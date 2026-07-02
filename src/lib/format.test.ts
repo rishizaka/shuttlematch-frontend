@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  defaultSessionTitle,
   formatDateTime,
   joinPolicyLabel,
   memberRoleLabel,
@@ -74,5 +75,13 @@ describe('participantDisplayName', () => {
 
   it('guestName が無いゲストは既定文言を返す', () => {
     expect(participantDisplayName({ ...guest, guestName: null })).toBe('ゲスト')
+  })
+})
+
+describe('defaultSessionTitle', () => {
+  it('時間帯で 昼練/夕練/夜練 を切り替える', () => {
+    expect(defaultSessionTitle(new Date('2026-07-02T12:00:00'))).toBe('7/2 昼練')
+    expect(defaultSessionTitle(new Date('2026-07-02T15:30:00'))).toBe('7/2 夕練')
+    expect(defaultSessionTitle(new Date('2026-07-02T19:00:00'))).toBe('7/2 夜練')
   })
 })

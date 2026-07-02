@@ -169,6 +169,21 @@ export const sessionApi = {
   list: (status: SessionStatus = 'OPEN') =>
     request<Session[]>(`/api/v1/sessions?status=${status}`),
   get: (sessionId: string) => request<Session>(`/api/v1/sessions/${sessionId}`),
+  /** かんたん作成: 参加人数・コート数・タイトルのみで、番号参加者+試合表まで作成。 */
+  quickCreate: (
+    circleId: string,
+    input: { title: string; courtCount: number; participantCount: number; createdBy: string },
+  ) =>
+    request<Session>(`/api/v1/circles/${circleId}/sessions/quick`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  /** 参加者の名前(ニックネーム)を変更する。 */
+  renameParticipant: (sessionId: string, participantId: string, name: string) =>
+    request<Session>(`/api/v1/sessions/${sessionId}/participants/${participantId}/rename`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
   /** セッションを終了する(終了済みとして履歴に残す)。 */
   close: (sessionId: string) =>
     request<Session>(`/api/v1/sessions/${sessionId}/close`, { method: 'POST' }),
@@ -204,6 +219,11 @@ export const matchApi = {
   get: (sessionId: string) => request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches`),
   startSet: (sessionId: string, setNumber: number) =>
     request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches/sets/${setNumber}/start`, {
+      method: 'POST',
+    }),
+  /** 進行中セットを開始前に戻す(開始時刻を消す)。 */
+  revertSet: (sessionId: string, setNumber: number) =>
+    request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches/sets/${setNumber}/revert`, {
       method: 'POST',
     }),
   addSets: (sessionId: string, setCount?: number) =>

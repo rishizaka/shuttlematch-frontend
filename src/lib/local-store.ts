@@ -120,3 +120,32 @@ export function removeSessionId(id: string) {
   c.sessionIds = c.sessionIds.filter((x) => x !== id)
   persist(KEYS.sessionIds, c.sessionIds)
 }
+
+// ---- self participant (試合表での自己申告) ----
+// セッションごとに「自分が何番か(＝ニックネーム入力済み)」を保存する。
+// これがあれば試合表の自己申告モーダルは出さない。skipped は「あとで」を選んだ状態。
+
+const SELF_PREFIX = 'shuttlematch.self.'
+
+export interface SelfParticipant {
+  participantId?: string
+  skipped?: boolean
+}
+
+export function getSelfParticipant(sessionId: string): SelfParticipant | null {
+  return readRaw<SelfParticipant | null>(SELF_PREFIX + sessionId, null)
+}
+
+export function setSelfParticipant(sessionId: string, participantId: string) {
+  if (isBrowser()) {
+    window.localStorage.setItem(SELF_PREFIX + sessionId, JSON.stringify({ participantId }))
+  }
+  emit()
+}
+
+export function skipSelfParticipant(sessionId: string) {
+  if (isBrowser()) {
+    window.localStorage.setItem(SELF_PREFIX + sessionId, JSON.stringify({ skipped: true }))
+  }
+  emit()
+}

@@ -50,6 +50,7 @@ function JoinPage() {
               <Link
                 to="/sessions/$sessionId/matches"
                 params={{ sessionId }}
+                search={{ openExternalBrowser: 1 }}
                 className="inline-block text-sm text-emerald-600 hover:underline"
               >
                 試合表を見る →

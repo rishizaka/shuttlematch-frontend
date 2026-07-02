@@ -53,6 +53,8 @@ function SetGroupView({
   isOrganizer,
   onStart,
   starting,
+  onRevert,
+  reverting,
 }: {
   group: SetGroup
   nameByParticipantId: ReadonlyMap<string, string>
@@ -63,14 +65,18 @@ function SetGroupView({
   isOrganizer: boolean
   onStart?: () => void
   starting: boolean
+  onRevert?: () => void
+  reverting: boolean
 }) {
-  const [confirming, setConfirming] = useState(false)
+  // 「開始前に戻す」の確認状態。開始はワンタップなので確認しない。
+  const [confirmingRevert, setConfirmingRevert] = useState(false)
 
   // セットの開始時刻は同一セット共通。任意の1試合から拾う。
   const startedAt = group.matches.find((m) => m.startedAt)?.startedAt ?? null
   const startedTime = startedAt ? formatTime(startedAt) : null
   const finished = !!startedAt && !active
   const canStart = isOrganizer && !!onStart && startable && !startedAt
+  const canRevert = isOrganizer && !!onRevert && active
 
   const isHighlighted = (m: Match) =>
     !!highlightParticipantId &&
@@ -107,25 +113,37 @@ function SetGroupView({
 
         {canStart ? (
           <div className="w-full sm:ml-auto sm:w-auto">
-            {confirming ? (
+            {/* 開始はワンタップ。 */}
+            <button
+              type="button"
+              disabled={starting}
+              onClick={() => onStart?.()}
+              className="w-full rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 sm:w-auto sm:py-1.5"
+            >
+              {starting ? '開始中…' : `第 ${group.setNumber} セットを開始`}
+            </button>
+          </div>
+        ) : canRevert ? (
+          <div className="w-full sm:ml-auto sm:w-auto">
+            {confirmingRevert ? (
               <div className="flex w-full flex-wrap items-center justify-end gap-2">
                 <span className="mr-auto text-xs font-medium text-slate-600 sm:mr-0">
-                  第 {group.setNumber} セットを開始しますか？
+                  第 {group.setNumber} セットを開始前に戻しますか？
                 </span>
                 <button
                   type="button"
-                  disabled={starting}
+                  disabled={reverting}
                   onClick={() => {
-                    onStart?.()
-                    setConfirming(false)
+                    onRevert?.()
+                    setConfirmingRevert(false)
                   }}
-                  className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                  className="rounded-lg bg-slate-700 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
                 >
                   はい
                 </button>
                 <button
                   type="button"
-                  onClick={() => setConfirming(false)}
+                  onClick={() => setConfirmingRevert(false)}
                   className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-white"
                 >
                   いいえ
@@ -134,10 +152,10 @@ function SetGroupView({
             ) : (
               <button
                 type="button"
-                onClick={() => setConfirming(true)}
-                className="w-full rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 sm:w-auto sm:py-1.5"
+                onClick={() => setConfirmingRevert(true)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 sm:w-auto sm:py-1.5"
               >
-                第 {group.setNumber} セットを開始
+                開始前に戻す
               </button>
             )}
           </div>
@@ -171,6 +189,8 @@ export function MatchScheduleList({
   isOrganizer = false,
   onStartSet,
   startingSetNumber,
+  onRevertSet,
+  revertingSetNumber,
 }: {
   matches: Match[]
   nameByParticipantId: ReadonlyMap<string, string>
@@ -188,6 +208,10 @@ export function MatchScheduleList({
   onStartSet?: (setNumber: number) => void
   /** 開始処理中のセット番号。 */
   startingSetNumber?: number | null
+  /** 進行中セットを開始前に戻すハンドラ。 */
+  onRevertSet?: (setNumber: number) => void
+  /** 戻し処理中のセット番号。 */
+  revertingSetNumber?: number | null
 }) {
   if (matches.length === 0) {
     return <p className="py-6 text-sm text-slate-500">表示できる試合がありません。</p>
@@ -213,6 +237,12 @@ export function MatchScheduleList({
               : undefined
           }
           starting={startingSetNumber === group.setNumber}
+          onRevert={
+            isOrganizer && onRevertSet && group.setNumber === activeSetNumber
+              ? () => onRevertSet(group.setNumber)
+              : undefined
+          }
+          reverting={revertingSetNumber === group.setNumber}
         />
       ))}
     </div>

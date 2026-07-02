@@ -173,6 +173,33 @@ export function useCloseSession(sessionId: string) {
   })
 }
 
+/** かんたん作成。番号参加者+試合表まで作成し、識別子を localStore に保存する。 */
+export function useQuickCreateSession(circleId: string) {
+  return useMutation({
+    mutationFn: (input: {
+      title: string
+      courtCount: number
+      participantCount: number
+      createdBy: string
+    }) => sessionApi.quickCreate(circleId, input),
+    onSuccess: (session) => {
+      addSessionId(session.id)
+    },
+  })
+}
+
+/** 参加者の名前(ニックネーム)変更 (運営者操作)。 */
+export function useRenameParticipant(sessionId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: { participantId: string; name: string }) =>
+      sessionApi.renameParticipant(sessionId, input.participantId, input.name),
+    onSuccess: (session) => {
+      qc.setQueryData(queryKeys.session(sessionId), session)
+    },
+  })
+}
+
 export function useAddParticipant(sessionId: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -244,6 +271,17 @@ export function useStartSet(sessionId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (setNumber: number) => matchApi.startSet(sessionId, setNumber),
+    onSuccess: (schedule) => {
+      qc.setQueryData(queryKeys.matches(sessionId), schedule)
+    },
+  })
+}
+
+/** セットを開始前に戻す (運営者操作)。進行中セットの開始時刻を消す。 */
+export function useRevertSet(sessionId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (setNumber: number) => matchApi.revertSet(sessionId, setNumber),
     onSuccess: (schedule) => {
       qc.setQueryData(queryKeys.matches(sessionId), schedule)
     },

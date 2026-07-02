@@ -108,6 +108,7 @@ function SessionPage() {
                     <Link
                       to="/sessions/$sessionId/matches"
                       params={{ sessionId: session.id }}
+                      search={{ openExternalBrowser: 1 }}
                       className="inline-flex items-center gap-1 text-sm text-emerald-600 hover:underline"
                     >
                       <ListChecks className="h-4 w-4" />

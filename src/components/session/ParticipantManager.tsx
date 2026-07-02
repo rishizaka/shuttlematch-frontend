@@ -1,19 +1,19 @@
 import { useState } from 'react'
-import { Link2, Plus } from 'lucide-react'
+import { Plus, Share2 } from 'lucide-react'
 import type { Participant } from '../../lib/types'
 import {
   useAddParticipant,
   useMarkParticipantLeft,
   useReactivateParticipant,
   useRemoveParticipant,
+  useRenameParticipant,
 } from '../../hooks/queries'
 import { Button } from '../ui/Button'
-import { Field, Input } from '../ui/Field'
 import { ErrorBlock } from '../ui/Spinner'
 import { ParticipantList } from './ParticipantList'
 
 /**
- * オーガナイザー向けの参加者管理(代理登録・ゲスト追加・削除/早退)。
+ * オーガナイザー向けの参加者管理(番号追加・削除/早退・名前変更)。
  * セッション詳細にインラインで埋め込んで使う。
  * 生成前は削除、生成後(generated)は早退/復帰で在席状態を切り替える。
  */
@@ -33,19 +33,34 @@ export function ParticipantManager({
   const remove = useRemoveParticipant(sessionId)
   const markLeft = useMarkParticipantLeft(sessionId)
   const reactivate = useReactivateParticipant(sessionId)
-  const [guestName, setGuestName] = useState('')
+  const rename = useRenameParticipant(sessionId)
   const [copied, setCopied] = useState(false)
 
-  const addGuest = (e: React.FormEvent) => {
-    e.preventDefault()
-    add.mutate({ guestName: guestName.trim() }, { onSuccess: () => setGuestName('') })
+  // 途中参加: 次の空き番号(現在の人数+1)を番号のまま追加する。名前は後から本人が申告できる。
+  const addNumber = () => {
+    add.mutate({ guestName: String(participants.length + 1) })
   }
 
-  const copyInvite = async () => {
+  // 試合表の共有リンク。openExternalBrowser=1 は LINE 等のアプリ内ブラウザから
+  // 既定(外部)ブラウザで開かせるためのパラメータ。
+  const shareUrl =
+    typeof window === 'undefined'
+      ? ''
+      : `${window.location.origin}/sessions/${sessionId}/matches?openExternalBrowser=1`
+
+  const shareLink = async () => {
     if (typeof window === 'undefined') return
-    const url = `${window.location.origin}/join/${sessionId}`
+    // 共有シートがあれば使う(LINE などに直接共有できる)。
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: '試合表', url: shareUrl })
+        return
+      } catch {
+        // キャンセル・失敗時はコピーにフォールバック
+      }
+    }
     try {
-      await navigator.clipboard.writeText(url)
+      await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -57,11 +72,11 @@ export function ParticipantManager({
     <div className="space-y-4">
       <div className="rounded-lg bg-slate-50 p-3">
         <p className="mb-2 text-xs text-slate-500">
-          招待リンクを共有すると、ログインなしでニックネーム入力だけで参加できます。
+          リンクを共有すると、LINE などのアプリ内ブラウザからでも既定のブラウザで試合表を開けます。
         </p>
-        <Button type="button" size="sm" variant="secondary" onClick={copyInvite}>
-          <Link2 className="h-4 w-4" />
-          {copied ? 'コピーしました' : '招待リンクをコピー'}
+        <Button type="button" size="sm" variant="secondary" onClick={shareLink}>
+          <Share2 className="h-4 w-4" />
+          {copied ? 'コピーしました' : '試合表リンクを共有'}
         </Button>
       </div>
 
@@ -72,6 +87,7 @@ export function ParticipantManager({
         removingId={remove.isPending ? (remove.variables as string) : null}
         onMarkLeft={generated ? (p) => markLeft.mutate(p.id) : undefined}
         onReactivate={generated ? (p) => reactivate.mutate(p.id) : undefined}
+        onRename={(p, name) => rename.mutate({ participantId: p.id, name })}
         updatingId={
           markLeft.isPending
             ? (markLeft.variables as string)
@@ -90,25 +106,23 @@ export function ParticipantManager({
       {add.isError ? <ErrorBlock message={(add.error as Error).message} /> : null}
       {markLeft.isError ? <ErrorBlock message={(markLeft.error as Error).message} /> : null}
       {reactivate.isError ? <ErrorBlock message={(reactivate.error as Error).message} /> : null}
+      {rename.isError ? <ErrorBlock message={(rename.error as Error).message} /> : null}
 
-      <div className="space-y-3 border-t border-slate-100 pt-4">
-        <p className="text-sm font-medium text-slate-700">ゲストを追加</p>
-        <form onSubmit={addGuest} className="flex items-end gap-2">
-          <div className="flex-1">
-            <Field label="ゲスト名（アカウント不要）" htmlFor="pm-guest-name">
-              <Input
-                id="pm-guest-name"
-                value={guestName}
-                onChange={(e) => setGuestName(e.target.value)}
-                placeholder="ゲスト 花子"
-              />
-            </Field>
-          </div>
-          <Button type="submit" size="sm" variant="secondary" disabled={add.isPending || !guestName.trim()}>
-            <Plus className="h-4 w-4" />
-            追加
-          </Button>
-        </form>
+      <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+        <p className="text-sm text-slate-600">
+          途中参加はここで番号を1つ増やせます。名前は本人が試合表で申告できます。
+        </p>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className="sm:ml-auto"
+          onClick={addNumber}
+          disabled={add.isPending}
+        >
+          <Plus className="h-4 w-4" />
+          {add.isPending ? '追加中…' : '番号を追加'}
+        </Button>
       </div>
     </div>
   )

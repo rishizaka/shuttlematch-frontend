@@ -98,3 +98,12 @@ export function participantDisplayName(
 export function shortId(id: string): string {
   return id.slice(0, 8)
 }
+
+/**
+ * セッションタイトルの初期値。今日の日付 + 時間帯ラベル。
+ * 〜15時: 昼練 / 15時台: 夕練 / 16時〜: 夜練。
+ */
+export function defaultSessionTitle(now: Date = new Date()): string {
+  const label = now.getHours() < 15 ? '昼練' : now.getHours() < 16 ? '夕練' : '夜練'
+  return `${now.getMonth() + 1}/${now.getDate()} ${label}`
+}

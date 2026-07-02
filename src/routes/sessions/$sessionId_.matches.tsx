@@ -1,27 +1,41 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   useAddSets,
   useCircle,
   useCloseSession,
   useMatches,
+  useRenameParticipant,
   useReplanFutureSets,
+  useRevertSet,
   useSession,
   useStartSet,
   useUserNames,
 } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
+import {
+  getSelfParticipant,
+  setSelfParticipant,
+  skipSelfParticipant,
+} from '../../lib/local-store'
 import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
 import { buildParticipantNameLookup } from '../../components/match/MatchCard'
 import { ParticipantManager } from '../../components/session/ParticipantManager'
+import { SelfIdentifyModal } from '../../components/session/SelfIdentifyModal'
 import {
   MatchScheduleList,
   filterMatchesForParticipant,
 } from '../../components/match/MatchScheduleList'
 
 export const Route = createFileRoute('/sessions/$sessionId_/matches')({
+  // LINE 等のアプリ内ブラウザから既定ブラウザで開かせるためのパラメータ。
+  // リンク/アドレスバー共有時に URL へ残るよう、ルートの検索パラメータとして扱う。
+  validateSearch: (search: Record<string, unknown>): { openExternalBrowser?: 1 } => ({
+    openExternalBrowser:
+      search.openExternalBrowser === 1 || search.openExternalBrowser === '1' ? 1 : undefined,
+  }),
   component: MatchesPage,
 })
 
@@ -34,14 +48,32 @@ function MatchesPage() {
   const { data: circle } = useCircle(session?.circleId)
   const { data: schedule, isLoading, isError, error } = useMatches(sessionId)
   const startSet = useStartSet(sessionId)
+  const revertSet = useRevertSet(sessionId)
   const addSets = useAddSets(sessionId)
   const replan = useReplanFutureSets(sessionId)
   const closeSession = useCloseSession(sessionId)
+  const rename = useRenameParticipant(sessionId)
   const [filter, setFilter] = useState<Filter>('all')
   const [addCount, setAddCount] = useState(3)
   const [confirmingClose, setConfirmingClose] = useState(false)
+  const [showSelfModal, setShowSelfModal] = useState(false)
+  // 自己申告で選んだ自分の ParticipantId (localStorage 由来)。
+  const [selfParticipantId, setSelfParticipantId] = useState<string | null>(null)
 
   const closed = session?.status === 'CLOSED'
+
+  // LINE 等のアプリ内ブラウザで開かれたら、既定(外部)ブラウザで開き直す。
+  // openExternalBrowser=1 を付けて1回だけリダイレクト(付与済み/通常ブラウザでは何もしない)。
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const ua = navigator.userAgent || ''
+    const inInAppBrowser = /Line\//i.test(ua)
+    if (!inInAppBrowser) return
+    const url = new URL(window.location.href)
+    if (url.searchParams.get('openExternalBrowser') === '1') return
+    url.searchParams.set('openExternalBrowser', '1')
+    window.location.replace(url.toString())
+  }, [])
 
   // 早退者がいる、または在席者で未開始セットに一度も出ていない人がいる = 再編成の余地あり。
   const hasLeftParticipant = (session?.participants ?? []).some((p) => p.status === 'LEFT')
@@ -70,11 +102,28 @@ function MatchesPage() {
     return map
   }, [session])
 
-  // 自分の ParticipantId (このセッションに参加している場合)。
-  const myParticipantId = useMemo(
-    () => session?.participants.find((p) => p.userId === user?.id)?.id ?? null,
-    [session, user],
-  )
+  // 自分の ParticipantId。登録ユーザーなら userId 一致、そうでなければ自己申告(番号)を使う。
+  const myParticipantId = useMemo(() => {
+    const byUser = session?.participants.find((p) => p.userId === user?.id)?.id
+    if (byUser) return byUser
+    if (selfParticipantId && session?.participants.some((p) => p.id === selfParticipantId)) {
+      return selfParticipantId
+    }
+    return null
+  }, [session, user, selfParticipantId])
+
+  // マウント後に localStorage を読み、未申告なら自己紹介モーダルを出す(SSR不一致を避けるため effect 内で判定)。
+  useEffect(() => {
+    if (!schedule || closed) return
+    const participantCount = session?.participants.length ?? 0
+    if (participantCount === 0) return
+    const stored = getSelfParticipant(sessionId)
+    if (stored?.participantId) {
+      setSelfParticipantId(stored.participantId)
+      return
+    }
+    if (!stored) setShowSelfModal(true)
+  }, [sessionId, schedule, closed, session])
 
   // アクティブ(進行中)なセット = 最も新しい開始時刻を持つセット。
   const activeSetNumber = useMemo(() => {
@@ -125,6 +174,30 @@ function MatchesPage() {
 
   return (
     <div className="space-y-5">
+      {showSelfModal ? (
+        <SelfIdentifyModal
+          participants={session?.participants ?? []}
+          names={userNames}
+          submitting={rename.isPending}
+          onSubmit={(participantId, nickname) =>
+            rename.mutate(
+              { participantId, name: nickname },
+              {
+                onSuccess: () => {
+                  setSelfParticipant(sessionId, participantId)
+                  setSelfParticipantId(participantId)
+                  setShowSelfModal(false)
+                },
+              },
+            )
+          }
+          onSkip={() => {
+            skipSelfParticipant(sessionId)
+            setShowSelfModal(false)
+          }}
+        />
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link
@@ -330,6 +403,8 @@ function MatchesPage() {
           isOrganizer={isOrganizer && !closed}
           onStartSet={(setNumber) => startSet.mutate(setNumber)}
           startingSetNumber={startSet.isPending ? startSet.variables : null}
+          onRevertSet={(setNumber) => revertSet.mutate(setNumber)}
+          revertingSetNumber={revertSet.isPending ? revertSet.variables : null}
         />
       )}
     </div>
