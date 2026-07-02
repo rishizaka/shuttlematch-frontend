@@ -20,12 +20,14 @@ const names = new Map([
 ])
 
 describe('MatchCard', () => {
-  it('コート番号・両ペアの名前を表示する', () => {
+  it('コート番号とコートの4名を表示する(ペア/vsは出さない)', () => {
     render(<MatchCard match={match} nameByParticipantId={names} />)
     expect(screen.getByText('2 コート')).toBeInTheDocument()
     expect(screen.getByText('太郎')).toBeInTheDocument()
+    expect(screen.getByText('次郎')).toBeInTheDocument()
+    expect(screen.getByText('三郎')).toBeInTheDocument()
     expect(screen.getByText('花子')).toBeInTheDocument()
-    expect(screen.getByText('VS')).toBeInTheDocument()
+    expect(screen.queryByText('VS')).not.toBeInTheDocument()
   })
 
   it('名前が未解決の ParticipantId は短縮 ID で表示する', () => {

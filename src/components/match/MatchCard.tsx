@@ -40,33 +40,6 @@ function PlayerView({
   )
 }
 
-function PairView({
-  player1Id,
-  player2Id,
-  nameByParticipantId,
-  indexByParticipantId,
-}: {
-  player1Id: string
-  player2Id: string
-  nameByParticipantId: ReadonlyMap<string, string>
-  indexByParticipantId?: ReadonlyMap<string, number>
-}) {
-  return (
-    <div className="flex min-w-0 flex-col items-start gap-1">
-      <PlayerView
-        id={player1Id}
-        nameByParticipantId={nameByParticipantId}
-        indexByParticipantId={indexByParticipantId}
-      />
-      <PlayerView
-        id={player2Id}
-        nameByParticipantId={nameByParticipantId}
-        indexByParticipantId={indexByParticipantId}
-      />
-    </div>
-  )
-}
-
 /**
  * 1コート分の対戦カード。セット内の「◯コート」を1枚として表示する。
  * 進行中/終了の状態はセット単位で決まるため親から受け取る。
@@ -112,24 +85,21 @@ export function MatchCard({
           ) : null}
         </div>
       ) : null}
-      <div
-        className={
-          'grid grid-cols-[1fr_auto_1fr] items-center gap-3' + (finished ? ' opacity-50' : '')
-        }
-      >
-        <PairView
-          player1Id={match.pairA.player1Id}
-          player2Id={match.pairA.player2Id}
-          nameByParticipantId={nameByParticipantId}
-          indexByParticipantId={indexByParticipantId}
-        />
-        <span className="text-sm font-bold text-emerald-600">VS</span>
-        <PairView
-          player1Id={match.pairB.player1Id}
-          player2Id={match.pairB.player2Id}
-          nameByParticipantId={nameByParticipantId}
-          indexByParticipantId={indexByParticipantId}
-        />
+      {/* ペアは現地で相談して決めるため、コートの4名をフラットに表示する(vsは出さない)。 */}
+      <div className={'grid grid-cols-2 gap-x-3 gap-y-2' + (finished ? ' opacity-50' : '')}>
+        {[
+          match.pairA.player1Id,
+          match.pairA.player2Id,
+          match.pairB.player1Id,
+          match.pairB.player2Id,
+        ].map((id, i) => (
+          <PlayerView
+            key={`${id}-${i}`}
+            id={id}
+            nameByParticipantId={nameByParticipantId}
+            indexByParticipantId={indexByParticipantId}
+          />
+        ))}
       </div>
     </div>
   )
