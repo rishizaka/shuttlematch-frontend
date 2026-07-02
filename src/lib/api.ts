@@ -169,6 +169,9 @@ export const sessionApi = {
   list: (status: SessionStatus = 'OPEN') =>
     request<Session[]>(`/api/v1/sessions?status=${status}`),
   get: (sessionId: string) => request<Session>(`/api/v1/sessions/${sessionId}`),
+  /** セッションを終了する(終了済みとして履歴に残す)。 */
+  close: (sessionId: string) =>
+    request<Session>(`/api/v1/sessions/${sessionId}/close`, { method: 'POST' }),
   addParticipant: (sessionId: string, input: AddParticipantInput) =>
     request<Session>(`/api/v1/sessions/${sessionId}/participants`, {
       method: 'POST',

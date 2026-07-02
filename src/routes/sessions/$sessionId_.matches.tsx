@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import {
   useAddSets,
   useCircle,
+  useCloseSession,
   useMatches,
   useReplanFutureSets,
   useSession,
@@ -34,8 +35,12 @@ function MatchesPage() {
   const startSet = useStartSet(sessionId)
   const addSets = useAddSets(sessionId)
   const replan = useReplanFutureSets(sessionId)
+  const closeSession = useCloseSession(sessionId)
   const [filter, setFilter] = useState<Filter>('all')
   const [addCount, setAddCount] = useState(3)
+  const [confirmingClose, setConfirmingClose] = useState(false)
+
+  const closed = session?.status === 'CLOSED'
 
   // 早退者がいる、または在席者で未開始セットに一度も出ていない人がいる = 再編成の余地あり。
   const hasLeftParticipant = (session?.participants ?? []).some((p) => p.status === 'LEFT')
@@ -128,7 +133,14 @@ function MatchesPage() {
           >
             ← セッションへ戻る
           </Link>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900">試合表</h1>
+          <div className="mt-1 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-slate-900">試合表</h1>
+            {closed ? (
+              <span className="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
+                終了済み
+              </span>
+            ) : null}
+          </div>
           <p className="text-sm text-slate-500">
             全 {setCount} セット・{schedule.matchCount} 試合
           </p>
@@ -153,7 +165,17 @@ function MatchesPage() {
         ) : null}
       </div>
 
-      {isOrganizer ? (
+      {closed ? (
+        <Card>
+          <CardBody>
+            <p className="text-sm text-slate-600">
+              この試合表は終了済みとして記録されています。内容の変更はできません。
+            </p>
+          </CardBody>
+        </Card>
+      ) : null}
+
+      {isOrganizer && !closed ? (
         <Card>
           <CardBody>
             <div className="flex flex-wrap items-center gap-3">
@@ -221,6 +243,58 @@ function MatchesPage() {
                   : '再編成に失敗しました'}
               </p>
             ) : null}
+
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-3">
+              {confirmingClose ? (
+                <>
+                  <p className="text-sm font-medium text-slate-700">
+                    この試合表を記録しますか？（終了後は変更できません）
+                  </p>
+                  <div className="flex items-center gap-2 sm:ml-auto">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        closeSession.mutate(undefined, {
+                          onSuccess: () => setConfirmingClose(false),
+                        })
+                      }}
+                      disabled={closeSession.isPending}
+                    >
+                      {closeSession.isPending ? '記録中…' : 'はい'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setConfirmingClose(false)}
+                      disabled={closeSession.isPending}
+                    >
+                      いいえ
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-slate-600">
+                    活動が終わったら、この試合表を記録して終了します。
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    className="sm:ml-auto"
+                    onClick={() => setConfirmingClose(true)}
+                  >
+                    終了
+                  </Button>
+                </>
+              )}
+            </div>
+            {closeSession.isError ? (
+              <p className="mt-2 text-sm text-red-600">
+                {closeSession.error instanceof Error
+                  ? closeSession.error.message
+                  : '終了に失敗しました'}
+              </p>
+            ) : null}
           </CardBody>
         </Card>
       ) : null}
@@ -239,7 +313,7 @@ function MatchesPage() {
           highlightParticipantId={filter === 'all' ? myParticipantId : null}
           activeSetNumber={activeSetNumber}
           startableSetNumber={startableSetNumber}
-          isOrganizer={isOrganizer}
+          isOrganizer={isOrganizer && !closed}
           onStartSet={(setNumber) => startSet.mutate(setNumber)}
           startingSetNumber={startSet.isPending ? startSet.variables : null}
         />

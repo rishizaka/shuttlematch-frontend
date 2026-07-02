@@ -45,6 +45,7 @@ function SessionPage() {
 
   const organizer = isOrganizer(session, circle, user?.id)
   const generated = session.status === 'GENERATED'
+  const closed = session.status === 'CLOSED'
 
   return (
     <div className="space-y-6">
@@ -136,7 +137,7 @@ function SessionPage() {
               description={organizer ? '代理登録・ゲスト追加・削除ができます' : undefined}
             />
             <CardBody>
-              {organizer ? (
+              {organizer && !closed ? (
                 <ParticipantManager
                   sessionId={session.id}
                   participants={session.participants}

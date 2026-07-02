@@ -161,6 +161,18 @@ export function useCreateSession(circleId: string) {
   })
 }
 
+/** セッション終了 (運営者操作)。終了済みにして募集中一覧からも外す。 */
+export function useCloseSession(sessionId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => sessionApi.close(sessionId),
+    onSuccess: (session) => {
+      qc.setQueryData(queryKeys.session(sessionId), session)
+      qc.invalidateQueries({ queryKey: queryKeys.openSessions('OPEN') })
+    },
+  })
+}
+
 export function useAddParticipant(sessionId: string) {
   const qc = useQueryClient()
   return useMutation({
