@@ -15,6 +15,7 @@ import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
 import { buildParticipantNameLookup } from '../../components/match/MatchCard'
+import { ParticipantManager } from '../../components/session/ParticipantManager'
 import {
   MatchScheduleList,
   filterMatchesForParticipant,
@@ -178,7 +179,20 @@ function MatchesPage() {
       {isOrganizer && !closed ? (
         <Card>
           <CardBody>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-slate-700">参加者の出入り</p>
+              <p className="text-xs text-slate-500">
+                途中参加はゲスト追加、早退・復帰は各参加者のボタンで切り替え。反映するには下の「未開始セットを再編成」を押します。
+              </p>
+              <ParticipantManager
+                sessionId={sessionId}
+                participants={session?.participants ?? []}
+                names={userNames}
+                generated
+              />
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
               <p className="text-sm text-slate-600">
                 セット数が足りない場合は、現在の結果を保ったまま追加できます。
               </p>
