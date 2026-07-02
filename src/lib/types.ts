@@ -5,7 +5,6 @@ export type MemberRole = 'ORGANIZER' | 'PLAYER'
 export type JoinPolicy = 'OPEN' | 'APPROVAL'
 export type SessionStatus = 'PREPARING' | 'OPEN' | 'GENERATED' | 'CLOSED'
 export type SessionVisibility = 'PUBLIC' | 'MEMBERS_ONLY'
-export type JoinRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
 export interface User {
   id: string
@@ -55,15 +54,6 @@ export interface Session {
   createdBy: string
   participantCount: number
   participants: Participant[]
-}
-
-export interface JoinRequest {
-  id: string
-  circleId: string
-  userId: string
-  status: JoinRequestStatus
-  requestedAt: string
-  decidedAt: string | null
 }
 
 /** 試合のペア。player1Id / player2Id は ParticipantId を指す。 */

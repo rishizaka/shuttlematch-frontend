@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query'
 import {
   circleApi,
-  joinRequestApi,
   matchApi,
   sessionApi,
   userApi,
@@ -12,7 +11,7 @@ import {
   type CreateUserInput,
 } from '../lib/api'
 import { addCircleId, addSessionId } from '../lib/local-store'
-import type { JoinRequestStatus, SessionStatus, User } from '../lib/types'
+import type { SessionStatus, User } from '../lib/types'
 
 export const queryKeys = {
   user: (id: string) => ['user', id] as const,
@@ -20,8 +19,6 @@ export const queryKeys = {
   session: (id: string) => ['session', id] as const,
   matches: (id: string) => ['matches', id] as const,
   openSessions: (status: SessionStatus) => ['sessions', 'list', status] as const,
-  joinRequests: (circleId: string, status: JoinRequestStatus) =>
-    ['joinRequests', circleId, status] as const,
 }
 
 // ---- User ----
@@ -80,49 +77,6 @@ export function useAddMember(circleId: string) {
 }
 
 // ---- Join request (membership application) ----
-
-/** サークルの参加申請一覧(オーガナイザー用)。 */
-export function useJoinRequests(
-  circleId: string | undefined,
-  status: JoinRequestStatus = 'PENDING',
-  enabled = true,
-) {
-  return useQuery({
-    queryKey: queryKeys.joinRequests(circleId ?? '', status),
-    queryFn: () => joinRequestApi.list(circleId as string, status),
-    enabled: !!circleId && enabled,
-  })
-}
-
-/** 参加申請を出す。 */
-export function useApplyForMembership(circleId: string) {
-  return useMutation({
-    mutationFn: (userId: string) => joinRequestApi.apply(circleId, userId),
-  })
-}
-
-/** 参加申請を承認する。承認するとメンバーが増えるのでサークルも再取得。 */
-export function useApproveJoinRequest(circleId: string) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (requestId: string) => joinRequestApi.approve(circleId, requestId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.joinRequests(circleId, 'PENDING') })
-      qc.invalidateQueries({ queryKey: queryKeys.circle(circleId) })
-    },
-  })
-}
-
-/** 参加申請を却下する。 */
-export function useRejectJoinRequest(circleId: string) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (requestId: string) => joinRequestApi.reject(circleId, requestId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.joinRequests(circleId, 'PENDING') })
-    },
-  })
-}
 
 // ---- Session ----
 

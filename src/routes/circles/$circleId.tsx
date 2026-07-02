@@ -12,7 +12,6 @@ import { Field, Input, Select } from '../../components/ui/Field'
 import { Badge } from '../../components/ui/Badge'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
 import { SessionCard } from '../../components/session/SessionCard'
-import { JoinRequestsCard } from '../../components/circle/JoinRequestsCard'
 
 export const Route = createFileRoute('/circles/$circleId')({ component: CirclePage })
 
@@ -72,7 +71,6 @@ function CirclePage() {
         </div>
         <div className="space-y-6">
           <MembersCard circle={circle} />
-          {organizer ? <JoinRequestsCard circleId={circle.id} /> : null}
           {organizer ? <AddMemberCard circleId={circle.id} /> : null}
         </div>
       </div>

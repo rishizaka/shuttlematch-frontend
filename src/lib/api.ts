@@ -1,8 +1,6 @@
 import type {
   Circle,
   JoinPolicy,
-  JoinRequest,
-  JoinRequestStatus,
   MatchSchedule,
   MemberRole,
   Session,
@@ -114,30 +112,6 @@ export const circleApi = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
-}
-
-// ---- Join request (membership application) ----
-
-export const joinRequestApi = {
-  apply: (circleId: string, userId: string) =>
-    request<JoinRequest>(`/api/v1/circles/${circleId}/join-requests`, {
-      method: 'POST',
-      body: JSON.stringify({ userId }),
-    }),
-  list: (circleId: string, status: JoinRequestStatus = 'PENDING') =>
-    request<JoinRequest[]>(
-      `/api/v1/circles/${circleId}/join-requests?status=${status}`,
-    ),
-  approve: (circleId: string, requestId: string) =>
-    request<JoinRequest>(
-      `/api/v1/circles/${circleId}/join-requests/${requestId}/approve`,
-      { method: 'POST' },
-    ),
-  reject: (circleId: string, requestId: string) =>
-    request<JoinRequest>(
-      `/api/v1/circles/${circleId}/join-requests/${requestId}/reject`,
-      { method: 'POST' },
-    ),
 }
 
 // ---- Session ----

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Check, ChevronDown, ChevronUp, Play, RotateCcw } from 'lucide-react'
 import type { Match } from '../../lib/types'
 import { formatTime } from '../../lib/format'
 import { MatchCard } from './MatchCard'
@@ -70,6 +71,8 @@ function SetGroupView({
 }) {
   // 「開始前に戻す」の確認状態。開始はワンタップなので確認しない。
   const [confirmingRevert, setConfirmingRevert] = useState(false)
+  // 終了セットは折りたたんで一覧を軽くする。タップで展開できる。
+  const [expanded, setExpanded] = useState(false)
 
   // セットの開始時刻は同一セット共通。任意の1試合から拾う。
   const startedAt = group.matches.find((m) => m.startedAt)?.startedAt ?? null
@@ -77,6 +80,8 @@ function SetGroupView({
   const finished = !!startedAt && !active
   const canStart = isOrganizer && !!onStart && startable && !startedAt
   const canRevert = isOrganizer && !!onRevert && active
+  // まだ開始できない未来のセット。
+  const upcoming = !startedAt && !canStart
 
   const isHighlighted = (m: Match) =>
     !!highlightParticipantId &&
@@ -85,50 +90,87 @@ function SetGroupView({
       m.pairB.player1Id === highlightParticipantId ||
       m.pairB.player2Id === highlightParticipantId)
 
-  const headerBadge = active
-    ? 'border-emerald-500'
+  const hasMyMatch = group.matches.some(isHighlighted)
+
+  // 終了セットは1行のサマリーに畳む。
+  if (finished && !expanded) {
+    return (
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        className="flex w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-left transition hover:border-slate-300 hover:bg-slate-50"
+      >
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100">
+          <Check className="h-3 w-3 text-slate-400" />
+        </span>
+        <span className="text-sm font-semibold text-slate-500">
+          第 {group.setNumber} セット
+        </span>
+        {startedTime ? (
+          <span className="text-xs text-slate-400 tabular-nums">{startedTime}〜</span>
+        ) : null}
+        {hasMyMatch ? (
+          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
+            出場
+          </span>
+        ) : null}
+        <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-slate-300" />
+      </button>
+    )
+  }
+
+  const container = active
+    ? 'rounded-2xl border-2 border-emerald-500 bg-emerald-50/50 p-4 shadow-sm shadow-emerald-100'
     : finished
-      ? 'border-slate-200'
-      : 'border-slate-200'
+      ? 'rounded-2xl border border-slate-200 bg-white p-4'
+      : canStart
+        ? 'rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm'
+        : 'rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-4'
 
   return (
-    <section className={'rounded-2xl border-l-4 bg-slate-50/60 p-4 ' + headerBadge}>
-      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-base font-bold text-slate-900">第 {group.setNumber} セット</h2>
-          {startedTime ? (
-            <span className="text-xs font-medium text-slate-500">{startedTime}〜</span>
-          ) : null}
-          {active ? (
-            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-              進行中
-            </span>
-          ) : null}
-          {finished ? (
-            <span className="inline-flex items-center rounded-full bg-slate-200 px-2 py-0.5 text-xs font-semibold text-slate-500">
-              終了
-            </span>
-          ) : null}
-        </div>
+    <section className={container}>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {active ? (
+          <span className="relative flex h-2.5 w-2.5" aria-hidden>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          </span>
+        ) : null}
+        <h2
+          className={
+            'text-base font-bold ' +
+            (finished ? 'text-slate-500' : upcoming ? 'text-slate-600' : 'text-slate-900')
+          }
+        >
+          第 {group.setNumber} セット
+        </h2>
+        {startedTime ? (
+          <span className="text-xs font-medium text-slate-500 tabular-nums">
+            {startedTime}〜
+          </span>
+        ) : null}
+        {active ? (
+          <span className="inline-flex items-center rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white">
+            進行中
+          </span>
+        ) : null}
+        {finished ? (
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
+            終了
+          </span>
+        ) : null}
+        {upcoming && !canStart ? (
+          <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-400">
+            待機中
+          </span>
+        ) : null}
 
-        {canStart ? (
-          <div className="w-full sm:ml-auto sm:w-auto">
-            {/* 開始はワンタップ。 */}
-            <button
-              type="button"
-              disabled={starting}
-              onClick={() => onStart?.()}
-              className="w-full rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 sm:w-auto sm:py-1.5"
-            >
-              {starting ? '開始中…' : `第 ${group.setNumber} セットを開始`}
-            </button>
-          </div>
-        ) : canRevert ? (
-          <div className="w-full sm:ml-auto sm:w-auto">
-            {confirmingRevert ? (
-              <div className="flex w-full flex-wrap items-center justify-end gap-2">
-                <span className="mr-auto text-xs font-medium text-slate-600 sm:mr-0">
-                  第 {group.setNumber} セットを開始前に戻しますか？
+        <span className="ml-auto flex items-center gap-1.5">
+          {canRevert ? (
+            confirmingRevert ? (
+              <span className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-slate-600">
+                  開始前に戻しますか？
                 </span>
                 <button
                   type="button"
@@ -137,29 +179,41 @@ function SetGroupView({
                     onRevert?.()
                     setConfirmingRevert(false)
                   }}
-                  className="rounded-lg bg-slate-700 px-3 py-1 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+                  className="rounded-md bg-slate-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
                 >
                   はい
                 </button>
                 <button
                   type="button"
                   onClick={() => setConfirmingRevert(false)}
-                  className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-white"
+                  className="rounded-md px-2 py-1 text-xs font-medium text-slate-500 hover:bg-white"
                 >
                   いいえ
                 </button>
-              </div>
+              </span>
             ) : (
+              // 誤操作を避けたい補助操作なので、あえて控えめな見た目にする。
               <button
                 type="button"
                 onClick={() => setConfirmingRevert(true)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 sm:w-auto sm:py-1.5"
+                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-white hover:text-slate-600"
               >
-                開始前に戻す
+                <RotateCcw className="h-3.5 w-3.5" />
+                戻す
               </button>
-            )}
-          </div>
-        ) : null}
+            )
+          ) : null}
+          {finished ? (
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              aria-label="たたむ"
+              className="inline-flex items-center rounded-lg p-1 text-slate-300 transition hover:bg-slate-100 hover:text-slate-500"
+            >
+              <ChevronUp className="h-4 w-4" />
+            </button>
+          ) : null}
+        </span>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -175,6 +229,20 @@ function SetGroupView({
           />
         ))}
       </div>
+
+      {canStart ? (
+        <div className="mt-3 sm:flex sm:justify-end">
+          <button
+            type="button"
+            disabled={starting}
+            onClick={() => onStart?.()}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-50 sm:w-auto sm:px-6"
+          >
+            <Play className="h-4 w-4 fill-current" />
+            {starting ? '開始中…' : `第 ${group.setNumber} セットを開始`}
+          </button>
+        </div>
+      ) : null}
     </section>
   )
 }
@@ -220,7 +288,7 @@ export function MatchScheduleList({
   const groups = groupMatchesBySet(matches)
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {groups.map((group) => (
         <SetGroupView
           key={group.setNumber}

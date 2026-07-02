@@ -64,18 +64,31 @@ export function MatchCard({
   finished?: boolean
 }) {
   const container = active
-    ? 'border-emerald-500 bg-white ring-2 ring-emerald-300'
+    ? highlight
+      ? 'border-emerald-400 bg-white shadow-sm ring-1 ring-emerald-300'
+      : 'border-emerald-200 bg-white shadow-sm'
     : finished
-      ? 'border-slate-200 bg-slate-50'
+      ? 'border-slate-100 bg-white'
       : highlight
-        ? 'border-emerald-400 bg-white ring-1 ring-emerald-200'
+        ? 'border-emerald-300 bg-emerald-50/50 ring-1 ring-emerald-200'
         : 'border-slate-200 bg-white'
 
+  const courtChip = active
+    ? 'bg-emerald-600 text-white'
+    : finished
+      ? 'bg-slate-100 text-slate-400'
+      : 'bg-slate-100 text-slate-600'
+
   return (
-    <div className={'rounded-xl border p-4 shadow-sm ' + container}>
+    <div className={'rounded-xl border p-4 ' + container}>
       {match.courtNumber != null ? (
         <div className="mb-3 flex items-center gap-2">
-          <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+          <span
+            className={
+              'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ' +
+              courtChip
+            }
+          >
             {match.courtNumber} コート
           </span>
           {highlight ? (

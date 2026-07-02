@@ -34,9 +34,13 @@ export function ParticipantList({
     return <p className="py-4 text-sm text-slate-500">まだ参加者がいません。</p>
   }
 
-  const startEdit = (p: Participant) => {
+  // 既定の名前(番号のまま)なら未設定=「ゲスト」表示。
+  const isUnnamed = (p: Participant, i: number) =>
+    p.guest && (p.guestName ?? '') === String(i + 1)
+
+  const startEdit = (p: Participant, unnamed: boolean) => {
     setEditingId(p.id)
-    setDraft(p.guestName ?? '')
+    setDraft(unnamed ? '' : (p.guestName ?? ''))
   }
   const commit = (p: Participant) => {
     const name = draft.trim()
@@ -51,6 +55,8 @@ export function ParticipantList({
         const editing = editingId === p.id
         // ゲストのみ名前編集可。
         const canRename = !!onRename && p.guest
+        const unnamed = isUnnamed(p, i)
+        const displayName = unnamed ? 'ゲスト' : participantDisplayName(p, names)
         return (
           <li key={p.id} className="flex items-center justify-between gap-3 py-2.5">
             <span
@@ -97,20 +103,25 @@ export function ParticipantList({
                 </span>
               ) : (
                 <>
-                  <span className={'truncate ' + (left ? 'line-through' : '')}>
-                    {participantDisplayName(p, names)}
+                  <span
+                    className={
+                      'truncate ' +
+                      (left ? 'line-through ' : '') +
+                      (unnamed ? 'text-slate-400' : '')
+                    }
+                  >
+                    {displayName}
                   </span>
                   {canRename ? (
                     <button
                       type="button"
-                      onClick={() => startEdit(p)}
+                      onClick={() => startEdit(p, unnamed)}
                       aria-label="名前を編集"
                       className="shrink-0 text-slate-400 transition hover:text-slate-700"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
                   ) : null}
-                  {p.guest ? <Badge tone="amber">ゲスト</Badge> : null}
                   {left ? <Badge tone="slate">早退</Badge> : null}
                 </>
               )}
