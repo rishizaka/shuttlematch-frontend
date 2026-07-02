@@ -141,6 +141,7 @@ function SessionPage() {
                   sessionId={session.id}
                   participants={session.participants}
                   names={names}
+                  generated={generated}
                 />
               ) : (
                 <ParticipantList participants={session.participants} names={names} />

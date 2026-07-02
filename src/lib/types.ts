@@ -28,6 +28,8 @@ export interface Circle {
   members: Member[]
 }
 
+export type ParticipantStatus = 'ACTIVE' | 'LEFT'
+
 export interface Participant {
   id: string
   /** 登録ユーザーの参加なら UserId、ゲストなら null。 */
@@ -35,6 +37,8 @@ export interface Participant {
   /** ゲスト参加者の表示名。登録ユーザーなら null。 */
   guestName: string | null
   guest: boolean
+  /** 在席状態。LEFT は早退(未開始セットの編成対象外)。 */
+  status: ParticipantStatus
 }
 
 export interface Session {

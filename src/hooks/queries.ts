@@ -181,6 +181,29 @@ export function useRemoveParticipant(sessionId: string) {
   })
 }
 
+/** 早退 (運営者操作)。在席状態を LEFT にする。未開始セットの再編成で反映される。 */
+export function useMarkParticipantLeft(sessionId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (participantId: string) => sessionApi.markParticipantLeft(sessionId, participantId),
+    onSuccess: (session) => {
+      qc.setQueryData(queryKeys.session(sessionId), session)
+    },
+  })
+}
+
+/** 復帰 (運営者操作)。在席状態を ACTIVE に戻す。 */
+export function useReactivateParticipant(sessionId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (participantId: string) =>
+      sessionApi.reactivateParticipant(sessionId, participantId),
+    onSuccess: (session) => {
+      qc.setQueryData(queryKeys.session(sessionId), session)
+    },
+  })
+}
+
 // ---- Match ----
 
 export function useMatches(sessionId: string | undefined) {
@@ -220,6 +243,17 @@ export function useAddSets(sessionId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (setCount: number) => matchApi.addSets(sessionId, setCount),
+    onSuccess: (schedule) => {
+      qc.setQueryData(queryKeys.matches(sessionId), schedule)
+    },
+  })
+}
+
+/** 未開始セットの再編成 (運営者操作)。途中参加・早退を反映する。 */
+export function useReplanFutureSets(sessionId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => matchApi.replan(sessionId),
     onSuccess: (schedule) => {
       qc.setQueryData(queryKeys.matches(sessionId), schedule)
     },

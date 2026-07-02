@@ -66,8 +66,8 @@ describe('groupMatchesBySet', () => {
 describe('buildParticipantNameLookup', () => {
   it('ParticipantId -> 表示名 のマップを作る (登録ユーザーとゲスト)', () => {
     const participants: Participant[] = [
-      { id: 'p1', userId: 'u1', guestName: null, guest: false },
-      { id: 'p2', userId: null, guestName: 'ゲスト花子', guest: true },
+      { id: 'p1', userId: 'u1', guestName: null, guest: false, status: 'ACTIVE' },
+      { id: 'p2', userId: null, guestName: 'ゲスト花子', guest: true, status: 'ACTIVE' },
     ]
     const userNames = new Map([['u1', '太郎']])
     const lookup = buildParticipantNameLookup(participants, userNames)

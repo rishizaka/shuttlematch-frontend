@@ -178,6 +178,16 @@ export const sessionApi = {
     request<void>(`/api/v1/sessions/${sessionId}/participants/${participantId}`, {
       method: 'DELETE',
     }),
+  /** 早退(在席状態を LEFT に)。 */
+  markParticipantLeft: (sessionId: string, participantId: string) =>
+    request<Session>(`/api/v1/sessions/${sessionId}/participants/${participantId}/leave`, {
+      method: 'POST',
+    }),
+  /** 復帰(在席状態を ACTIVE に)。 */
+  reactivateParticipant: (sessionId: string, participantId: string) =>
+    request<Session>(`/api/v1/sessions/${sessionId}/participants/${participantId}/reactivate`, {
+      method: 'POST',
+    }),
 }
 
 // ---- Match ----
@@ -197,5 +207,10 @@ export const matchApi = {
     request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches/sets`, {
       method: 'POST',
       body: JSON.stringify(setCount != null ? { setCount } : {}),
+    }),
+  /** 未開始セットを現在の在席者で再編成する(途中参加・早退の反映)。 */
+  replan: (sessionId: string) =>
+    request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches/replan`, {
+      method: 'POST',
     }),
 }

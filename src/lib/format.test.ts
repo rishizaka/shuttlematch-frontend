@@ -56,8 +56,8 @@ describe('shortId', () => {
 })
 
 describe('participantDisplayName', () => {
-  const guest: Participant = { id: 'p1', userId: null, guestName: '花子', guest: true }
-  const member: Participant = { id: 'p2', userId: 'u-100', guestName: null, guest: false }
+  const guest: Participant = { id: 'p1', userId: null, guestName: '花子', guest: true, status: 'ACTIVE' }
+  const member: Participant = { id: 'p2', userId: 'u-100', guestName: null, guest: false, status: 'ACTIVE' }
 
   it('ゲストは guestName を返す', () => {
     expect(participantDisplayName(guest)).toBe('花子')

@@ -4,6 +4,7 @@ import {
   useAddSets,
   useCircle,
   useMatches,
+  useReplanFutureSets,
   useSession,
   useStartSet,
   useUserNames,
@@ -32,8 +33,12 @@ function MatchesPage() {
   const { data: schedule, isLoading, isError, error } = useMatches(sessionId)
   const startSet = useStartSet(sessionId)
   const addSets = useAddSets(sessionId)
+  const replan = useReplanFutureSets(sessionId)
   const [filter, setFilter] = useState<Filter>('all')
   const [addCount, setAddCount] = useState(3)
+
+  // 早退者がいる、または在席者で未開始セットに一度も出ていない人がいる = 再編成の余地あり。
+  const hasLeftParticipant = (session?.participants ?? []).some((p) => p.status === 'LEFT')
 
   // 運営者(セッション作成者 or サークルの ORGANIZER)のみセット開始操作ができる。
   const isOrganizer = useMemo(() => {
@@ -184,6 +189,36 @@ function MatchesPage() {
                 {addSets.error instanceof Error
                   ? addSets.error.message
                   : 'セットの追加に失敗しました'}
+              </p>
+            ) : null}
+
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-3">
+              <p className="text-sm text-slate-600">
+                途中参加・早退があったら、未開始セットを現在の在席者で組み直せます。
+                {hasLeftParticipant ? (
+                  <span className="ml-1 font-medium text-emerald-700">
+                    早退者がいます。
+                  </span>
+                ) : null}
+                <span className="block text-xs text-slate-400">
+                  開始済みのセットはそのまま。人数が足りない場合はコート数を自動で減らします。
+                </span>
+              </p>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="sm:ml-auto"
+                onClick={() => replan.mutate()}
+                disabled={replan.isPending}
+              >
+                {replan.isPending ? '再編成中…' : '未開始セットを再編成'}
+              </Button>
+            </div>
+            {replan.isError ? (
+              <p className="mt-2 text-sm text-red-600">
+                {replan.error instanceof Error
+                  ? replan.error.message
+                  : '再編成に失敗しました'}
               </p>
             ) : null}
           </CardBody>
