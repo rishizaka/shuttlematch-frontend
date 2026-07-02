@@ -2,13 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   defaultSessionTitle,
   formatDateTime,
-  joinPolicyLabel,
-  memberRoleLabel,
   participantDisplayName,
   sessionStatusLabel,
   shortId,
   toOffsetDateTime,
-  visibilityLabel,
 } from './format'
 import type { Participant } from './types'
 
@@ -35,18 +32,6 @@ describe('ラベル変換', () => {
   it('セッションステータス', () => {
     expect(sessionStatusLabel('OPEN')).toBe('参加受付中')
     expect(sessionStatusLabel('GENERATED')).toBe('試合生成済み')
-  })
-  it('参加方式', () => {
-    expect(joinPolicyLabel('OPEN')).toBe('自由参加')
-    expect(joinPolicyLabel('APPROVAL')).toBe('承認制')
-  })
-  it('メンバー役割', () => {
-    expect(memberRoleLabel('ORGANIZER')).toBe('オーガナイザー')
-    expect(memberRoleLabel('PLAYER')).toBe('プレイヤー')
-  })
-  it('公開範囲', () => {
-    expect(visibilityLabel('PUBLIC')).toBe('公開')
-    expect(visibilityLabel('MEMBERS_ONLY')).toBe('メンバー限定')
   })
 })
 

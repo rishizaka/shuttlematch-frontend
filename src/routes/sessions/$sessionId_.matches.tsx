@@ -13,7 +13,6 @@ import {
 } from 'lucide-react'
 import {
   useAddSets,
-  useCircle,
   useCloseSession,
   useMatches,
   useRenameParticipant,
@@ -56,7 +55,6 @@ function MatchesPage() {
   const { sessionId } = Route.useParams()
   const { user } = useCurrentUser()
   const { data: session } = useSession(sessionId)
-  const { data: circle } = useCircle(session?.circleId)
   const { data: schedule, isLoading, isError, error } = useMatches(sessionId)
   const startSet = useStartSet(sessionId)
   const revertSet = useRevertSet(sessionId)
@@ -93,12 +91,11 @@ function MatchesPage() {
   const activeCount = (session?.participants ?? []).length - leftCount
   const hasLeftParticipant = leftCount > 0
 
-  // 運営者(セッション作成者 or サークルの ORGANIZER)のみセット開始操作ができる。
-  const isOrganizer = useMemo(() => {
-    if (!user || !session) return false
-    if (session.createdBy === user.id) return true
-    return !!circle?.members.some((m) => m.userId === user.id && m.role === 'ORGANIZER')
-  }, [user, session, circle])
+  // 運営者(ルームの作成者)のみセット開始などの操作ができる。
+  const isOrganizer = useMemo(
+    () => !!user && !!session && session.createdBy === user.id,
+    [user, session],
+  )
 
   const userIds = (session?.participants ?? [])
     .map((p) => p.userId)

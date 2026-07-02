@@ -1,21 +1,17 @@
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query'
 import {
-  circleApi,
   matchApi,
   sessionApi,
   userApi,
-  type AddMemberInput,
   type AddParticipantInput,
-  type CreateCircleInput,
   type CreateSessionInput,
   type CreateUserInput,
 } from '../lib/api'
-import { addCircleId, addSessionId } from '../lib/local-store'
+import { addSessionId } from '../lib/local-store'
 import type { SessionStatus, User } from '../lib/types'
 
 export const queryKeys = {
   user: (id: string) => ['user', id] as const,
-  circle: (id: string) => ['circle', id] as const,
   session: (id: string) => ['session', id] as const,
   matches: (id: string) => ['matches', id] as const,
   openSessions: (status: SessionStatus) => ['sessions', 'list', status] as const,
@@ -37,48 +33,7 @@ export function useCreateUser() {
   })
 }
 
-// ---- Circle ----
-
-export function useCircle(circleId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.circle(circleId ?? ''),
-    queryFn: () => circleApi.get(circleId as string),
-    enabled: !!circleId,
-  })
-}
-
-/** 複数 circle をまとめて取得する (ダッシュボード用)。 */
-export function useCircles(circleIds: string[]) {
-  return useQueries({
-    queries: circleIds.map((id) => ({
-      queryKey: queryKeys.circle(id),
-      queryFn: () => circleApi.get(id),
-    })),
-  })
-}
-
-export function useCreateCircle() {
-  return useMutation({
-    mutationFn: (input: CreateCircleInput) => circleApi.create(input),
-    onSuccess: (circle) => {
-      addCircleId(circle.id)
-    },
-  })
-}
-
-export function useAddMember(circleId: string) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: AddMemberInput) => circleApi.addMember(circleId, input),
-    onSuccess: (circle) => {
-      qc.setQueryData(queryKeys.circle(circleId), circle)
-    },
-  })
-}
-
-// ---- Join request (membership application) ----
-
-// ---- Session ----
+// ---- Session (room) ----
 
 export function useSession(sessionId: string | undefined) {
   return useQuery({
@@ -106,9 +61,9 @@ export function useSessions(sessionIds: string[]) {
   })
 }
 
-export function useCreateSession(circleId: string) {
+export function useCreateSession() {
   return useMutation({
-    mutationFn: (input: CreateSessionInput) => sessionApi.create(circleId, input),
+    mutationFn: (input: CreateSessionInput) => sessionApi.create(input),
     onSuccess: (session) => {
       addSessionId(session.id)
     },
@@ -128,14 +83,14 @@ export function useCloseSession(sessionId: string) {
 }
 
 /** かんたん作成。番号参加者+試合表まで作成し、識別子を localStore に保存する。 */
-export function useQuickCreateSession(circleId: string) {
+export function useQuickCreateSession() {
   return useMutation({
     mutationFn: (input: {
       title: string
       courtCount: number
       participantCount: number
       createdBy: string
-    }) => sessionApi.quickCreate(circleId, input),
+    }) => sessionApi.quickCreate(input),
     onSuccess: (session) => {
       addSessionId(session.id)
     },

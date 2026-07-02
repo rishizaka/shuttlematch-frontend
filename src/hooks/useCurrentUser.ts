@@ -1,11 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import {
-  getCircleIds,
-  getCurrentUser,
-  getSessionIds,
-  setCurrentUser,
-  subscribe,
-} from '../lib/local-store'
+import { getCurrentUser, getSessionIds, setCurrentUser, subscribe } from '../lib/local-store'
 import type { User } from '../lib/types'
 
 /**
@@ -25,11 +19,6 @@ export function useCurrentUser() {
     logout: () => setCurrentUser(null),
     isAuthenticated: user != null,
   }
-}
-
-/** 既知の circle ID 一覧を購読する。 */
-export function useKnownCircleIds(): string[] {
-  return useSyncExternalStore(subscribe, getCircleIds, () => [])
 }
 
 /** 既知の session ID 一覧を購読する。 */

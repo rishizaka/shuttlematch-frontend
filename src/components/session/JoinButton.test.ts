@@ -4,14 +4,12 @@ import type { Session } from '../../lib/types'
 
 const base: Session = {
   id: 's1',
-  circleId: 'c1',
   title: 'テスト',
   heldAt: '2026-06-30T10:00:00Z',
   location: null,
   capacity: null,
   courtCount: null,
   status: 'OPEN',
-  visibility: 'PUBLIC',
   createdBy: 'u1',
   participantCount: 0,
   participants: [],

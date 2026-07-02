@@ -14,7 +14,6 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionsSessionIdRouteImport } from './routes/sessions/$sessionId'
 import { Route as JoinSessionIdRouteImport } from './routes/join.$sessionId'
-import { Route as CirclesCircleIdRouteImport } from './routes/circles/$circleId'
 import { Route as SessionsSessionIdMatchesRouteImport } from './routes/sessions/$sessionId_.matches'
 import { Route as OrganizerSessionsNewRouteImport } from './routes/organizer/sessions.new'
 
@@ -43,11 +42,6 @@ const JoinSessionIdRoute = JoinSessionIdRouteImport.update({
   path: '/join/$sessionId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CirclesCircleIdRoute = CirclesCircleIdRouteImport.update({
-  id: '/circles/$circleId',
-  path: '/circles/$circleId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SessionsSessionIdMatchesRoute =
   SessionsSessionIdMatchesRouteImport.update({
     id: '/sessions/$sessionId_/matches',
@@ -64,7 +58,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/circles/$circleId': typeof CirclesCircleIdRoute
   '/join/$sessionId': typeof JoinSessionIdRoute
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/organizer/sessions/new': typeof OrganizerSessionsNewRoute
@@ -74,7 +67,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/circles/$circleId': typeof CirclesCircleIdRoute
   '/join/$sessionId': typeof JoinSessionIdRoute
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/organizer/sessions/new': typeof OrganizerSessionsNewRoute
@@ -85,7 +77,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/circles/$circleId': typeof CirclesCircleIdRoute
   '/join/$sessionId': typeof JoinSessionIdRoute
   '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/organizer/sessions/new': typeof OrganizerSessionsNewRoute
@@ -97,7 +88,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
-    | '/circles/$circleId'
     | '/join/$sessionId'
     | '/sessions/$sessionId'
     | '/organizer/sessions/new'
@@ -107,7 +97,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
-    | '/circles/$circleId'
     | '/join/$sessionId'
     | '/sessions/$sessionId'
     | '/organizer/sessions/new'
@@ -117,7 +106,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
-    | '/circles/$circleId'
     | '/join/$sessionId'
     | '/sessions/$sessionId'
     | '/organizer/sessions/new'
@@ -128,7 +116,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
-  CirclesCircleIdRoute: typeof CirclesCircleIdRoute
   JoinSessionIdRoute: typeof JoinSessionIdRoute
   SessionsSessionIdRoute: typeof SessionsSessionIdRoute
   OrganizerSessionsNewRoute: typeof OrganizerSessionsNewRoute
@@ -172,13 +159,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinSessionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/circles/$circleId': {
-      id: '/circles/$circleId'
-      path: '/circles/$circleId'
-      fullPath: '/circles/$circleId'
-      preLoaderRoute: typeof CirclesCircleIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/sessions/$sessionId_/matches': {
       id: '/sessions/$sessionId_/matches'
       path: '/sessions/$sessionId/matches'
@@ -200,7 +180,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
-  CirclesCircleIdRoute: CirclesCircleIdRoute,
   JoinSessionIdRoute: JoinSessionIdRoute,
   SessionsSessionIdRoute: SessionsSessionIdRoute,
   OrganizerSessionsNewRoute: OrganizerSessionsNewRoute,

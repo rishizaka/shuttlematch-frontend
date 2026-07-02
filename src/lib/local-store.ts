@@ -12,7 +12,6 @@ import type { User } from './types'
 
 const KEYS = {
   currentUser: 'shuttlematch.currentUser',
-  circleIds: 'shuttlematch.circleIds',
   sessionIds: 'shuttlematch.sessionIds',
 } as const
 
@@ -39,7 +38,6 @@ function readRaw<T>(key: string, fallback: T): T {
 
 interface Cache {
   currentUser: User | null
-  circleIds: string[]
   sessionIds: string[]
 }
 
@@ -49,7 +47,6 @@ function ensureCache(): Cache {
   if (cache == null) {
     cache = {
       currentUser: readRaw<User | null>(KEYS.currentUser, null),
-      circleIds: readRaw<string[]>(KEYS.circleIds, []),
       sessionIds: readRaw<string[]>(KEYS.sessionIds, []),
     }
   }
@@ -79,26 +76,6 @@ export function getCurrentUser(): User | null {
 export function setCurrentUser(user: User | null) {
   ensureCache().currentUser = user
   persist(KEYS.currentUser, user)
-}
-
-// ---- known circle ids ----
-
-export function getCircleIds(): string[] {
-  return ensureCache().circleIds
-}
-
-export function addCircleId(id: string) {
-  const c = ensureCache()
-  if (!c.circleIds.includes(id)) {
-    c.circleIds = [id, ...c.circleIds]
-    persist(KEYS.circleIds, c.circleIds)
-  }
-}
-
-export function removeCircleId(id: string) {
-  const c = ensureCache()
-  c.circleIds = c.circleIds.filter((x) => x !== id)
-  persist(KEYS.circleIds, c.circleIds)
 }
 
 // ---- known session ids ----

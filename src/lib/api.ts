@@ -1,13 +1,4 @@
-import type {
-  Circle,
-  JoinPolicy,
-  MatchSchedule,
-  MemberRole,
-  Session,
-  SessionStatus,
-  SessionVisibility,
-  User,
-} from './types'
+import type { MatchSchedule, Session, SessionStatus, User } from './types'
 
 // バックエンドのベース URL。本番では VITE_API_BASE_URL を設定する。
 export const API_BASE_URL: string =
@@ -89,32 +80,7 @@ export const authApi = {
     }),
 }
 
-// ---- Circle ----
-
-export interface CreateCircleInput {
-  name: string
-  description?: string | null
-  joinPolicy: JoinPolicy
-  createdBy: string
-}
-
-export interface AddMemberInput {
-  userId: string
-  role?: MemberRole
-}
-
-export const circleApi = {
-  create: (input: CreateCircleInput) =>
-    request<Circle>('/api/v1/circles', { method: 'POST', body: JSON.stringify(input) }),
-  get: (circleId: string) => request<Circle>(`/api/v1/circles/${circleId}`),
-  addMember: (circleId: string, input: AddMemberInput) =>
-    request<Circle>(`/api/v1/circles/${circleId}/members`, {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }),
-}
-
-// ---- Session ----
+// ---- Room (session) ----
 
 export interface CreateSessionInput {
   title: string
@@ -123,7 +89,6 @@ export interface CreateSessionInput {
   location?: string | null
   capacity?: number | null
   courtCount?: number | null
-  visibility?: SessionVisibility
   createdBy: string
 }
 
@@ -134,21 +99,23 @@ export interface AddParticipantInput {
 }
 
 export const sessionApi = {
-  create: (circleId: string, input: CreateSessionInput) =>
-    request<Session>(`/api/v1/circles/${circleId}/sessions`, {
+  create: (input: CreateSessionInput) =>
+    request<Session>('/api/v1/sessions', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
-  /** 募集中などのステータスでセッション一覧を取得する(公開)。 */
+  /** ステータスでルーム一覧を取得する(公開)。 */
   list: (status: SessionStatus = 'OPEN') =>
     request<Session[]>(`/api/v1/sessions?status=${status}`),
   get: (sessionId: string) => request<Session>(`/api/v1/sessions/${sessionId}`),
   /** かんたん作成: 参加人数・コート数・タイトルのみで、番号参加者+試合表まで作成。 */
-  quickCreate: (
-    circleId: string,
-    input: { title: string; courtCount: number; participantCount: number; createdBy: string },
-  ) =>
-    request<Session>(`/api/v1/circles/${circleId}/sessions/quick`, {
+  quickCreate: (input: {
+    title: string
+    courtCount: number
+    participantCount: number
+    createdBy: string
+  }) =>
+    request<Session>('/api/v1/sessions/quick', {
       method: 'POST',
       body: JSON.stringify(input),
     }),

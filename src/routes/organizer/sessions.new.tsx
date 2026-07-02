@@ -8,17 +8,13 @@ import { Button } from '../../components/ui/Button'
 import { Field, Input } from '../../components/ui/Field'
 
 export const Route = createFileRoute('/organizer/sessions/new')({
-  validateSearch: (search: Record<string, unknown>): { circleId: string } => ({
-    circleId: typeof search.circleId === 'string' ? search.circleId : '',
-  }),
   component: NewSessionPage,
 })
 
 function NewSessionPage() {
-  const { circleId } = Route.useSearch()
   const router = useRouter()
   const { user } = useCurrentUser()
-  const create = useQuickCreateSession(circleId)
+  const create = useQuickCreateSession()
 
   const [title, setTitle] = useState(defaultSessionTitle())
   const [participantCount, setParticipantCount] = useState('')
@@ -57,18 +53,6 @@ function NewSessionPage() {
           })
         },
       },
-    )
-  }
-
-  if (!circleId) {
-    return (
-      <Card>
-        <CardBody>
-          <p className="text-sm text-red-600">
-            サークルが指定されていません。サークル画面から「セッションを作成」を開いてください。
-          </p>
-        </CardBody>
-      </Card>
     )
   }
 

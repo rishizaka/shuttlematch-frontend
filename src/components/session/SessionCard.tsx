@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Calendar, Lock, MapPin, Users } from 'lucide-react'
+import { Calendar, MapPin, Users } from 'lucide-react'
 import type { Session } from '../../lib/types'
 import { formatDateTime, sessionStatusLabel } from '../../lib/format'
 import { Badge, statusTone } from '../ui/Badge'
@@ -14,12 +14,6 @@ export function SessionCard({ session }: { session: Session }) {
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-semibold text-slate-900">{session.title}</h3>
         <div className="flex shrink-0 items-center gap-1.5">
-          {session.visibility === 'MEMBERS_ONLY' ? (
-            <Badge tone="amber">
-              <Lock className="mr-0.5 inline h-3 w-3" aria-hidden />
-              メンバー限定
-            </Badge>
-          ) : null}
           <Badge tone={statusTone(session.status)}>{sessionStatusLabel(session.status)}</Badge>
         </div>
       </div>

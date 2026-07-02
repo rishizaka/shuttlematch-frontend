@@ -1,10 +1,4 @@
-import type {
-  JoinPolicy,
-  MemberRole,
-  Participant,
-  SessionStatus,
-  SessionVisibility,
-} from './types'
+import type { Participant, SessionStatus } from './types'
 
 /** ISO 日時を日本時間で「2026/06/30 19:00」形式に整形する。 */
 export function formatDateTime(iso: string): string {
@@ -47,33 +41,6 @@ const SESSION_STATUS_LABELS: Record<SessionStatus, string> = {
 
 export function sessionStatusLabel(status: SessionStatus): string {
   return SESSION_STATUS_LABELS[status] ?? status
-}
-
-const VISIBILITY_LABELS: Record<SessionVisibility, string> = {
-  PUBLIC: '公開',
-  MEMBERS_ONLY: 'メンバー限定',
-}
-
-export function visibilityLabel(visibility: SessionVisibility): string {
-  return VISIBILITY_LABELS[visibility] ?? visibility
-}
-
-const JOIN_POLICY_LABELS: Record<JoinPolicy, string> = {
-  OPEN: '自由参加',
-  APPROVAL: '承認制',
-}
-
-export function joinPolicyLabel(policy: JoinPolicy): string {
-  return JOIN_POLICY_LABELS[policy] ?? policy
-}
-
-const MEMBER_ROLE_LABELS: Record<MemberRole, string> = {
-  ORGANIZER: 'オーガナイザー',
-  PLAYER: 'プレイヤー',
-}
-
-export function memberRoleLabel(role: MemberRole): string {
-  return MEMBER_ROLE_LABELS[role] ?? role
 }
 
 /**

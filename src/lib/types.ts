@@ -1,30 +1,12 @@
 // バックエンド (shuttlematch-backend) の REST レスポンスに対応するドメイン型。
 // 値はバックエンドの enum 名 (大文字) をそのまま受け取る。
 
-export type MemberRole = 'ORGANIZER' | 'PLAYER'
-export type JoinPolicy = 'OPEN' | 'APPROVAL'
 export type SessionStatus = 'PREPARING' | 'OPEN' | 'GENERATED' | 'CLOSED'
-export type SessionVisibility = 'PUBLIC' | 'MEMBERS_ONLY'
 
 export interface User {
   id: string
   name: string
   email: string
-}
-
-export interface Member {
-  userId: string
-  role: MemberRole
-}
-
-export interface Circle {
-  id: string
-  name: string
-  description: string | null
-  inviteCode: string
-  joinPolicy: JoinPolicy
-  createdBy: string
-  members: Member[]
 }
 
 export type ParticipantStatus = 'ACTIVE' | 'LEFT'
@@ -42,7 +24,6 @@ export interface Participant {
 
 export interface Session {
   id: string
-  circleId: string
   title: string
   /** ISO-8601 (UTC, 末尾 Z)。 */
   heldAt: string
@@ -50,7 +31,6 @@ export interface Session {
   capacity: number | null
   courtCount: number | null
   status: SessionStatus
-  visibility: SessionVisibility
   createdBy: string
   participantCount: number
   participants: Participant[]
