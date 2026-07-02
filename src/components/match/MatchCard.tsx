@@ -3,7 +3,7 @@ import { participantDisplayName } from '../../lib/format'
 
 /**
  * ParticipantId -> 表示名 のルックアップを作る。
- * 試合のペアは ParticipantId を参照するため、セッションの参加者一覧と
+ * 試合のペアは ParticipantId を参照するため、ルームの参加者一覧と
  * userId -> 名前 のマップから解決する。
  */
 export function buildParticipantNameLookup(

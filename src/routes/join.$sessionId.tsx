@@ -10,7 +10,7 @@ export const Route = createFileRoute('/join/$sessionId')({ component: JoinPage }
 
 /**
  * 招待リンク用の公開参加ページ。ログイン不要で、ニックネームを入力すると
- * ゲストとしてセッションに参加できる。
+ * ゲストとしてルームに参加できる。
  */
 function JoinPage() {
   const { sessionId } = Route.useParams()
@@ -28,7 +28,7 @@ function JoinPage() {
 
   if (isLoading) return <LoadingBlock />
   if (isError || !session) {
-    return <ErrorBlock message="セッションが見つかりません。招待リンクを確認してください。" />
+    return <ErrorBlock message="ルームが見つかりません。招待リンクを確認してください。" />
   }
 
   const acceptsJoin = session.status === 'OPEN' || session.status === 'PREPARING'
@@ -58,7 +58,7 @@ function JoinPage() {
             </div>
           ) : !acceptsJoin ? (
             <p className="text-sm text-slate-500">
-              このセッションは現在参加を受け付けていません。
+              このルームは現在参加を受け付けていません。
             </p>
           ) : (
             <form onSubmit={submit} className="space-y-4">

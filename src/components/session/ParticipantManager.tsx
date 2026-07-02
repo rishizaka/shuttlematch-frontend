@@ -14,7 +14,7 @@ import { ParticipantList } from './ParticipantList'
 
 /**
  * オーガナイザー向けの参加者管理(番号追加・削除/早退・名前変更)。
- * セッション詳細にインラインで埋め込んで使う。
+ * ルーム詳細にインラインで埋め込んで使う。
  * 生成前は削除、生成後(generated)は早退/復帰で在席状態を切り替える。
  */
 export function ParticipantManager({

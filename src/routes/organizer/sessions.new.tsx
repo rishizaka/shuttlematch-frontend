@@ -60,7 +60,7 @@ function NewSessionPage() {
     <div className="mx-auto max-w-lg">
       <Card>
         <CardHeader
-          title="セッションを作成"
+          title="ルームを作成"
           description="人数とコート数を入れるだけ。番号で試合表を作り、名前は後から付けられます。"
         />
         <CardBody>

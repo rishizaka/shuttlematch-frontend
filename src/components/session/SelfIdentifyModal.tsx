@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Participant } from '../../lib/types'
 import { participantDisplayName } from '../../lib/format'
 import { Button } from '../ui/Button'
@@ -6,23 +6,35 @@ import { Button } from '../ui/Button'
 /**
  * 試合表を開いたときに「あなたの番号とニックネームは？」と尋ねるモーダル。
  * 番号(参加者)を選んでニックネームを入力すると、その参加者の名前を更新する。
+ * 自己申告するまで試合表は見せない想定のため、閉じる手段はキャンセル(戻る)のみ。
  */
 export function SelfIdentifyModal({
   participants,
   names,
   submitting,
   onSubmit,
-  onSkip,
+  onCancel,
 }: {
   participants: Participant[]
   names?: ReadonlyMap<string, string>
   submitting: boolean
   onSubmit: (participantId: string, nickname: string) => void
-  onSkip: () => void
+  /** キャンセル時のハンドラ。呼び出し側でルーム詳細へ戻す。 */
+  onCancel: () => void
 }) {
   const [numberStr, setNumberStr] = useState('')
   const [nickname, setNickname] = useState('')
   const [attempted, setAttempted] = useState(false)
+
+  // 表示中は背面ページのスクロールをロックする。
+  // スクロール(特に macOS のバウンス)でオーバーレイの外に背面が見えるのを防ぐ。
+  useEffect(() => {
+    const { overflow } = document.body.style
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = overflow
+    }
+  }, [])
 
   // 番号(index+1)がまだ既定名のままなら空き、名前が付いていたら使用中。
   const isTaken = (p: Participant, index: number) =>
@@ -54,7 +66,7 @@ export function SelfIdentifyModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-900/40 p-4"
       role="dialog"
       aria-modal="true"
       aria-label="自己紹介"
@@ -102,8 +114,8 @@ export function SelfIdentifyModal({
           <Button className="flex-1" onClick={submit} disabled={submitting}>
             {submitting ? '登録中…' : '決定'}
           </Button>
-          <Button variant="ghost" onClick={onSkip} disabled={submitting}>
-            あとで
+          <Button variant="ghost" onClick={onCancel} disabled={submitting}>
+            キャンセル
           </Button>
         </div>
       </div>

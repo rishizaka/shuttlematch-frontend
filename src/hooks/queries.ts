@@ -43,7 +43,7 @@ export function useSession(sessionId: string | undefined) {
   })
 }
 
-/** 募集中などのステータスのセッション一覧(公開・トップページ用)。 */
+/** 募集中などのステータスのルーム一覧(公開・トップページ用)。 */
 export function useSessionList(status: SessionStatus = 'OPEN') {
   return useQuery({
     queryKey: queryKeys.openSessions(status),
@@ -70,7 +70,7 @@ export function useCreateSession() {
   })
 }
 
-/** セッション終了 (運営者操作)。終了済みにして募集中一覧からも外す。 */
+/** ルーム終了 (運営者操作)。終了済みにして募集中一覧からも外す。 */
 export function useCloseSession(sessionId: string) {
   const qc = useQueryClient()
   return useMutation({

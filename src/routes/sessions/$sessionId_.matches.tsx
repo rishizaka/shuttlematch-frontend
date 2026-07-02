@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import {
   Archive,
@@ -23,11 +23,7 @@ import {
   useUserNames,
 } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
-import {
-  getSelfParticipant,
-  setSelfParticipant,
-  skipSelfParticipant,
-} from '../../lib/local-store'
+import { getSelfParticipant, setSelfParticipant } from '../../lib/local-store'
 import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
@@ -53,6 +49,7 @@ type Filter = 'all' | 'mine'
 
 function MatchesPage() {
   const { sessionId } = Route.useParams()
+  const navigate = useNavigate()
   const { user } = useCurrentUser()
   const { data: session } = useSession(sessionId)
   const { data: schedule, isLoading, isError, error } = useMatches(sessionId)
@@ -125,17 +122,20 @@ function MatchesPage() {
   }, [session, user, selfParticipantId])
 
   // マウント後に localStorage を読み、未申告なら自己紹介モーダルを出す(SSR不一致を避けるため effect 内で判定)。
+  // 運営者と、参加者に紐付いた登録ユーザーは申告不要なので対象外。
   useEffect(() => {
     if (!schedule || closed) return
-    const participantCount = session?.participants.length ?? 0
-    if (participantCount === 0) return
+    const participants = session?.participants ?? []
+    if (participants.length === 0) return
+    if (isOrganizer) return
+    if (user && participants.some((p) => p.userId === user.id)) return
     const stored = getSelfParticipant(sessionId)
     if (stored?.participantId) {
       setSelfParticipantId(stored.participantId)
       return
     }
-    if (!stored) setShowSelfModal(true)
-  }, [sessionId, schedule, closed, session])
+    setShowSelfModal(true)
+  }, [sessionId, schedule, closed, session, user, isOrganizer])
 
   // アクティブ(進行中)なセット = 最も新しい開始時刻を持つセット。
   const activeSetNumber = useMemo(() => {
@@ -203,9 +203,9 @@ function MatchesPage() {
               },
             )
           }
-          onSkip={() => {
-            skipSelfParticipant(sessionId)
-            setShowSelfModal(false)
+          onCancel={() => {
+            // 申告しないなら試合表は見せず、ルーム詳細へ戻す。
+            navigate({ to: '/sessions/$sessionId', params: { sessionId } })
           }}
         />
       ) : null}
@@ -217,7 +217,7 @@ function MatchesPage() {
             params={{ sessionId }}
             className="text-sm text-emerald-600 hover:underline"
           >
-            ← セッションへ戻る
+            ← ルームへ戻る
           </Link>
           <div className="mt-1 flex items-center gap-2">
             <h1 className="text-2xl font-bold text-slate-900">試合表</h1>
@@ -437,7 +437,7 @@ function MatchesPage() {
         />
       )}
 
-      {/* セッションの終了は最終操作なので、ページ最下部に控えめに置く。 */}
+      {/* ルームの終了は最終操作なので、ページ最下部に控えめに置く。 */}
       {isOrganizer && !closed ? (
         <div className="border-t border-slate-100 pt-6">
           {confirmingClose ? (
@@ -476,7 +476,7 @@ function MatchesPage() {
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 transition hover:text-red-600"
               >
                 <Archive className="h-4 w-4" />
-                セッションを終了
+                ルームを終了
               </button>
             </div>
           )}

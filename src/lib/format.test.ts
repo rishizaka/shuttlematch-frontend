@@ -29,7 +29,7 @@ describe('toOffsetDateTime', () => {
 })
 
 describe('ラベル変換', () => {
-  it('セッションステータス', () => {
+  it('ルームステータス', () => {
     expect(sessionStatusLabel('OPEN')).toBe('参加受付中')
     expect(sessionStatusLabel('GENERATED')).toBe('試合生成済み')
   })

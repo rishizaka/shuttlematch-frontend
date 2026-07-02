@@ -67,7 +67,7 @@ export function shortId(id: string): string {
 }
 
 /**
- * セッションタイトルの初期値。今日の日付 + 時間帯ラベル。
+ * ルームタイトルの初期値。今日の日付 + 時間帯ラベル。
  * 〜15時: 昼練 / 15時台: 夕練 / 16時〜: 夜練。
  */
 export function defaultSessionTitle(now: Date = new Date()): string {

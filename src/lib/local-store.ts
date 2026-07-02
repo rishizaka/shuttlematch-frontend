@@ -99,7 +99,7 @@ export function removeSessionId(id: string) {
 }
 
 // ---- self participant (試合表での自己申告) ----
-// セッションごとに「自分が何番か(＝ニックネーム入力済み)」を保存する。
+// ルームごとに「自分が何番か(＝ニックネーム入力済み)」を保存する。
 // これがあれば試合表の自己申告モーダルは出さない。skipped は「あとで」を選んだ状態。
 
 const SELF_PREFIX = 'shuttlematch.self.'

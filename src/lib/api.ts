@@ -100,14 +100,14 @@ export interface AddParticipantInput {
 
 export const sessionApi = {
   create: (input: CreateSessionInput) =>
-    request<Session>('/api/v1/sessions', {
+    request<Session>('/api/v1/rooms', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
   /** ステータスでルーム一覧を取得する(公開)。 */
   list: (status: SessionStatus = 'OPEN') =>
-    request<Session[]>(`/api/v1/sessions?status=${status}`),
-  get: (sessionId: string) => request<Session>(`/api/v1/sessions/${sessionId}`),
+    request<Session[]>(`/api/v1/rooms?status=${status}`),
+  get: (sessionId: string) => request<Session>(`/api/v1/rooms/${sessionId}`),
   /** かんたん作成: 参加人数・コート数・タイトルのみで、番号参加者+試合表まで作成。 */
   quickCreate: (input: {
     title: string
@@ -115,36 +115,36 @@ export const sessionApi = {
     participantCount: number
     createdBy: string
   }) =>
-    request<Session>('/api/v1/sessions/quick', {
+    request<Session>('/api/v1/rooms/quick', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
   /** 参加者の名前(ニックネーム)を変更する。 */
   renameParticipant: (sessionId: string, participantId: string, name: string) =>
-    request<Session>(`/api/v1/sessions/${sessionId}/participants/${participantId}/rename`, {
+    request<Session>(`/api/v1/rooms/${sessionId}/participants/${participantId}/rename`, {
       method: 'POST',
       body: JSON.stringify({ name }),
     }),
-  /** セッションを終了する(終了済みとして履歴に残す)。 */
+  /** ルームを終了する(終了済みとして履歴に残す)。 */
   close: (sessionId: string) =>
-    request<Session>(`/api/v1/sessions/${sessionId}/close`, { method: 'POST' }),
+    request<Session>(`/api/v1/rooms/${sessionId}/close`, { method: 'POST' }),
   addParticipant: (sessionId: string, input: AddParticipantInput) =>
-    request<Session>(`/api/v1/sessions/${sessionId}/participants`, {
+    request<Session>(`/api/v1/rooms/${sessionId}/participants`, {
       method: 'POST',
       body: JSON.stringify(input),
     }),
   removeParticipant: (sessionId: string, participantId: string) =>
-    request<void>(`/api/v1/sessions/${sessionId}/participants/${participantId}`, {
+    request<void>(`/api/v1/rooms/${sessionId}/participants/${participantId}`, {
       method: 'DELETE',
     }),
   /** 早退(在席状態を LEFT に)。 */
   markParticipantLeft: (sessionId: string, participantId: string) =>
-    request<Session>(`/api/v1/sessions/${sessionId}/participants/${participantId}/leave`, {
+    request<Session>(`/api/v1/rooms/${sessionId}/participants/${participantId}/leave`, {
       method: 'POST',
     }),
   /** 復帰(在席状態を ACTIVE に)。 */
   reactivateParticipant: (sessionId: string, participantId: string) =>
-    request<Session>(`/api/v1/sessions/${sessionId}/participants/${participantId}/reactivate`, {
+    request<Session>(`/api/v1/rooms/${sessionId}/participants/${participantId}/reactivate`, {
       method: 'POST',
     }),
 }
@@ -153,28 +153,28 @@ export const sessionApi = {
 
 export const matchApi = {
   generate: (sessionId: string, matchCount?: number) =>
-    request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches/generate`, {
+    request<MatchSchedule>(`/api/v1/rooms/${sessionId}/matches/generate`, {
       method: 'POST',
       body: JSON.stringify(matchCount != null ? { matchCount } : {}),
     }),
-  get: (sessionId: string) => request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches`),
+  get: (sessionId: string) => request<MatchSchedule>(`/api/v1/rooms/${sessionId}/matches`),
   startSet: (sessionId: string, setNumber: number) =>
-    request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches/sets/${setNumber}/start`, {
+    request<MatchSchedule>(`/api/v1/rooms/${sessionId}/matches/sets/${setNumber}/start`, {
       method: 'POST',
     }),
   /** 進行中セットを開始前に戻す(開始時刻を消す)。 */
   revertSet: (sessionId: string, setNumber: number) =>
-    request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches/sets/${setNumber}/revert`, {
+    request<MatchSchedule>(`/api/v1/rooms/${sessionId}/matches/sets/${setNumber}/revert`, {
       method: 'POST',
     }),
   addSets: (sessionId: string, setCount?: number) =>
-    request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches/sets`, {
+    request<MatchSchedule>(`/api/v1/rooms/${sessionId}/matches/sets`, {
       method: 'POST',
       body: JSON.stringify(setCount != null ? { setCount } : {}),
     }),
   /** 未開始セットを現在の在席者で再編成する(途中参加・早退の反映)。 */
   replan: (sessionId: string) =>
-    request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches/replan`, {
+    request<MatchSchedule>(`/api/v1/rooms/${sessionId}/matches/replan`, {
       method: 'POST',
     }),
 }

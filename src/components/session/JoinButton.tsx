@@ -47,7 +47,7 @@ export function JoinButton({ session, user }: { session: Session; user: User | n
         参加する
       </Button>
       {locked ? (
-        <p className="text-xs text-slate-500">このセッションは受付を終了しています。</p>
+        <p className="text-xs text-slate-500">このルームは受付を終了しています。</p>
       ) : null}
       {add.isError ? (
         <p className="text-xs text-red-600">{(add.error as Error).message}</p>
