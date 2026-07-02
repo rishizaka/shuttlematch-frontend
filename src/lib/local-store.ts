@@ -3,7 +3,7 @@ import type { User } from './types'
 // MVP の暫定ストア。
 // バックエンドにはまだ認証 (Cognito) と一覧取得エンドポイントが無いため、
 // ・現在のユーザー identity
-// ・作成/参加した circle / session の ID 一覧
+// ・作成/参加した circle / room の ID 一覧
 // をブラウザの localStorage に保持してダッシュボードを成立させる。
 // 認証導入後は currentUser を Cognito 由来に、ID 一覧をサーバの一覧 API に置き換える。
 //
@@ -12,7 +12,7 @@ import type { User } from './types'
 
 const KEYS = {
   currentUser: 'shuttlematch.currentUser',
-  sessionIds: 'shuttlematch.sessionIds',
+  roomIds: 'shuttlematch.roomIds',
 } as const
 
 type Listener = () => void
@@ -38,7 +38,7 @@ function readRaw<T>(key: string, fallback: T): T {
 
 interface Cache {
   currentUser: User | null
-  sessionIds: string[]
+  roomIds: string[]
 }
 
 let cache: Cache | null = null
@@ -47,7 +47,7 @@ function ensureCache(): Cache {
   if (cache == null) {
     cache = {
       currentUser: readRaw<User | null>(KEYS.currentUser, null),
-      sessionIds: readRaw<string[]>(KEYS.sessionIds, []),
+      roomIds: readRaw<string[]>(KEYS.roomIds, []),
     }
   }
   return cache
@@ -78,24 +78,24 @@ export function setCurrentUser(user: User | null) {
   persist(KEYS.currentUser, user)
 }
 
-// ---- known session ids ----
+// ---- known room ids ----
 
-export function getSessionIds(): string[] {
-  return ensureCache().sessionIds
+export function getRoomIds(): string[] {
+  return ensureCache().roomIds
 }
 
-export function addSessionId(id: string) {
+export function addRoomId(id: string) {
   const c = ensureCache()
-  if (!c.sessionIds.includes(id)) {
-    c.sessionIds = [id, ...c.sessionIds]
-    persist(KEYS.sessionIds, c.sessionIds)
+  if (!c.roomIds.includes(id)) {
+    c.roomIds = [id, ...c.roomIds]
+    persist(KEYS.roomIds, c.roomIds)
   }
 }
 
-export function removeSessionId(id: string) {
+export function removeRoomId(id: string) {
   const c = ensureCache()
-  c.sessionIds = c.sessionIds.filter((x) => x !== id)
-  persist(KEYS.sessionIds, c.sessionIds)
+  c.roomIds = c.roomIds.filter((x) => x !== id)
+  persist(KEYS.roomIds, c.roomIds)
 }
 
 // ---- self participant (試合表での自己申告) ----
@@ -109,20 +109,20 @@ export interface SelfParticipant {
   skipped?: boolean
 }
 
-export function getSelfParticipant(sessionId: string): SelfParticipant | null {
-  return readRaw<SelfParticipant | null>(SELF_PREFIX + sessionId, null)
+export function getSelfParticipant(roomId: string): SelfParticipant | null {
+  return readRaw<SelfParticipant | null>(SELF_PREFIX + roomId, null)
 }
 
-export function setSelfParticipant(sessionId: string, participantId: string) {
+export function setSelfParticipant(roomId: string, participantId: string) {
   if (isBrowser()) {
-    window.localStorage.setItem(SELF_PREFIX + sessionId, JSON.stringify({ participantId }))
+    window.localStorage.setItem(SELF_PREFIX + roomId, JSON.stringify({ participantId }))
   }
   emit()
 }
 
-export function skipSelfParticipant(sessionId: string) {
+export function skipSelfParticipant(roomId: string) {
   if (isBrowser()) {
-    window.localStorage.setItem(SELF_PREFIX + sessionId, JSON.stringify({ skipped: true }))
+    window.localStorage.setItem(SELF_PREFIX + roomId, JSON.stringify({ skipped: true }))
   }
   emit()
 }

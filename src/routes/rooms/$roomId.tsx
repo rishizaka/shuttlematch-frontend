@@ -1,48 +1,48 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { Calendar, ListChecks, MapPin, Users } from 'lucide-react'
-import { useSession, useUserNames } from '../../hooks/queries'
+import { useRoom, useUserNames } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
-import { addSessionId } from '../../lib/local-store'
-import type { Session } from '../../lib/types'
-import { formatDateTime, sessionStatusLabel } from '../../lib/format'
+import { addRoomId } from '../../lib/local-store'
+import type { Room } from '../../lib/types'
+import { formatDateTime, roomStatusLabel } from '../../lib/format'
 import { Card, CardBody, CardHeader } from '../../components/ui/Card'
 import { Badge, statusTone } from '../../components/ui/Badge'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
-import { ParticipantList } from '../../components/session/ParticipantList'
-import { ParticipantManager } from '../../components/session/ParticipantManager'
-import { ParticipationPanel } from '../../components/session/ParticipationPanel'
+import { ParticipantList } from '../../components/room/ParticipantList'
+import { ParticipantManager } from '../../components/room/ParticipantManager'
+import { ParticipationPanel } from '../../components/room/ParticipationPanel'
 import { GenerateMatchesButton } from '../../components/match/GenerateMatchesButton'
 
-export const Route = createFileRoute('/sessions/$sessionId')({ component: SessionPage })
+export const Route = createFileRoute('/rooms/$roomId')({ component: RoomPage })
 
-function isOrganizer(session: Session, userId: string | undefined): boolean {
+function isOrganizer(room: Room, userId: string | undefined): boolean {
   // ルームは作成者(オーナー)のみが運営操作できる。
-  return !!userId && session.createdBy === userId
+  return !!userId && room.createdBy === userId
 }
 
-function SessionPage() {
-  const { sessionId } = Route.useParams()
+function RoomPage() {
+  const { roomId } = Route.useParams()
   const { user } = useCurrentUser()
-  const { data: session, isLoading, isError, error } = useSession(sessionId)
+  const { data: room, isLoading, isError, error } = useRoom(roomId)
 
   useEffect(() => {
-    if (session) addSessionId(session.id)
-  }, [session])
+    if (room) addRoomId(room.id)
+  }, [room])
 
-  const userIds = (session?.participants ?? [])
+  const userIds = (room?.participants ?? [])
     .map((p) => p.userId)
     .filter((id): id is string => !!id)
   const names = useUserNames(userIds)
 
   if (isLoading) return <LoadingBlock />
-  if (isError || !session) {
+  if (isError || !room) {
     return <ErrorBlock message={error instanceof Error ? error.message : 'ルームを取得できませんでした'} />
   }
 
-  const organizer = isOrganizer(session, user?.id)
-  const generated = session.status === 'GENERATED'
-  const closed = session.status === 'CLOSED'
+  const organizer = isOrganizer(room, user?.id)
+  const generated = room.status === 'GENERATED'
+  const closed = room.status === 'CLOSED'
 
   return (
     <div className="space-y-6">
@@ -51,12 +51,12 @@ function SessionPage() {
           <Link to="/" className="text-sm text-emerald-600 hover:underline">
             ← ルーム一覧へ
           </Link>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900">{session.title}</h1>
+          <h1 className="mt-1 text-2xl font-bold text-slate-900">{room.title}</h1>
           <div className="mt-2 flex items-center gap-2">
-            <Badge tone={statusTone(session.status)}>{sessionStatusLabel(session.status)}</Badge>
+            <Badge tone={statusTone(room.status)}>{roomStatusLabel(room.status)}</Badge>
           </div>
         </div>
-        <ParticipationPanel session={session} user={user} />
+        <ParticipationPanel room={room} user={user} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -67,18 +67,18 @@ function SessionPage() {
               <dl className="space-y-2 text-sm text-slate-700">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-slate-400" aria-hidden />
-                  {formatDateTime(session.heldAt)}
+                  {formatDateTime(room.heldAt)}
                 </div>
-                {session.location ? (
+                {room.location ? (
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-slate-400" aria-hidden />
-                    {session.location}
+                    {room.location}
                   </div>
                 ) : null}
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-slate-400" aria-hidden />
-                  参加 {session.participantCount}
-                  {session.capacity ? ` / ${session.capacity}` : ''} 名
+                  参加 {room.participantCount}
+                  {room.capacity ? ` / ${room.capacity}` : ''} 名
                 </div>
               </dl>
             </CardBody>
@@ -91,8 +91,8 @@ function SessionPage() {
                 action={
                   generated ? (
                     <Link
-                      to="/sessions/$sessionId/matches"
-                      params={{ sessionId: session.id }}
+                      to="/rooms/$roomId/matches"
+                      params={{ roomId: room.id }}
                       search={{ openExternalBrowser: 1 }}
                       className="inline-flex items-center gap-1 text-sm text-emerald-600 hover:underline"
                     >
@@ -109,7 +109,7 @@ function SessionPage() {
                   <p className="text-sm text-slate-600">まだ試合は生成されていません。</p>
                 )}
                 {organizer ? (
-                  <GenerateMatchesButton session={session} alreadyGenerated={generated} />
+                  <GenerateMatchesButton room={room} alreadyGenerated={generated} />
                 ) : null}
               </CardBody>
             </Card>
@@ -119,19 +119,19 @@ function SessionPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader
-              title={`参加者 (${session.participantCount})`}
+              title={`参加者 (${room.participantCount})`}
               description={organizer ? '代理登録・ゲスト追加・削除ができます' : undefined}
             />
             <CardBody>
               {organizer && !closed ? (
                 <ParticipantManager
-                  sessionId={session.id}
-                  participants={session.participants}
+                  roomId={room.id}
+                  participants={room.participants}
                   names={names}
                   generated={generated}
                 />
               ) : (
-                <ParticipantList participants={session.participants} names={names} />
+                <ParticipantList participants={room.participants} names={names} />
               )}
             </CardBody>
           </Card>

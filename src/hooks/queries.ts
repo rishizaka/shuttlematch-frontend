@@ -1,20 +1,20 @@
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query'
 import {
   matchApi,
-  sessionApi,
+  roomApi,
   userApi,
   type AddParticipantInput,
-  type CreateSessionInput,
+  type CreateRoomInput,
   type CreateUserInput,
 } from '../lib/api'
-import { addSessionId } from '../lib/local-store'
-import type { SessionStatus, User } from '../lib/types'
+import { addRoomId } from '../lib/local-store'
+import type { RoomStatus, User } from '../lib/types'
 
 export const queryKeys = {
   user: (id: string) => ['user', id] as const,
-  session: (id: string) => ['session', id] as const,
+  room: (id: string) => ['room', id] as const,
   matches: (id: string) => ['matches', id] as const,
-  openSessions: (status: SessionStatus) => ['sessions', 'list', status] as const,
+  openRooms: (status: RoomStatus) => ["rooms", "list", status] as const,
 }
 
 // ---- User ----
@@ -33,188 +33,188 @@ export function useCreateUser() {
   })
 }
 
-// ---- Session (room) ----
+// ---- Room (room) ----
 
-export function useSession(sessionId: string | undefined) {
+export function useRoom(roomId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.session(sessionId ?? ''),
-    queryFn: () => sessionApi.get(sessionId as string),
-    enabled: !!sessionId,
+    queryKey: queryKeys.room(roomId ?? ''),
+    queryFn: () => roomApi.get(roomId as string),
+    enabled: !!roomId,
   })
 }
 
 /** 募集中などのステータスのルーム一覧(公開・トップページ用)。 */
-export function useSessionList(status: SessionStatus = 'OPEN') {
+export function useRoomList(status: RoomStatus = 'OPEN') {
   return useQuery({
-    queryKey: queryKeys.openSessions(status),
-    queryFn: () => sessionApi.list(status),
+    queryKey: queryKeys.openRooms(status),
+    queryFn: () => roomApi.list(status),
   })
 }
 
-/** 複数 session をまとめて取得する (ダッシュボード用)。 */
-export function useSessions(sessionIds: string[]) {
+/** 複数 room をまとめて取得する (ダッシュボード用)。 */
+export function useRooms(roomIds: string[]) {
   return useQueries({
-    queries: sessionIds.map((id) => ({
-      queryKey: queryKeys.session(id),
-      queryFn: () => sessionApi.get(id),
+    queries: roomIds.map((id) => ({
+      queryKey: queryKeys.room(id),
+      queryFn: () => roomApi.get(id),
     })),
   })
 }
 
-export function useCreateSession() {
+export function useCreateRoom() {
   return useMutation({
-    mutationFn: (input: CreateSessionInput) => sessionApi.create(input),
-    onSuccess: (session) => {
-      addSessionId(session.id)
+    mutationFn: (input: CreateRoomInput) => roomApi.create(input),
+    onSuccess: (room) => {
+      addRoomId(room.id)
     },
   })
 }
 
 /** ルーム終了 (運営者操作)。終了済みにして募集中一覧からも外す。 */
-export function useCloseSession(sessionId: string) {
+export function useCloseRoom(roomId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: () => sessionApi.close(sessionId),
-    onSuccess: (session) => {
-      qc.setQueryData(queryKeys.session(sessionId), session)
-      qc.invalidateQueries({ queryKey: queryKeys.openSessions('OPEN') })
+    mutationFn: () => roomApi.close(roomId),
+    onSuccess: (room) => {
+      qc.setQueryData(queryKeys.room(roomId), room)
+      qc.invalidateQueries({ queryKey: queryKeys.openRooms('OPEN') })
     },
   })
 }
 
 /** かんたん作成。番号参加者+試合表まで作成し、識別子を localStore に保存する。 */
-export function useQuickCreateSession() {
+export function useQuickCreateRoom() {
   return useMutation({
     mutationFn: (input: {
       title: string
       courtCount: number
       participantCount: number
       createdBy: string
-    }) => sessionApi.quickCreate(input),
-    onSuccess: (session) => {
-      addSessionId(session.id)
+    }) => roomApi.quickCreate(input),
+    onSuccess: (room) => {
+      addRoomId(room.id)
     },
   })
 }
 
 /** 参加者の名前(ニックネーム)変更 (運営者操作)。 */
-export function useRenameParticipant(sessionId: string) {
+export function useRenameParticipant(roomId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (input: { participantId: string; name: string }) =>
-      sessionApi.renameParticipant(sessionId, input.participantId, input.name),
-    onSuccess: (session) => {
-      qc.setQueryData(queryKeys.session(sessionId), session)
+      roomApi.renameParticipant(roomId, input.participantId, input.name),
+    onSuccess: (room) => {
+      qc.setQueryData(queryKeys.room(roomId), room)
     },
   })
 }
 
-export function useAddParticipant(sessionId: string) {
+export function useAddParticipant(roomId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (input: AddParticipantInput) => sessionApi.addParticipant(sessionId, input),
-    onSuccess: (session) => {
-      qc.setQueryData(queryKeys.session(sessionId), session)
+    mutationFn: (input: AddParticipantInput) => roomApi.addParticipant(roomId, input),
+    onSuccess: (room) => {
+      qc.setQueryData(queryKeys.room(roomId), room)
     },
   })
 }
 
-export function useRemoveParticipant(sessionId: string) {
+export function useRemoveParticipant(roomId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (participantId: string) => sessionApi.removeParticipant(sessionId, participantId),
+    mutationFn: (participantId: string) => roomApi.removeParticipant(roomId, participantId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.session(sessionId) })
+      qc.invalidateQueries({ queryKey: queryKeys.room(roomId) })
     },
   })
 }
 
 /** 早退 (運営者操作)。在席状態を LEFT にする。未開始セットの再編成で反映される。 */
-export function useMarkParticipantLeft(sessionId: string) {
+export function useMarkParticipantLeft(roomId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (participantId: string) => sessionApi.markParticipantLeft(sessionId, participantId),
-    onSuccess: (session) => {
-      qc.setQueryData(queryKeys.session(sessionId), session)
+    mutationFn: (participantId: string) => roomApi.markParticipantLeft(roomId, participantId),
+    onSuccess: (room) => {
+      qc.setQueryData(queryKeys.room(roomId), room)
     },
   })
 }
 
 /** 復帰 (運営者操作)。在席状態を ACTIVE に戻す。 */
-export function useReactivateParticipant(sessionId: string) {
+export function useReactivateParticipant(roomId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (participantId: string) =>
-      sessionApi.reactivateParticipant(sessionId, participantId),
-    onSuccess: (session) => {
-      qc.setQueryData(queryKeys.session(sessionId), session)
+      roomApi.reactivateParticipant(roomId, participantId),
+    onSuccess: (room) => {
+      qc.setQueryData(queryKeys.room(roomId), room)
     },
   })
 }
 
 // ---- Match ----
 
-export function useMatches(sessionId: string | undefined) {
+export function useMatches(roomId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.matches(sessionId ?? ''),
-    queryFn: () => matchApi.get(sessionId as string),
-    enabled: !!sessionId,
+    queryKey: queryKeys.matches(roomId ?? ''),
+    queryFn: () => matchApi.get(roomId as string),
+    enabled: !!roomId,
     // まだ生成されていない場合は 404 になるため、リトライしない。
     retry: false,
   })
 }
 
-export function useGenerateMatches(sessionId: string) {
+export function useGenerateMatches(roomId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (matchCount?: number) => matchApi.generate(sessionId, matchCount),
+    mutationFn: (matchCount?: number) => matchApi.generate(roomId, matchCount),
     onSuccess: (schedule) => {
-      qc.setQueryData(queryKeys.matches(sessionId), schedule)
-      qc.invalidateQueries({ queryKey: queryKeys.session(sessionId) })
+      qc.setQueryData(queryKeys.matches(roomId), schedule)
+      qc.invalidateQueries({ queryKey: queryKeys.room(roomId) })
     },
   })
 }
 
 /** セット開始 (運営者操作)。開始したセット (全コート) がアクティブになり、開始時刻が記録される。 */
-export function useStartSet(sessionId: string) {
+export function useStartSet(roomId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (setNumber: number) => matchApi.startSet(sessionId, setNumber),
+    mutationFn: (setNumber: number) => matchApi.startSet(roomId, setNumber),
     onSuccess: (schedule) => {
-      qc.setQueryData(queryKeys.matches(sessionId), schedule)
+      qc.setQueryData(queryKeys.matches(roomId), schedule)
     },
   })
 }
 
 /** セットを開始前に戻す (運営者操作)。進行中セットの開始時刻を消す。 */
-export function useRevertSet(sessionId: string) {
+export function useRevertSet(roomId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (setNumber: number) => matchApi.revertSet(sessionId, setNumber),
+    mutationFn: (setNumber: number) => matchApi.revertSet(roomId, setNumber),
     onSuccess: (schedule) => {
-      qc.setQueryData(queryKeys.matches(sessionId), schedule)
+      qc.setQueryData(queryKeys.matches(roomId), schedule)
     },
   })
 }
 
 /** セット追加 (運営者操作)。既存の結果を保ったまま、末尾にセットを継ぎ足す。 */
-export function useAddSets(sessionId: string) {
+export function useAddSets(roomId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (setCount: number) => matchApi.addSets(sessionId, setCount),
+    mutationFn: (setCount: number) => matchApi.addSets(roomId, setCount),
     onSuccess: (schedule) => {
-      qc.setQueryData(queryKeys.matches(sessionId), schedule)
+      qc.setQueryData(queryKeys.matches(roomId), schedule)
     },
   })
 }
 
 /** 未開始セットの再編成 (運営者操作)。途中参加・早退を反映する。 */
-export function useReplanFutureSets(sessionId: string) {
+export function useReplanFutureSets(roomId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: () => matchApi.replan(sessionId),
+    mutationFn: () => matchApi.replan(roomId),
     onSuccess: (schedule) => {
-      qc.setQueryData(queryKeys.matches(sessionId), schedule)
+      qc.setQueryData(queryKeys.matches(roomId), schedule)
     },
   })
 }

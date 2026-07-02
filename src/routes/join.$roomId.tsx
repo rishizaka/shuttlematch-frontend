@@ -1,21 +1,21 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useAddParticipant, useSession } from '../hooks/queries'
+import { useAddParticipant, useRoom } from '../hooks/queries'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Field, Input } from '../components/ui/Field'
 import { ErrorBlock, LoadingBlock } from '../components/ui/Spinner'
 
-export const Route = createFileRoute('/join/$sessionId')({ component: JoinPage })
+export const Route = createFileRoute('/join/$roomId')({ component: JoinPage })
 
 /**
  * 招待リンク用の公開参加ページ。ログイン不要で、ニックネームを入力すると
  * ゲストとしてルームに参加できる。
  */
 function JoinPage() {
-  const { sessionId } = Route.useParams()
-  const { data: session, isLoading, isError } = useSession(sessionId)
-  const add = useAddParticipant(sessionId)
+  const { roomId } = Route.useParams()
+  const { data: room, isLoading, isError } = useRoom(roomId)
+  const add = useAddParticipant(roomId)
   const [nickname, setNickname] = useState('')
   const [joinedName, setJoinedName] = useState<string | null>(null)
 
@@ -27,17 +27,17 @@ function JoinPage() {
   }
 
   if (isLoading) return <LoadingBlock />
-  if (isError || !session) {
+  if (isError || !room) {
     return <ErrorBlock message="ルームが見つかりません。招待リンクを確認してください。" />
   }
 
-  const acceptsJoin = session.status === 'OPEN' || session.status === 'PREPARING'
+  const acceptsJoin = room.status === 'OPEN' || room.status === 'PREPARING'
 
   return (
     <div className="mx-auto max-w-md">
       <Card>
         <CardHeader
-          title={session.title}
+          title={room.title}
           description={joinedName ? undefined : 'ニックネームを入力して参加します。'}
         />
         <CardBody>
@@ -48,8 +48,8 @@ function JoinPage() {
                 <span className="font-semibold">{joinedName}</span> さんとして参加しました！
               </p>
               <Link
-                to="/sessions/$sessionId/matches"
-                params={{ sessionId }}
+                to="/rooms/$roomId/matches"
+                params={{ roomId }}
                 search={{ openExternalBrowser: 1 }}
                 className="inline-block text-sm text-emerald-600 hover:underline"
               >

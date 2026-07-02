@@ -1,7 +1,7 @@
 // バックエンド (shuttlematch-backend) の REST レスポンスに対応するドメイン型。
 // 値はバックエンドの enum 名 (大文字) をそのまま受け取る。
 
-export type SessionStatus = 'PREPARING' | 'OPEN' | 'GENERATED' | 'CLOSED'
+export type RoomStatus = 'PREPARING' | 'OPEN' | 'GENERATED' | 'CLOSED'
 
 export interface User {
   id: string
@@ -22,7 +22,7 @@ export interface Participant {
   status: ParticipantStatus
 }
 
-export interface Session {
+export interface Room {
   id: string
   title: string
   /** ISO-8601 (UTC, 末尾 Z)。 */
@@ -30,7 +30,7 @@ export interface Session {
   location: string | null
   capacity: number | null
   courtCount: number | null
-  status: SessionStatus
+  status: RoomStatus
   createdBy: string
   participantCount: number
   participants: Participant[]
@@ -54,7 +54,7 @@ export interface Match {
 }
 
 export interface MatchSchedule {
-  sessionId: string
+  roomId: string
   matchCount: number
   matches: Match[]
 }

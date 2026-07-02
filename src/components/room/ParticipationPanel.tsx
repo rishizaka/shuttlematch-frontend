@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import type { Session, User } from '../../lib/types'
+import type { Room, User } from '../../lib/types'
 import { JoinButton } from './JoinButton'
 
 export type ParticipationMode = 'login' | 'join'
@@ -15,10 +15,10 @@ export function resolveParticipationMode(user: User | null): ParticipationMode {
  * ルームへの参加動線。未ログインは閲覧のみ、ログイン済みは参加ボタン。
  */
 export function ParticipationPanel({
-  session,
+  room,
   user,
 }: {
-  session: Session
+  room: Room
   user: User | null
 }) {
   const mode = resolveParticipationMode(user)
@@ -34,5 +34,5 @@ export function ParticipationPanel({
     )
   }
 
-  return <JoinButton session={session} user={user} />
+  return <JoinButton room={room} user={user} />
 }

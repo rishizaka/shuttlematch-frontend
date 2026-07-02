@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/cn'
-import type { SessionStatus } from '../../lib/types'
+import type { RoomStatus } from '../../lib/types'
 
 type Tone = 'slate' | 'emerald' | 'amber' | 'blue'
 
@@ -24,13 +24,13 @@ export function Badge({ tone = 'slate', children }: { tone?: Tone; children: Rea
   )
 }
 
-const STATUS_TONE: Record<SessionStatus, Tone> = {
+const STATUS_TONE: Record<RoomStatus, Tone> = {
   PREPARING: 'slate',
   OPEN: 'emerald',
   GENERATED: 'blue',
   CLOSED: 'amber',
 }
 
-export function statusTone(status: SessionStatus): Tone {
+export function statusTone(status: RoomStatus): Tone {
   return STATUS_TONE[status] ?? 'slate'
 }

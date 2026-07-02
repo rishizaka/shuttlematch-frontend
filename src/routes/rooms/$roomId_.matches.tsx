@@ -13,12 +13,12 @@ import {
 } from 'lucide-react'
 import {
   useAddSets,
-  useCloseSession,
+  useCloseRoom,
   useMatches,
   useRenameParticipant,
   useReplanFutureSets,
   useRevertSet,
-  useSession,
+  useRoom,
   useStartSet,
   useUserNames,
 } from '../../hooks/queries'
@@ -28,14 +28,14 @@ import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
 import { buildParticipantNameLookup } from '../../components/match/MatchCard'
-import { ParticipantManager } from '../../components/session/ParticipantManager'
-import { SelfIdentifyModal } from '../../components/session/SelfIdentifyModal'
+import { ParticipantManager } from '../../components/room/ParticipantManager'
+import { SelfIdentifyModal } from '../../components/room/SelfIdentifyModal'
 import {
   MatchScheduleList,
   filterMatchesForParticipant,
 } from '../../components/match/MatchScheduleList'
 
-export const Route = createFileRoute('/sessions/$sessionId_/matches')({
+export const Route = createFileRoute('/rooms/$roomId_/matches')({
   // LINE 等のアプリ内ブラウザから既定ブラウザで開かせるためのパラメータ。
   // リンク/アドレスバー共有時に URL へ残るよう、ルートの検索パラメータとして扱う。
   validateSearch: (search: Record<string, unknown>): { openExternalBrowser?: 1 } => ({
@@ -48,17 +48,17 @@ export const Route = createFileRoute('/sessions/$sessionId_/matches')({
 type Filter = 'all' | 'mine'
 
 function MatchesPage() {
-  const { sessionId } = Route.useParams()
+  const { roomId } = Route.useParams()
   const navigate = useNavigate()
   const { user } = useCurrentUser()
-  const { data: session } = useSession(sessionId)
-  const { data: schedule, isLoading, isError, error } = useMatches(sessionId)
-  const startSet = useStartSet(sessionId)
-  const revertSet = useRevertSet(sessionId)
-  const addSets = useAddSets(sessionId)
-  const replan = useReplanFutureSets(sessionId)
-  const closeSession = useCloseSession(sessionId)
-  const rename = useRenameParticipant(sessionId)
+  const { data: room } = useRoom(roomId)
+  const { data: schedule, isLoading, isError, error } = useMatches(roomId)
+  const startSet = useStartSet(roomId)
+  const revertSet = useRevertSet(roomId)
+  const addSets = useAddSets(roomId)
+  const replan = useReplanFutureSets(roomId)
+  const closeRoom = useCloseRoom(roomId)
+  const rename = useRenameParticipant(roomId)
   const [filter, setFilter] = useState<Filter>('all')
   const [addCount, setAddCount] = useState(3)
   const [confirmingClose, setConfirmingClose] = useState(false)
@@ -68,7 +68,7 @@ function MatchesPage() {
   // 自己申告で選んだ自分の ParticipantId (localStorage 由来)。
   const [selfParticipantId, setSelfParticipantId] = useState<string | null>(null)
 
-  const closed = session?.status === 'CLOSED'
+  const closed = room?.status === 'CLOSED'
 
   // LINE 等のアプリ内ブラウザで開かれたら、既定(外部)ブラウザで開き直す。
   // openExternalBrowser=1 を付けて1回だけリダイレクト(付与済み/通常ブラウザでは何もしない)。
@@ -84,58 +84,58 @@ function MatchesPage() {
   }, [])
 
   // 早退者がいる、または在席者で未開始セットに一度も出ていない人がいる = 再編成の余地あり。
-  const leftCount = (session?.participants ?? []).filter((p) => p.status === 'LEFT').length
-  const activeCount = (session?.participants ?? []).length - leftCount
+  const leftCount = (room?.participants ?? []).filter((p) => p.status === 'LEFT').length
+  const activeCount = (room?.participants ?? []).length - leftCount
   const hasLeftParticipant = leftCount > 0
 
   // 運営者(ルームの作成者)のみセット開始などの操作ができる。
   const isOrganizer = useMemo(
-    () => !!user && !!session && session.createdBy === user.id,
-    [user, session],
+    () => !!user && !!room && room.createdBy === user.id,
+    [user, room],
   )
 
-  const userIds = (session?.participants ?? [])
+  const userIds = (room?.participants ?? [])
     .map((p) => p.userId)
     .filter((id): id is string => !!id)
   const userNames = useUserNames(userIds)
 
   const nameByParticipantId = useMemo(
-    () => buildParticipantNameLookup(session?.participants ?? [], userNames),
-    [session, userNames],
+    () => buildParticipantNameLookup(room?.participants ?? [], userNames),
+    [room, userNames],
   )
 
   // 参加者一覧の並び順を 1 始まりの番号として割り当てる。
   const indexByParticipantId = useMemo(() => {
     const map = new Map<string, number>()
-    ;(session?.participants ?? []).forEach((p, i) => map.set(p.id, i + 1))
+    ;(room?.participants ?? []).forEach((p, i) => map.set(p.id, i + 1))
     return map
-  }, [session])
+  }, [room])
 
   // 自分の ParticipantId。登録ユーザーなら userId 一致、そうでなければ自己申告(番号)を使う。
   const myParticipantId = useMemo(() => {
-    const byUser = session?.participants.find((p) => p.userId === user?.id)?.id
+    const byUser = room?.participants.find((p) => p.userId === user?.id)?.id
     if (byUser) return byUser
-    if (selfParticipantId && session?.participants.some((p) => p.id === selfParticipantId)) {
+    if (selfParticipantId && room?.participants.some((p) => p.id === selfParticipantId)) {
       return selfParticipantId
     }
     return null
-  }, [session, user, selfParticipantId])
+  }, [room, user, selfParticipantId])
 
   // マウント後に localStorage を読み、未申告なら自己紹介モーダルを出す(SSR不一致を避けるため effect 内で判定)。
   // 運営者と、参加者に紐付いた登録ユーザーは申告不要なので対象外。
   useEffect(() => {
     if (!schedule || closed) return
-    const participants = session?.participants ?? []
+    const participants = room?.participants ?? []
     if (participants.length === 0) return
     if (isOrganizer) return
     if (user && participants.some((p) => p.userId === user.id)) return
-    const stored = getSelfParticipant(sessionId)
+    const stored = getSelfParticipant(roomId)
     if (stored?.participantId) {
       setSelfParticipantId(stored.participantId)
       return
     }
     setShowSelfModal(true)
-  }, [sessionId, schedule, closed, session, user, isOrganizer])
+  }, [roomId, schedule, closed, room, user, isOrganizer])
 
   // アクティブ(進行中)なセット = 最も新しい開始時刻を持つセット。
   const activeSetNumber = useMemo(() => {
@@ -188,7 +188,7 @@ function MatchesPage() {
     <div className="space-y-5">
       {showSelfModal ? (
         <SelfIdentifyModal
-          participants={session?.participants ?? []}
+          participants={room?.participants ?? []}
           names={userNames}
           submitting={rename.isPending}
           onSubmit={(participantId, nickname) =>
@@ -196,7 +196,7 @@ function MatchesPage() {
               { participantId, name: nickname },
               {
                 onSuccess: () => {
-                  setSelfParticipant(sessionId, participantId)
+                  setSelfParticipant(roomId, participantId)
                   setSelfParticipantId(participantId)
                   setShowSelfModal(false)
                 },
@@ -205,7 +205,7 @@ function MatchesPage() {
           }
           onCancel={() => {
             // 申告しないなら試合表は見せず、ルーム詳細へ戻す。
-            navigate({ to: '/sessions/$sessionId', params: { sessionId } })
+            navigate({ to: '/rooms/$roomId', params: { roomId } })
           }}
         />
       ) : null}
@@ -213,8 +213,8 @@ function MatchesPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link
-            to="/sessions/$sessionId"
-            params={{ sessionId }}
+            to="/rooms/$roomId"
+            params={{ roomId }}
             className="text-sm text-emerald-600 hover:underline"
           >
             ← ルームへ戻る
@@ -314,8 +314,8 @@ function MatchesPage() {
                   途中参加はゲスト追加、早退・復帰は各参加者のボタンで切り替え。反映するには下の「未開始セットを再編成」を押します。
                 </p>
                 <ParticipantManager
-                  sessionId={sessionId}
-                  participants={session?.participants ?? []}
+                  roomId={roomId}
+                  participants={room?.participants ?? []}
                   names={userNames}
                   generated
                 />
@@ -450,19 +450,19 @@ function MatchesPage() {
                   size="sm"
                   variant="danger"
                   onClick={() => {
-                    closeSession.mutate(undefined, {
+                    closeRoom.mutate(undefined, {
                       onSuccess: () => setConfirmingClose(false),
                     })
                   }}
-                  disabled={closeSession.isPending}
+                  disabled={closeRoom.isPending}
                 >
-                  {closeSession.isPending ? '記録中…' : '終了する'}
+                  {closeRoom.isPending ? '記録中…' : '終了する'}
                 </Button>
                 <Button
                   size="sm"
                   variant="secondary"
                   onClick={() => setConfirmingClose(false)}
-                  disabled={closeSession.isPending}
+                  disabled={closeRoom.isPending}
                 >
                   キャンセル
                 </Button>
@@ -480,10 +480,10 @@ function MatchesPage() {
               </button>
             </div>
           )}
-          {closeSession.isError ? (
+          {closeRoom.isError ? (
             <p className="mt-2 text-center text-sm text-red-600">
-              {closeSession.error instanceof Error
-                ? closeSession.error.message
+              {closeRoom.error instanceof Error
+                ? closeRoom.error.message
                 : '終了に失敗しました'}
             </p>
           ) : null}

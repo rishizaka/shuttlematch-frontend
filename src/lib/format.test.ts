@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
-  defaultSessionTitle,
+  defaultRoomTitle,
   formatDateTime,
   participantDisplayName,
-  sessionStatusLabel,
+  roomStatusLabel,
   shortId,
   toOffsetDateTime,
 } from './format'
@@ -30,8 +30,8 @@ describe('toOffsetDateTime', () => {
 
 describe('ラベル変換', () => {
   it('ルームステータス', () => {
-    expect(sessionStatusLabel('OPEN')).toBe('参加受付中')
-    expect(sessionStatusLabel('GENERATED')).toBe('試合生成済み')
+    expect(roomStatusLabel('OPEN')).toBe('参加受付中')
+    expect(roomStatusLabel('GENERATED')).toBe('試合生成済み')
   })
 })
 
@@ -63,10 +63,10 @@ describe('participantDisplayName', () => {
   })
 })
 
-describe('defaultSessionTitle', () => {
+describe('defaultRoomTitle', () => {
   it('時間帯で 昼練/夕練/夜練 を切り替える', () => {
-    expect(defaultSessionTitle(new Date('2026-07-02T12:00:00'))).toBe('7/2 昼練')
-    expect(defaultSessionTitle(new Date('2026-07-02T15:30:00'))).toBe('7/2 夕練')
-    expect(defaultSessionTitle(new Date('2026-07-02T19:00:00'))).toBe('7/2 夜練')
+    expect(defaultRoomTitle(new Date('2026-07-02T12:00:00'))).toBe('7/2 昼練')
+    expect(defaultRoomTitle(new Date('2026-07-02T15:30:00'))).toBe('7/2 夕練')
+    expect(defaultRoomTitle(new Date('2026-07-02T19:00:00'))).toBe('7/2 夜練')
   })
 })

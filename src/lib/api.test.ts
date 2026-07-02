@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, sessionApi, userApi } from './api'
+import { ApiError, roomApi, userApi } from './api'
 
 const okJson = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -36,7 +36,7 @@ describe('api client', () => {
 
   it('204 No Content は undefined を返す', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 204 }))
-    const result = await sessionApi.removeParticipant('s1', 'p1')
+    const result = await roomApi.removeParticipant('s1', 'p1')
     expect(result).toBeUndefined()
   })
 

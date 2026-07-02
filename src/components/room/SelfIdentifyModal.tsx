@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { Participant } from '../../lib/types'
 import { participantDisplayName } from '../../lib/format'
 import { Button } from '../ui/Button'
@@ -64,9 +65,15 @@ export function SelfIdentifyModal({
     onSubmit(target.id, nickname.trim())
   }
 
-  return (
+  // SSR では描画しない(クライアントで開かれる想定のモーダル)。
+  if (typeof document === 'undefined') return null
+
+  // body 直下へポータル描画する。ページ側のレイアウト(space-y 等の margin)が
+  // fixed 要素の高さ計算に影響し、オーバーレイが下端まで届かなくなるのを防ぐ。
+  // 背景は濃い色 + ぼかしで、申告するまで試合表の内容を読めないようにする。
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-900/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain bg-slate-900/90 p-4 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
       aria-label="自己紹介"
@@ -119,6 +126,7 @@ export function SelfIdentifyModal({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

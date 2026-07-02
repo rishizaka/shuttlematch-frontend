@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { canJoin } from './JoinButton'
-import type { Session } from '../../lib/types'
+import type { Room } from '../../lib/types'
 
-const base: Session = {
+const base: Room = {
   id: 's1',
   title: 'テスト',
   heldAt: '2026-06-30T10:00:00Z',

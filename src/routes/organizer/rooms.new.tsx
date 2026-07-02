@@ -1,22 +1,22 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useQuickCreateSession } from '../../hooks/queries'
+import { useQuickCreateRoom } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
-import { defaultSessionTitle } from '../../lib/format'
+import { defaultRoomTitle } from '../../lib/format'
 import { Card, CardBody, CardHeader } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Field, Input } from '../../components/ui/Field'
 
-export const Route = createFileRoute('/organizer/sessions/new')({
-  component: NewSessionPage,
+export const Route = createFileRoute('/organizer/rooms/new')({
+  component: NewRoomPage,
 })
 
-function NewSessionPage() {
+function NewRoomPage() {
   const router = useRouter()
   const { user } = useCurrentUser()
-  const create = useQuickCreateSession()
+  const create = useQuickCreateRoom()
 
-  const [title, setTitle] = useState(defaultSessionTitle())
+  const [title, setTitle] = useState(defaultRoomTitle())
   const [participantCount, setParticipantCount] = useState('')
   const [courtCount, setCourtCount] = useState('1')
   const [attempted, setAttempted] = useState(false)
@@ -45,10 +45,10 @@ function NewSessionPage() {
         createdBy: user?.id ?? '',
       },
       {
-        onSuccess: (session) => {
+        onSuccess: (room) => {
           void router.navigate({
-            to: '/sessions/$sessionId/matches',
-            params: { sessionId: session.id },
+            to: '/rooms/$roomId/matches',
+            params: { roomId: room.id },
             search: { openExternalBrowser: 1 },
           })
         },

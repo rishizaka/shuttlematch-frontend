@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { getCurrentUser, getSessionIds, setCurrentUser, subscribe } from '../lib/local-store'
+import { getCurrentUser, getRoomIds, setCurrentUser, subscribe } from '../lib/local-store'
 import type { User } from '../lib/types'
 
 /**
@@ -21,7 +21,7 @@ export function useCurrentUser() {
   }
 }
 
-/** 既知の session ID 一覧を購読する。 */
-export function useKnownSessionIds(): string[] {
-  return useSyncExternalStore(subscribe, getSessionIds, () => [])
+/** 既知の room ID 一覧を購読する。 */
+export function useKnownRoomIds(): string[] {
+  return useSyncExternalStore(subscribe, getRoomIds, () => [])
 }

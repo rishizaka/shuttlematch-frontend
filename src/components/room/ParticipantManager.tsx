@@ -18,22 +18,22 @@ import { ParticipantList } from './ParticipantList'
  * 生成前は削除、生成後(generated)は早退/復帰で在席状態を切り替える。
  */
 export function ParticipantManager({
-  sessionId,
+  roomId,
   participants,
   names,
   generated = false,
 }: {
-  sessionId: string
+  roomId: string
   participants: Participant[]
   names?: ReadonlyMap<string, string>
   /** 試合生成済みか。生成後は削除ではなく早退/復帰を使う。 */
   generated?: boolean
 }) {
-  const add = useAddParticipant(sessionId)
-  const remove = useRemoveParticipant(sessionId)
-  const markLeft = useMarkParticipantLeft(sessionId)
-  const reactivate = useReactivateParticipant(sessionId)
-  const rename = useRenameParticipant(sessionId)
+  const add = useAddParticipant(roomId)
+  const remove = useRemoveParticipant(roomId)
+  const markLeft = useMarkParticipantLeft(roomId)
+  const reactivate = useReactivateParticipant(roomId)
+  const rename = useRenameParticipant(roomId)
   const [copied, setCopied] = useState(false)
 
   // 途中参加: 次の空き番号(現在の人数+1)を番号のまま追加する。名前は後から本人が申告できる。
@@ -46,7 +46,7 @@ export function ParticipantManager({
   const shareUrl =
     typeof window === 'undefined'
       ? ''
-      : `${window.location.origin}/sessions/${sessionId}/matches?openExternalBrowser=1`
+      : `${window.location.origin}/rooms/${roomId}/matches?openExternalBrowser=1`
 
   const shareLink = async () => {
     if (typeof window === 'undefined') return

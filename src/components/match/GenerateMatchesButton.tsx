@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Shuffle } from 'lucide-react'
-import type { Session } from '../../lib/types'
+import type { Room } from '../../lib/types'
 import { useGenerateMatches } from '../../hooks/queries'
 import { Button } from '../ui/Button'
 import { Spinner } from '../ui/Spinner'
@@ -9,16 +9,16 @@ import { Spinner } from '../ui/Spinner'
 export const MIN_PARTICIPANTS = 4
 
 export function GenerateMatchesButton({
-  session,
+  room,
   alreadyGenerated,
 }: {
-  session: Session
+  room: Room
   alreadyGenerated: boolean
 }) {
-  const generate = useGenerateMatches(session.id)
+  const generate = useGenerateMatches(room.id)
   const [confirming, setConfirming] = useState(false)
 
-  const enoughPlayers = session.participantCount >= MIN_PARTICIPANTS
+  const enoughPlayers = room.participantCount >= MIN_PARTICIPANTS
 
   if (!enoughPlayers) {
     return (

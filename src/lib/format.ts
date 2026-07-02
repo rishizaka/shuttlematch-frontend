@@ -1,4 +1,4 @@
-import type { Participant, SessionStatus } from './types'
+import type { Participant, RoomStatus } from './types'
 
 /** ISO 日時を日本時間で「2026/06/30 19:00」形式に整形する。 */
 export function formatDateTime(iso: string): string {
@@ -32,14 +32,14 @@ export function toOffsetDateTime(localValue: string): string {
   return date.toISOString()
 }
 
-const SESSION_STATUS_LABELS: Record<SessionStatus, string> = {
+const SESSION_STATUS_LABELS: Record<RoomStatus, string> = {
   PREPARING: '準備中',
   OPEN: '参加受付中',
   GENERATED: '試合生成済み',
   CLOSED: '終了',
 }
 
-export function sessionStatusLabel(status: SessionStatus): string {
+export function roomStatusLabel(status: RoomStatus): string {
   return SESSION_STATUS_LABELS[status] ?? status
 }
 
@@ -70,7 +70,7 @@ export function shortId(id: string): string {
  * ルームタイトルの初期値。今日の日付 + 時間帯ラベル。
  * 〜15時: 昼練 / 15時台: 夕練 / 16時〜: 夜練。
  */
-export function defaultSessionTitle(now: Date = new Date()): string {
+export function defaultRoomTitle(now: Date = new Date()): string {
   const label = now.getHours() < 15 ? '昼練' : now.getHours() < 16 ? '夕練' : '夜練'
   return `${now.getMonth() + 1}/${now.getDate()} ${label}`
 }

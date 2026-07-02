@@ -12,10 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SessionsSessionIdRouteImport } from './routes/sessions/$sessionId'
-import { Route as JoinSessionIdRouteImport } from './routes/join.$sessionId'
-import { Route as SessionsSessionIdMatchesRouteImport } from './routes/sessions/$sessionId_.matches'
-import { Route as OrganizerSessionsNewRouteImport } from './routes/organizer/sessions.new'
+import { Route as RoomsRoomIdRouteImport } from './routes/rooms/$roomId'
+import { Route as JoinRoomIdRouteImport } from './routes/join.$roomId'
+import { Route as RoomsRoomIdMatchesRouteImport } from './routes/rooms/$roomId_.matches'
+import { Route as OrganizerRoomsNewRouteImport } from './routes/organizer/rooms.new'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -32,25 +32,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SessionsSessionIdRoute = SessionsSessionIdRouteImport.update({
-  id: '/sessions/$sessionId',
-  path: '/sessions/$sessionId',
+const RoomsRoomIdRoute = RoomsRoomIdRouteImport.update({
+  id: '/rooms/$roomId',
+  path: '/rooms/$roomId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JoinSessionIdRoute = JoinSessionIdRouteImport.update({
-  id: '/join/$sessionId',
-  path: '/join/$sessionId',
+const JoinRoomIdRoute = JoinRoomIdRouteImport.update({
+  id: '/join/$roomId',
+  path: '/join/$roomId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SessionsSessionIdMatchesRoute =
-  SessionsSessionIdMatchesRouteImport.update({
-    id: '/sessions/$sessionId_/matches',
-    path: '/sessions/$sessionId/matches',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const OrganizerSessionsNewRoute = OrganizerSessionsNewRouteImport.update({
-  id: '/organizer/sessions/new',
-  path: '/organizer/sessions/new',
+const RoomsRoomIdMatchesRoute = RoomsRoomIdMatchesRouteImport.update({
+  id: '/rooms/$roomId_/matches',
+  path: '/rooms/$roomId/matches',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizerRoomsNewRoute = OrganizerRoomsNewRouteImport.update({
+  id: '/organizer/rooms/new',
+  path: '/organizer/rooms/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -58,29 +57,29 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/join/$sessionId': typeof JoinSessionIdRoute
-  '/sessions/$sessionId': typeof SessionsSessionIdRoute
-  '/organizer/sessions/new': typeof OrganizerSessionsNewRoute
-  '/sessions/$sessionId/matches': typeof SessionsSessionIdMatchesRoute
+  '/join/$roomId': typeof JoinRoomIdRoute
+  '/rooms/$roomId': typeof RoomsRoomIdRoute
+  '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
+  '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/join/$sessionId': typeof JoinSessionIdRoute
-  '/sessions/$sessionId': typeof SessionsSessionIdRoute
-  '/organizer/sessions/new': typeof OrganizerSessionsNewRoute
-  '/sessions/$sessionId/matches': typeof SessionsSessionIdMatchesRoute
+  '/join/$roomId': typeof JoinRoomIdRoute
+  '/rooms/$roomId': typeof RoomsRoomIdRoute
+  '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
+  '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
-  '/join/$sessionId': typeof JoinSessionIdRoute
-  '/sessions/$sessionId': typeof SessionsSessionIdRoute
-  '/organizer/sessions/new': typeof OrganizerSessionsNewRoute
-  '/sessions/$sessionId_/matches': typeof SessionsSessionIdMatchesRoute
+  '/join/$roomId': typeof JoinRoomIdRoute
+  '/rooms/$roomId': typeof RoomsRoomIdRoute
+  '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
+  '/rooms/$roomId_/matches': typeof RoomsRoomIdMatchesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -88,38 +87,38 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/signup'
-    | '/join/$sessionId'
-    | '/sessions/$sessionId'
-    | '/organizer/sessions/new'
-    | '/sessions/$sessionId/matches'
+    | '/join/$roomId'
+    | '/rooms/$roomId'
+    | '/organizer/rooms/new'
+    | '/rooms/$roomId/matches'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/signup'
-    | '/join/$sessionId'
-    | '/sessions/$sessionId'
-    | '/organizer/sessions/new'
-    | '/sessions/$sessionId/matches'
+    | '/join/$roomId'
+    | '/rooms/$roomId'
+    | '/organizer/rooms/new'
+    | '/rooms/$roomId/matches'
   id:
     | '__root__'
     | '/'
     | '/login'
     | '/signup'
-    | '/join/$sessionId'
-    | '/sessions/$sessionId'
-    | '/organizer/sessions/new'
-    | '/sessions/$sessionId_/matches'
+    | '/join/$roomId'
+    | '/rooms/$roomId'
+    | '/organizer/rooms/new'
+    | '/rooms/$roomId_/matches'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
-  JoinSessionIdRoute: typeof JoinSessionIdRoute
-  SessionsSessionIdRoute: typeof SessionsSessionIdRoute
-  OrganizerSessionsNewRoute: typeof OrganizerSessionsNewRoute
-  SessionsSessionIdMatchesRoute: typeof SessionsSessionIdMatchesRoute
+  JoinRoomIdRoute: typeof JoinRoomIdRoute
+  RoomsRoomIdRoute: typeof RoomsRoomIdRoute
+  OrganizerRoomsNewRoute: typeof OrganizerRoomsNewRoute
+  RoomsRoomIdMatchesRoute: typeof RoomsRoomIdMatchesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -145,32 +144,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sessions/$sessionId': {
-      id: '/sessions/$sessionId'
-      path: '/sessions/$sessionId'
-      fullPath: '/sessions/$sessionId'
-      preLoaderRoute: typeof SessionsSessionIdRouteImport
+    '/rooms/$roomId': {
+      id: '/rooms/$roomId'
+      path: '/rooms/$roomId'
+      fullPath: '/rooms/$roomId'
+      preLoaderRoute: typeof RoomsRoomIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/join/$sessionId': {
-      id: '/join/$sessionId'
-      path: '/join/$sessionId'
-      fullPath: '/join/$sessionId'
-      preLoaderRoute: typeof JoinSessionIdRouteImport
+    '/join/$roomId': {
+      id: '/join/$roomId'
+      path: '/join/$roomId'
+      fullPath: '/join/$roomId'
+      preLoaderRoute: typeof JoinRoomIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sessions/$sessionId_/matches': {
-      id: '/sessions/$sessionId_/matches'
-      path: '/sessions/$sessionId/matches'
-      fullPath: '/sessions/$sessionId/matches'
-      preLoaderRoute: typeof SessionsSessionIdMatchesRouteImport
+    '/rooms/$roomId_/matches': {
+      id: '/rooms/$roomId_/matches'
+      path: '/rooms/$roomId/matches'
+      fullPath: '/rooms/$roomId/matches'
+      preLoaderRoute: typeof RoomsRoomIdMatchesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/organizer/sessions/new': {
-      id: '/organizer/sessions/new'
-      path: '/organizer/sessions/new'
-      fullPath: '/organizer/sessions/new'
-      preLoaderRoute: typeof OrganizerSessionsNewRouteImport
+    '/organizer/rooms/new': {
+      id: '/organizer/rooms/new'
+      path: '/organizer/rooms/new'
+      fullPath: '/organizer/rooms/new'
+      preLoaderRoute: typeof OrganizerRoomsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -180,10 +179,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
-  JoinSessionIdRoute: JoinSessionIdRoute,
-  SessionsSessionIdRoute: SessionsSessionIdRoute,
-  OrganizerSessionsNewRoute: OrganizerSessionsNewRoute,
-  SessionsSessionIdMatchesRoute: SessionsSessionIdMatchesRoute,
+  JoinRoomIdRoute: JoinRoomIdRoute,
+  RoomsRoomIdRoute: RoomsRoomIdRoute,
+  OrganizerRoomsNewRoute: OrganizerRoomsNewRoute,
+  RoomsRoomIdMatchesRoute: RoomsRoomIdMatchesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
