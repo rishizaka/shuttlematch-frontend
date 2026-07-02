@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Plus, Users } from 'lucide-react'
-import { useCurrentUser, useKnownCircleIds, useKnownSessionIds } from '../hooks/useCurrentUser'
-import { useCircles, useCreateCircle, useSessions } from '../hooks/queries'
+import { useCurrentUser, useKnownCircleIds } from '../hooks/useCurrentUser'
+import { useCircles, useCreateCircle, useSessionList } from '../hooks/queries'
 import { circleApi } from '../lib/api'
 import { addCircleId } from '../lib/local-store'
 import type { JoinPolicy } from '../lib/types'
@@ -10,6 +10,7 @@ import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Field, Input, Select, Textarea } from '../components/ui/Field'
 import { Badge } from '../components/ui/Badge'
+import { ErrorBlock, LoadingBlock } from '../components/ui/Spinner'
 import { SessionCard } from '../components/session/SessionCard'
 import { joinPolicyLabel } from '../lib/format'
 
@@ -18,38 +19,42 @@ export const Route = createFileRoute('/')({ component: Dashboard })
 function Dashboard() {
   const { user, isAuthenticated } = useCurrentUser()
 
-  if (!isAuthenticated || !user) {
-    return <GuestLanding />
-  }
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">ダッシュボード</h1>
-        <p className="text-sm text-slate-500">こんにちは、{user.name} さん</p>
-      </div>
-      <CirclesSection createdBy={user.id} userId={user.id} />
-      <SessionsSection />
+    <div className="space-y-8">
+      {isAuthenticated && user ? (
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">ダッシュボード</h1>
+          <p className="text-sm text-slate-500">こんにちは、{user.name} さん</p>
+        </div>
+      ) : (
+        <GuestHero />
+      )}
+
+      <OpenSessionsSection />
+
+      {isAuthenticated && user ? (
+        <CirclesSection createdBy={user.id} userId={user.id} />
+      ) : null}
     </div>
   )
 }
 
-function GuestLanding() {
+function GuestHero() {
   return (
-    <div className="mx-auto max-w-lg py-12 text-center">
-      <div className="text-5xl" aria-hidden>
+    <div className="rounded-2xl border border-slate-200 bg-white px-6 py-8 text-center shadow-sm">
+      <div className="text-4xl" aria-hidden>
         🏸
       </div>
-      <h1 className="mt-4 text-2xl font-bold text-slate-900">ShuttleMatch へようこそ</h1>
+      <h1 className="mt-3 text-2xl font-bold text-slate-900">ShuttleMatch</h1>
       <p className="mt-2 text-slate-600">
-        バドミントンサークルの出欠管理とダブルスのランダムマッチングを、かんたんに。
+        募集中の練習会をチェックして参加しよう。出欠管理とダブルスの組み合わせをかんたんに。
       </p>
-      <div className="mt-6 flex justify-center gap-3">
+      <div className="mt-5 flex justify-center gap-3">
         <Link
           to="/signup"
           className="rounded-lg bg-emerald-600 px-5 py-2.5 font-medium text-white hover:bg-emerald-700"
         >
-          はじめる
+          新規登録
         </Link>
         <Link
           to="/login"
@@ -62,13 +67,46 @@ function GuestLanding() {
   )
 }
 
+function OpenSessionsSection() {
+  const { data: sessions, isLoading, isError, error } = useSessionList('OPEN')
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-lg font-semibold text-slate-900">募集中のセッション</h2>
+
+      {isLoading ? <LoadingBlock /> : null}
+      {isError ? (
+        <ErrorBlock
+          message={
+            error instanceof Error
+              ? `セッション一覧を取得できませんでした: ${error.message}`
+              : 'セッション一覧を取得できませんでした'
+          }
+        />
+      ) : null}
+
+      {sessions && sessions.length === 0 ? (
+        <p className="text-sm text-slate-500">現在募集中のセッションはありません。</p>
+      ) : null}
+
+      {sessions && sessions.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {sessions.map((s) => (
+            <SessionCard key={s.id} session={s} />
+          ))}
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
 function CirclesSection({ createdBy, userId }: { createdBy: string; userId: string }) {
   const circleIds = useKnownCircleIds()
   const circles = useCircles(circleIds)
 
   return (
     <section className="space-y-3">
-      <h2 className="text-lg font-semibold text-slate-900">サークル</h2>
+      <h2 className="text-lg font-semibold text-slate-900">マイサークル</h2>
 
       {circleIds.length === 0 ? (
         <p className="text-sm text-slate-500">
@@ -223,33 +261,5 @@ function JoinCircleForm({ userId }: { userId: string }) {
         </form>
       </CardBody>
     </Card>
-  )
-}
-
-function SessionsSection() {
-  const sessionIds = useKnownSessionIds()
-  const sessions = useSessions(sessionIds)
-  const loaded = sessions.filter((q) => q.data).map((q) => q.data!)
-
-  if (sessionIds.length === 0) {
-    return (
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-slate-900">直近のセッション</h2>
-        <p className="text-sm text-slate-500">
-          まだセッションがありません。サークルから作成できます。
-        </p>
-      </section>
-    )
-  }
-
-  return (
-    <section className="space-y-3">
-      <h2 className="text-lg font-semibold text-slate-900">直近のセッション</h2>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {loaded.map((s) => (
-          <SessionCard key={s.id} session={s} />
-        ))}
-      </div>
-    </section>
   )
 }

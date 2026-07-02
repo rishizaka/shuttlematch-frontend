@@ -20,13 +20,17 @@ describe('api client', () => {
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(okJson({ id: 'u1', name: '太郎', email: 't@example.com' }, 201))
 
-    const user = await userApi.create({ name: '太郎', email: 't@example.com' })
+    const user = await userApi.create({ name: '太郎', email: 't@example.com', password: 'abcd1234' })
 
     expect(user.id).toBe('u1')
     const [url, init] = fetchMock.mock.calls[0]
     expect(String(url)).toMatch(/\/api\/v1\/users$/)
     expect(init?.method).toBe('POST')
-    expect(JSON.parse(init?.body as string)).toEqual({ name: '太郎', email: 't@example.com' })
+    expect(JSON.parse(init?.body as string)).toEqual({
+      name: '太郎',
+      email: 't@example.com',
+      password: 'abcd1234',
+    })
     expect((init?.headers as Record<string, string>)['Content-Type']).toBe('application/json')
   })
 

@@ -5,9 +5,11 @@ import type { Match } from '../../lib/types'
 
 const match: Match = {
   matchNumber: 3,
+  setNumber: 2,
   pairA: { player1Id: 'p1', player2Id: 'p2' },
   pairB: { player1Id: 'p3', player2Id: 'p4' },
   courtNumber: 2,
+  startedAt: null,
 }
 
 const names = new Map([
@@ -18,10 +20,9 @@ const names = new Map([
 ])
 
 describe('MatchCard', () => {
-  it('試合番号・コート・両ペアの名前を表示する', () => {
+  it('コート番号・両ペアの名前を表示する', () => {
     render(<MatchCard match={match} nameByParticipantId={names} />)
-    expect(screen.getByText('第 3 試合')).toBeInTheDocument()
-    expect(screen.getByText('コート 2')).toBeInTheDocument()
+    expect(screen.getByText('2 コート')).toBeInTheDocument()
     expect(screen.getByText('太郎')).toBeInTheDocument()
     expect(screen.getByText('花子')).toBeInTheDocument()
     expect(screen.getByText('VS')).toBeInTheDocument()

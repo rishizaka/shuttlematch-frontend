@@ -13,10 +13,10 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SessionsSessionIdRouteImport } from './routes/sessions/$sessionId'
+import { Route as JoinSessionIdRouteImport } from './routes/join.$sessionId'
 import { Route as CirclesCircleIdRouteImport } from './routes/circles/$circleId'
-import { Route as SessionsSessionIdMatchesRouteImport } from './routes/sessions/$sessionId.matches'
+import { Route as SessionsSessionIdMatchesRouteImport } from './routes/sessions/$sessionId_.matches'
 import { Route as OrganizerSessionsNewRouteImport } from './routes/organizer/sessions.new'
-import { Route as OrganizerSessionsSessionIdParticipantsRouteImport } from './routes/organizer/sessions.$sessionId.participants'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -38,6 +38,11 @@ const SessionsSessionIdRoute = SessionsSessionIdRouteImport.update({
   path: '/sessions/$sessionId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JoinSessionIdRoute = JoinSessionIdRouteImport.update({
+  id: '/join/$sessionId',
+  path: '/join/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CirclesCircleIdRoute = CirclesCircleIdRouteImport.update({
   id: '/circles/$circleId',
   path: '/circles/$circleId',
@@ -45,41 +50,35 @@ const CirclesCircleIdRoute = CirclesCircleIdRouteImport.update({
 } as any)
 const SessionsSessionIdMatchesRoute =
   SessionsSessionIdMatchesRouteImport.update({
-    id: '/matches',
-    path: '/matches',
-    getParentRoute: () => SessionsSessionIdRoute,
+    id: '/sessions/$sessionId_/matches',
+    path: '/sessions/$sessionId/matches',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const OrganizerSessionsNewRoute = OrganizerSessionsNewRouteImport.update({
   id: '/organizer/sessions/new',
   path: '/organizer/sessions/new',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OrganizerSessionsSessionIdParticipantsRoute =
-  OrganizerSessionsSessionIdParticipantsRouteImport.update({
-    id: '/organizer/sessions/$sessionId/participants',
-    path: '/organizer/sessions/$sessionId/participants',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/circles/$circleId': typeof CirclesCircleIdRoute
-  '/sessions/$sessionId': typeof SessionsSessionIdRouteWithChildren
+  '/join/$sessionId': typeof JoinSessionIdRoute
+  '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/organizer/sessions/new': typeof OrganizerSessionsNewRoute
   '/sessions/$sessionId/matches': typeof SessionsSessionIdMatchesRoute
-  '/organizer/sessions/$sessionId/participants': typeof OrganizerSessionsSessionIdParticipantsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/circles/$circleId': typeof CirclesCircleIdRoute
-  '/sessions/$sessionId': typeof SessionsSessionIdRouteWithChildren
+  '/join/$sessionId': typeof JoinSessionIdRoute
+  '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/organizer/sessions/new': typeof OrganizerSessionsNewRoute
   '/sessions/$sessionId/matches': typeof SessionsSessionIdMatchesRoute
-  '/organizer/sessions/$sessionId/participants': typeof OrganizerSessionsSessionIdParticipantsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -87,10 +86,10 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/circles/$circleId': typeof CirclesCircleIdRoute
-  '/sessions/$sessionId': typeof SessionsSessionIdRouteWithChildren
+  '/join/$sessionId': typeof JoinSessionIdRoute
+  '/sessions/$sessionId': typeof SessionsSessionIdRoute
   '/organizer/sessions/new': typeof OrganizerSessionsNewRoute
-  '/sessions/$sessionId/matches': typeof SessionsSessionIdMatchesRoute
-  '/organizer/sessions/$sessionId/participants': typeof OrganizerSessionsSessionIdParticipantsRoute
+  '/sessions/$sessionId_/matches': typeof SessionsSessionIdMatchesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -99,30 +98,30 @@ export interface FileRouteTypes {
     | '/login'
     | '/signup'
     | '/circles/$circleId'
+    | '/join/$sessionId'
     | '/sessions/$sessionId'
     | '/organizer/sessions/new'
     | '/sessions/$sessionId/matches'
-    | '/organizer/sessions/$sessionId/participants'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/signup'
     | '/circles/$circleId'
+    | '/join/$sessionId'
     | '/sessions/$sessionId'
     | '/organizer/sessions/new'
     | '/sessions/$sessionId/matches'
-    | '/organizer/sessions/$sessionId/participants'
   id:
     | '__root__'
     | '/'
     | '/login'
     | '/signup'
     | '/circles/$circleId'
+    | '/join/$sessionId'
     | '/sessions/$sessionId'
     | '/organizer/sessions/new'
-    | '/sessions/$sessionId/matches'
-    | '/organizer/sessions/$sessionId/participants'
+    | '/sessions/$sessionId_/matches'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -130,9 +129,10 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   CirclesCircleIdRoute: typeof CirclesCircleIdRoute
-  SessionsSessionIdRoute: typeof SessionsSessionIdRouteWithChildren
+  JoinSessionIdRoute: typeof JoinSessionIdRoute
+  SessionsSessionIdRoute: typeof SessionsSessionIdRoute
   OrganizerSessionsNewRoute: typeof OrganizerSessionsNewRoute
-  OrganizerSessionsSessionIdParticipantsRoute: typeof OrganizerSessionsSessionIdParticipantsRoute
+  SessionsSessionIdMatchesRoute: typeof SessionsSessionIdMatchesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -165,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SessionsSessionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/join/$sessionId': {
+      id: '/join/$sessionId'
+      path: '/join/$sessionId'
+      fullPath: '/join/$sessionId'
+      preLoaderRoute: typeof JoinSessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/circles/$circleId': {
       id: '/circles/$circleId'
       path: '/circles/$circleId'
@@ -172,12 +179,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CirclesCircleIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sessions/$sessionId/matches': {
-      id: '/sessions/$sessionId/matches'
-      path: '/matches'
+    '/sessions/$sessionId_/matches': {
+      id: '/sessions/$sessionId_/matches'
+      path: '/sessions/$sessionId/matches'
       fullPath: '/sessions/$sessionId/matches'
       preLoaderRoute: typeof SessionsSessionIdMatchesRouteImport
-      parentRoute: typeof SessionsSessionIdRoute
+      parentRoute: typeof rootRouteImport
     }
     '/organizer/sessions/new': {
       id: '/organizer/sessions/new'
@@ -186,36 +193,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizerSessionsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/organizer/sessions/$sessionId/participants': {
-      id: '/organizer/sessions/$sessionId/participants'
-      path: '/organizer/sessions/$sessionId/participants'
-      fullPath: '/organizer/sessions/$sessionId/participants'
-      preLoaderRoute: typeof OrganizerSessionsSessionIdParticipantsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
-
-interface SessionsSessionIdRouteChildren {
-  SessionsSessionIdMatchesRoute: typeof SessionsSessionIdMatchesRoute
-}
-
-const SessionsSessionIdRouteChildren: SessionsSessionIdRouteChildren = {
-  SessionsSessionIdMatchesRoute: SessionsSessionIdMatchesRoute,
-}
-
-const SessionsSessionIdRouteWithChildren =
-  SessionsSessionIdRoute._addFileChildren(SessionsSessionIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   CirclesCircleIdRoute: CirclesCircleIdRoute,
-  SessionsSessionIdRoute: SessionsSessionIdRouteWithChildren,
+  JoinSessionIdRoute: JoinSessionIdRoute,
+  SessionsSessionIdRoute: SessionsSessionIdRoute,
   OrganizerSessionsNewRoute: OrganizerSessionsNewRoute,
-  OrganizerSessionsSessionIdParticipantsRoute:
-    OrganizerSessionsSessionIdParticipantsRoute,
+  SessionsSessionIdMatchesRoute: SessionsSessionIdMatchesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

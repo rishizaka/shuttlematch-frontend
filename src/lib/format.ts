@@ -1,4 +1,10 @@
-import type { JoinPolicy, MemberRole, Participant, SessionStatus } from './types'
+import type {
+  JoinPolicy,
+  MemberRole,
+  Participant,
+  SessionStatus,
+  SessionVisibility,
+} from './types'
 
 /** ISO 日時を日本時間で「2026/06/30 19:00」形式に整形する。 */
 export function formatDateTime(iso: string): string {
@@ -9,6 +15,17 @@ export function formatDateTime(iso: string): string {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
+
+/** ISO 日時を日本時間で「19:05」形式 (時:分) に整形する。 */
+export function formatTime(iso: string): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  return new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
     hour: '2-digit',
     minute: '2-digit',
   }).format(date)
@@ -30,6 +47,15 @@ const SESSION_STATUS_LABELS: Record<SessionStatus, string> = {
 
 export function sessionStatusLabel(status: SessionStatus): string {
   return SESSION_STATUS_LABELS[status] ?? status
+}
+
+const VISIBILITY_LABELS: Record<SessionVisibility, string> = {
+  PUBLIC: '公開',
+  MEMBERS_ONLY: 'メンバー限定',
+}
+
+export function visibilityLabel(visibility: SessionVisibility): string {
+  return VISIBILITY_LABELS[visibility] ?? visibility
 }
 
 const JOIN_POLICY_LABELS: Record<JoinPolicy, string> = {

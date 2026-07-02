@@ -14,11 +14,12 @@ function SignupPage() {
   const createUser = useCreateUser()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
     createUser.mutate(
-      { name, email },
+      { name, email, password },
       {
         onSuccess: (user) => {
           login(user)
@@ -33,17 +34,18 @@ function SignupPage() {
       <Card>
         <CardHeader
           title="新規登録"
-          description="氏名とメールアドレスでアカウントを作成します。"
+          description="ユーザー名・メールアドレス・パスワードでアカウントを作成します。"
         />
         <CardBody>
           <form onSubmit={submit} className="space-y-4">
-            <Field label="氏名" htmlFor="name">
+            <Field label="ユーザー名" htmlFor="name" hint="最大8文字">
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                placeholder="山田 太郎"
+                maxLength={8}
+                placeholder="やまだ"
               />
             </Field>
             <Field label="メールアドレス" htmlFor="email">
@@ -56,10 +58,25 @@ function SignupPage() {
                 placeholder="taro@example.com"
               />
             </Field>
+            <Field label="パスワード" htmlFor="password" hint="8文字以上">
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+                placeholder="••••••••"
+              />
+            </Field>
             {createUser.isError ? (
               <p className="text-sm text-red-600">{(createUser.error as Error).message}</p>
             ) : null}
-            <Button type="submit" className="w-full" disabled={createUser.isPending}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={createUser.isPending || !name.trim() || !email.trim() || password.length < 8}
+            >
               {createUser.isPending ? '作成中…' : 'アカウントを作成'}
             </Button>
           </form>

@@ -1,9 +1,13 @@
 import type {
   Circle,
   JoinPolicy,
+  JoinRequest,
+  JoinRequestStatus,
   MatchSchedule,
   MemberRole,
   Session,
+  SessionStatus,
+  SessionVisibility,
   User,
 } from './types'
 
@@ -68,12 +72,23 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export interface CreateUserInput {
   name: string
   email: string
+  password: string
 }
 
 export const userApi = {
   create: (input: CreateUserInput) =>
     request<User>('/api/v1/users', { method: 'POST', body: JSON.stringify(input) }),
   get: (userId: string) => request<User>(`/api/v1/users/${userId}`),
+}
+
+// ---- Auth ----
+
+export const authApi = {
+  login: (email: string, password: string) =>
+    request<User>('/api/v1/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    }),
 }
 
 // ---- Circle ----
@@ -101,6 +116,30 @@ export const circleApi = {
     }),
 }
 
+// ---- Join request (membership application) ----
+
+export const joinRequestApi = {
+  apply: (circleId: string, userId: string) =>
+    request<JoinRequest>(`/api/v1/circles/${circleId}/join-requests`, {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    }),
+  list: (circleId: string, status: JoinRequestStatus = 'PENDING') =>
+    request<JoinRequest[]>(
+      `/api/v1/circles/${circleId}/join-requests?status=${status}`,
+    ),
+  approve: (circleId: string, requestId: string) =>
+    request<JoinRequest>(
+      `/api/v1/circles/${circleId}/join-requests/${requestId}/approve`,
+      { method: 'POST' },
+    ),
+  reject: (circleId: string, requestId: string) =>
+    request<JoinRequest>(
+      `/api/v1/circles/${circleId}/join-requests/${requestId}/reject`,
+      { method: 'POST' },
+    ),
+}
+
 // ---- Session ----
 
 export interface CreateSessionInput {
@@ -109,6 +148,8 @@ export interface CreateSessionInput {
   heldAt: string
   location?: string | null
   capacity?: number | null
+  courtCount?: number | null
+  visibility?: SessionVisibility
   createdBy: string
 }
 
@@ -124,6 +165,9 @@ export const sessionApi = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+  /** 募集中などのステータスでセッション一覧を取得する(公開)。 */
+  list: (status: SessionStatus = 'OPEN') =>
+    request<Session[]>(`/api/v1/sessions?status=${status}`),
   get: (sessionId: string) => request<Session>(`/api/v1/sessions/${sessionId}`),
   addParticipant: (sessionId: string, input: AddParticipantInput) =>
     request<Session>(`/api/v1/sessions/${sessionId}/participants`, {
@@ -145,4 +189,13 @@ export const matchApi = {
       body: JSON.stringify(matchCount != null ? { matchCount } : {}),
     }),
   get: (sessionId: string) => request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches`),
+  startSet: (sessionId: string, setNumber: number) =>
+    request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches/sets/${setNumber}/start`, {
+      method: 'POST',
+    }),
+  addSets: (sessionId: string, setCount?: number) =>
+    request<MatchSchedule>(`/api/v1/sessions/${sessionId}/matches/sets`, {
+      method: 'POST',
+      body: JSON.stringify(setCount != null ? { setCount } : {}),
+    }),
 }
