@@ -40,16 +40,22 @@ export function ParticipantManager({
   const rename = useRenameParticipant(roomId)
   const replan = useReplanFutureSets(roomId)
   const { showToast } = useToast()
-  // 早退・復帰の後に「未開始セットを再編成しますか？」と確認するモーダルの開閉。
+  // ゲスト追加・早退・復帰の後に「未開始セットを再編成しますか？」と確認するモーダルの開閉。
   const [showReplanConfirm, setShowReplanConfirm] = useState(false)
 
   const askReplan = () => setShowReplanConfirm(true)
 
   // 途中参加: 次の空き番号(現在の人数+1)を番号のまま追加する。名前は後から本人が申告できる。
-  const addNumber = () => {
+  // 試合生成後は追加をきっかけに再編成モーダルを出す。生成前(試合表がまだ無い)はトーストのみ。
+  const addGuest = () => {
     add.mutate(
       { guestName: String(participants.length + 1) },
-      { onSuccess: () => showToast('番号を追加しました') },
+      {
+        onSuccess: () => {
+          if (generated) askReplan()
+          else showToast('ゲストを追加しました')
+        },
+      },
     )
   }
 
@@ -68,7 +74,7 @@ export function ParticipantManager({
 
   return (
     <div className="space-y-3">
-      {/* アクション行: 共有と途中参加(番号追加)。説明はツールチップ的な1行に集約する。 */}
+      {/* アクション行: 共有と途中参加(ゲスト追加)。説明はツールチップ的な1行に集約する。 */}
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" size="sm" variant="secondary" onClick={shareLink}>
           <Share2 className="h-4 w-4" />
@@ -79,11 +85,11 @@ export function ParticipantManager({
           size="sm"
           variant="secondary"
           className="ml-auto"
-          onClick={addNumber}
+          onClick={addGuest}
           disabled={add.isPending}
         >
           <Plus className="h-4 w-4" />
-          {add.isPending ? '追加中…' : '番号を追加'}
+          {add.isPending ? '追加中…' : 'ゲストを追加'}
         </Button>
       </div>
 
@@ -108,7 +114,7 @@ export function ParticipantManager({
 
       {generated ? (
         <p className="text-xs text-slate-400">
-          番号の追加・早退・復帰は「未開始セットを再編成」で試合表に反映されます。
+          ゲストの追加・早退・復帰は「未開始セットを再編成」で試合表に反映されます。
         </p>
       ) : null}
 
