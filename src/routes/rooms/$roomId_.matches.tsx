@@ -27,6 +27,7 @@ import { getSelfParticipant, setSelfParticipant } from '../../lib/local-store'
 import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
+import { useToast } from '../../components/ui/Toast'
 import { buildParticipantNameLookup } from '../../components/match/MatchCard'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { SelfIdentifyModal } from '../../components/room/SelfIdentifyModal'
@@ -51,6 +52,7 @@ function MatchesPage() {
   const { roomId } = Route.useParams()
   const navigate = useNavigate()
   const { user } = useCurrentUser()
+  const { showToast } = useToast()
   const { data: room } = useRoom(roomId)
   const { data: schedule, isLoading, isError, error } = useMatches(roomId)
   const startSet = useStartSet(roomId)
@@ -349,7 +351,11 @@ function MatchesPage() {
                     </div>
                     <Button
                       size="sm"
-                      onClick={() => addSets.mutate(addCount)}
+                      onClick={() =>
+                        addSets.mutate(addCount, {
+                          onSuccess: () => showToast('セットを追加しました'),
+                        })
+                      }
                       disabled={addSets.isPending}
                     >
                       {addSets.isPending ? '追加中…' : '追加'}
@@ -387,7 +393,11 @@ function MatchesPage() {
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => replan.mutate()}
+                    onClick={() =>
+                      replan.mutate(undefined, {
+                        onSuccess: () => showToast('未開始セットを再編成しました'),
+                      })
+                    }
                     disabled={replan.isPending}
                   >
                     {replan.isPending ? '再編成中…' : '再編成する'}

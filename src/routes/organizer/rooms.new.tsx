@@ -19,7 +19,7 @@ function NewRoomPage() {
 
   const [title, setTitle] = useState(defaultRoomTitle())
   const [participantCount, setParticipantCount] = useState('')
-  const [courtCount, setCourtCount] = useState('1')
+  const [courtCount, setCourtCount] = useState('2')
   const [attempted, setAttempted] = useState(false)
   // 未ログイン時のゲストユーザー発行の状態。
   const [issuingGuest, setIssuingGuest] = useState(false)

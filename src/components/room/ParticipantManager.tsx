@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Plus, Share2 } from 'lucide-react'
 import type { Participant } from '../../lib/types'
 import {
@@ -8,8 +7,10 @@ import {
   useRemoveParticipant,
   useRenameParticipant,
 } from '../../hooks/queries'
+import { copyToClipboard } from '../../lib/clipboard'
 import { Button } from '../ui/Button'
 import { ErrorBlock } from '../ui/Spinner'
+import { useToast } from '../ui/Toast'
 import { ParticipantList } from './ParticipantList'
 
 /**
@@ -34,11 +35,14 @@ export function ParticipantManager({
   const markLeft = useMarkParticipantLeft(roomId)
   const reactivate = useReactivateParticipant(roomId)
   const rename = useRenameParticipant(roomId)
-  const [copied, setCopied] = useState(false)
+  const { showToast } = useToast()
 
   // 途中参加: 次の空き番号(現在の人数+1)を番号のまま追加する。名前は後から本人が申告できる。
   const addNumber = () => {
-    add.mutate({ guestName: String(participants.length + 1) })
+    add.mutate(
+      { guestName: String(participants.length + 1) },
+      { onSuccess: () => showToast('番号を追加しました') },
+    )
   }
 
   // 試合表の共有リンク。openExternalBrowser=1 は LINE 等のアプリ内ブラウザから
@@ -50,22 +54,8 @@ export function ParticipantManager({
 
   const shareLink = async () => {
     if (typeof window === 'undefined') return
-    // 共有シートがあれば使う(LINE などに直接共有できる)。
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({ title: '試合表', url: shareUrl })
-        return
-      } catch {
-        // キャンセル・失敗時はコピーにフォールバック
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // クリップボード不可の環境では何もしない
-    }
+    const ok = await copyToClipboard(shareUrl)
+    if (ok) showToast('リンクをコピーしました')
   }
 
   return (
@@ -74,7 +64,7 @@ export function ParticipantManager({
       <div className="flex flex-wrap items-center gap-2">
         <Button type="button" size="sm" variant="secondary" onClick={shareLink}>
           <Share2 className="h-4 w-4" />
-          {copied ? 'コピーしました' : '試合表を共有'}
+          試合表を共有
         </Button>
         <Button
           type="button"

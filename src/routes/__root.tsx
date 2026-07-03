@@ -8,6 +8,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 import { Header } from '../components/layout/Header'
+import { ToastProvider } from '../components/ui/Toast'
 
 import appCss from '../styles.css?url'
 
@@ -36,18 +37,20 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900">
-        <Header />
-        <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
-        <TanStackDevtools
-          config={{ position: 'bottom-right' }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-            TanStackQueryDevtools,
-          ]}
-        />
+        <ToastProvider>
+          <Header />
+          <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+          <TanStackDevtools
+            config={{ position: 'bottom-right' }}
+            plugins={[
+              {
+                name: 'Tanstack Router',
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+              TanStackQueryDevtools,
+            ]}
+          />
+        </ToastProvider>
         <Scripts />
       </body>
     </html>
