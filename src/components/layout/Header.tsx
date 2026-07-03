@@ -7,6 +7,11 @@ export function Header() {
   const { user, logout, isAuthenticated } = useCurrentUser()
   const router = useRouter()
 
+  // ゲスト(メール未登録)にはログアウトを出さない。
+  // ゲストの識別子は localStorage にしかなく、ログアウトすると作成した
+  // ルームの運営権を取り戻せなくなるため、導線はログイン/新規登録のみにする。
+  const isGuest = !!user && user.email == null
+
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
@@ -18,7 +23,7 @@ export function Header() {
         </Link>
 
         <nav className="flex items-center gap-3 text-sm">
-          {isAuthenticated ? (
+          {isAuthenticated && !isGuest ? (
             <>
               <span className="hidden text-slate-600 sm:inline">{user?.name} さん</span>
               <Button
@@ -35,6 +40,9 @@ export function Header() {
             </>
           ) : (
             <>
+              {isGuest ? (
+                <span className="hidden text-slate-400 sm:inline">ゲスト利用中</span>
+              ) : null}
               <Link to="/login" className="text-slate-600 hover:text-slate-900">
                 ログイン
               </Link>

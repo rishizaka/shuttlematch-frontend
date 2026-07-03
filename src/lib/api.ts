@@ -67,6 +67,8 @@ export interface CreateUserInput {
 export const userApi = {
   create: (input: CreateUserInput) =>
     request<User>('/api/v1/users', { method: 'POST', body: JSON.stringify(input) }),
+  /** ゲストユーザーを発行する。未ログインでルームを作成するときの作成者に使う。 */
+  createGuest: () => request<User>('/api/v1/users/guest', { method: 'POST' }),
   get: (userId: string) => request<User>(`/api/v1/users/${userId}`),
 }
 

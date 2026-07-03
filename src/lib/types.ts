@@ -6,7 +6,8 @@ export type RoomStatus = 'PREPARING' | 'OPEN' | 'GENERATED' | 'CLOSED'
 export interface User {
   id: string
   name: string
-  email: string
+  /** ゲストユーザー(未ログイン作成者)は null。 */
+  email: string | null
 }
 
 export type ParticipantStatus = 'ACTIVE' | 'LEFT'
