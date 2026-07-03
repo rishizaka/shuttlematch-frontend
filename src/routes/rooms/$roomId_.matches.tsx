@@ -207,7 +207,10 @@ function MatchesPage() {
           }
           onCancel={() => {
             // 申告しないなら試合表は見せず、ルーム詳細へ戻す。
-            navigate({ to: '/rooms/$roomId', params: { roomId } })
+            // replace: true でこの試合表ページの履歴を残さない。
+            // 残すとブラウザバックで試合表に戻ってモーダルが再度出て、
+            // キャンセルするとまたルーム詳細へ…と無限に行き来してしまう。
+            navigate({ to: '/rooms/$roomId', params: { roomId }, replace: true })
           }}
         />
       ) : null}
