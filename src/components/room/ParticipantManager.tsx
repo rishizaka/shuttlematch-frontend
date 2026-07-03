@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Plus, Share2 } from 'lucide-react'
 import type { Participant } from '../../lib/types'
 import {
@@ -6,9 +7,11 @@ import {
   useReactivateParticipant,
   useRemoveParticipant,
   useRenameParticipant,
+  useReplanFutureSets,
 } from '../../hooks/queries'
 import { copyToClipboard } from '../../lib/clipboard'
 import { Button } from '../ui/Button'
+import { ConfirmModal } from '../ui/ConfirmModal'
 import { ErrorBlock } from '../ui/Spinner'
 import { useToast } from '../ui/Toast'
 import { ParticipantList } from './ParticipantList'
@@ -35,7 +38,12 @@ export function ParticipantManager({
   const markLeft = useMarkParticipantLeft(roomId)
   const reactivate = useReactivateParticipant(roomId)
   const rename = useRenameParticipant(roomId)
+  const replan = useReplanFutureSets(roomId)
   const { showToast } = useToast()
+  // 早退・復帰の後に「未開始セットを再編成しますか？」と確認するモーダルの開閉。
+  const [showReplanConfirm, setShowReplanConfirm] = useState(false)
+
+  const askReplan = () => setShowReplanConfirm(true)
 
   // 途中参加: 次の空き番号(現在の人数+1)を番号のまま追加する。名前は後から本人が申告できる。
   const addNumber = () => {
@@ -84,8 +92,10 @@ export function ParticipantManager({
         names={names}
         onRemove={generated ? undefined : (p) => remove.mutate(p.id)}
         removingId={remove.isPending ? (remove.variables as string) : null}
-        onMarkLeft={generated ? (p) => markLeft.mutate(p.id) : undefined}
-        onReactivate={generated ? (p) => reactivate.mutate(p.id) : undefined}
+        onMarkLeft={generated ? (p) => markLeft.mutate(p.id, { onSuccess: askReplan }) : undefined}
+        onReactivate={
+          generated ? (p) => reactivate.mutate(p.id, { onSuccess: askReplan }) : undefined
+        }
         onRename={(p, name) => rename.mutate({ participantId: p.id, name })}
         updatingId={
           markLeft.isPending
@@ -106,6 +116,23 @@ export function ParticipantManager({
       {markLeft.isError ? <ErrorBlock message={(markLeft.error as Error).message} /> : null}
       {reactivate.isError ? <ErrorBlock message={(reactivate.error as Error).message} /> : null}
       {rename.isError ? <ErrorBlock message={(rename.error as Error).message} /> : null}
+
+      {showReplanConfirm ? (
+        <ConfirmModal
+          title="試合表を再編成しますか？"
+          description="出入りを反映して未開始セットを組み直します(開始済みはそのまま)。"
+          confirming={replan.isPending}
+          onConfirm={() =>
+            replan.mutate(undefined, {
+              onSuccess: () => {
+                showToast('未開始セットを再編成しました')
+                setShowReplanConfirm(false)
+              },
+            })
+          }
+          onCancel={() => setShowReplanConfirm(false)}
+        />
+      ) : null}
     </div>
   )
 }
