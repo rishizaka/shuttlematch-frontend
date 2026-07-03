@@ -71,8 +71,9 @@ function SetGroupView({
 }) {
   // 「開始前に戻す」の確認状態。開始はワンタップなので確認しない。
   const [confirmingRevert, setConfirmingRevert] = useState(false)
-  // 終了セットは折りたたんで一覧を軽くする。タップで展開できる。
-  const [expanded, setExpanded] = useState(false)
+  // 終了セットは手動でのみ折りたためる。次のセット開始時に自動で畳まれると
+  // びっくりするため、既定は展開のまま(折りたたみは任意)。
+  const [expanded, setExpanded] = useState(true)
 
   // セットの開始時刻は同一セット共通。任意の1試合から拾う。
   const startedAt = group.matches.find((m) => m.startedAt)?.startedAt ?? null

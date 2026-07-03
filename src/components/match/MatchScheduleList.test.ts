@@ -74,4 +74,14 @@ describe('buildParticipantNameLookup', () => {
     expect(lookup.get('p1')).toBe('太郎')
     expect(lookup.get('p2')).toBe('ゲスト花子')
   })
+
+  it('自己申告していないゲスト(名前が番号のまま)は「ゲスト」と表示する', () => {
+    const participants: Participant[] = [
+      { id: 'p1', userId: null, guestName: '1', guest: true, status: 'ACTIVE' },
+      { id: 'p2', userId: null, guestName: '2', guest: true, status: 'ACTIVE' },
+    ]
+    const lookup = buildParticipantNameLookup(participants, new Map())
+    expect(lookup.get('p1')).toBe('ゲスト')
+    expect(lookup.get('p2')).toBe('ゲスト')
+  })
 })

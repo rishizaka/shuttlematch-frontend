@@ -69,14 +69,23 @@ export function ParticipantManager({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-lg bg-slate-50 p-3">
-        <p className="mb-2 text-xs text-slate-500">
-          リンクを共有すると、LINE などのアプリ内ブラウザからでも既定のブラウザで試合表を開けます。
-        </p>
+    <div className="space-y-3">
+      {/* アクション行: 共有と途中参加(番号追加)。説明はツールチップ的な1行に集約する。 */}
+      <div className="flex flex-wrap items-center gap-2">
         <Button type="button" size="sm" variant="secondary" onClick={shareLink}>
           <Share2 className="h-4 w-4" />
-          {copied ? 'コピーしました' : '試合表リンクを共有'}
+          {copied ? 'コピーしました' : '試合表を共有'}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          className="ml-auto"
+          onClick={addNumber}
+          disabled={add.isPending}
+        >
+          <Plus className="h-4 w-4" />
+          {add.isPending ? '追加中…' : '番号を追加'}
         </Button>
       </div>
 
@@ -98,8 +107,8 @@ export function ParticipantManager({
       />
 
       {generated ? (
-        <p className="text-xs text-slate-500">
-          試合開始後の出入りは「早退／復帰」で切り替え、試合表の「未開始セットを再編成」で反映します。
+        <p className="text-xs text-slate-400">
+          番号の追加・早退・復帰は「未開始セットを再編成」で試合表に反映されます。
         </p>
       ) : null}
 
@@ -107,23 +116,6 @@ export function ParticipantManager({
       {markLeft.isError ? <ErrorBlock message={(markLeft.error as Error).message} /> : null}
       {reactivate.isError ? <ErrorBlock message={(reactivate.error as Error).message} /> : null}
       {rename.isError ? <ErrorBlock message={(rename.error as Error).message} /> : null}
-
-      <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
-        <p className="text-sm text-slate-600">
-          途中参加はここで番号を1つ増やせます。名前は本人が試合表で申告できます。
-        </p>
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          className="sm:ml-auto"
-          onClick={addNumber}
-          disabled={add.isPending}
-        >
-          <Plus className="h-4 w-4" />
-          {add.isPending ? '追加中…' : '番号を追加'}
-        </Button>
-      </div>
     </div>
   )
 }

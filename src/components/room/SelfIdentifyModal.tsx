@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Participant } from '../../lib/types'
-import { participantDisplayName } from '../../lib/format'
+import { isUnclaimedGuestName, participantDisplayName } from '../../lib/format'
 import { Button } from '../ui/Button'
 
 /**
@@ -38,8 +38,7 @@ export function SelfIdentifyModal({
   }, [])
 
   // 番号(index+1)がまだ既定名のままなら空き、名前が付いていたら使用中。
-  const isTaken = (p: Participant, index: number) =>
-    !p.guest || (p.guestName ?? '').trim() !== String(index + 1)
+  const isTaken = (p: Participant, index: number) => !isUnclaimedGuestName(p, index)
 
   const num = Number(numberStr)
   const inRange = Number.isInteger(num) && num >= 1 && num <= participants.length
@@ -97,7 +96,7 @@ export function SelfIdentifyModal({
                 if (e.key === 'Enter') submit()
               }}
               placeholder="あなたの番号"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             />
           </label>
 
@@ -110,7 +109,7 @@ export function SelfIdentifyModal({
                 if (e.key === 'Enter') submit()
               }}
               placeholder="例: たろう"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
             />
           </label>
 

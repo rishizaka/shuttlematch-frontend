@@ -306,13 +306,10 @@ function MatchesPage() {
             <div className="divide-y divide-slate-100 border-t border-slate-100">
               {/* 参加者の出入り */}
               <div className="px-4 py-4 sm:px-5">
-                <div className="mb-1 flex items-center gap-2">
+                <div className="mb-3 flex items-center gap-2">
                   <Users className="h-4 w-4 text-slate-400" />
-                  <h3 className="text-sm font-semibold text-slate-800">参加者の出入り</h3>
+                  <h3 className="text-sm font-semibold text-slate-800">参加者</h3>
                 </div>
-                <p className="mb-3 text-xs text-slate-500">
-                  途中参加はゲスト追加、早退・復帰は各参加者のボタンで切り替え。反映するには下の「未開始セットを再編成」を押します。
-                </p>
                 <ParticipantManager
                   roomId={roomId}
                   participants={room?.participants ?? []}
@@ -324,14 +321,9 @@ function MatchesPage() {
               {/* セットを追加 */}
               <div className="px-4 py-4 sm:px-5">
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-center gap-2">
-                      <ListPlus className="h-4 w-4 text-slate-400" />
-                      <h3 className="text-sm font-semibold text-slate-800">セットを追加</h3>
-                    </div>
-                    <p className="text-xs text-slate-500">
-                      現在の結果を保ったまま、末尾にセットを追加します。
-                    </p>
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <ListPlus className="h-4 w-4 text-slate-400" />
+                    <h3 className="text-sm font-semibold text-slate-800">セットを追加</h3>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center overflow-hidden rounded-lg border border-slate-300">
@@ -389,8 +381,7 @@ function MatchesPage() {
                       ) : null}
                     </div>
                     <p className="text-xs text-slate-500">
-                      途中参加・早退を反映して、未開始セットを現在の在席者で組み直します。
-                      開始済みのセットはそのまま。人数が足りない場合はコート数を自動で減らします。
+                      出入りを反映して未開始セットを組み直します(開始済みはそのまま)。
                     </p>
                   </div>
                   <Button

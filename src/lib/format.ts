@@ -67,6 +67,28 @@ export function shortId(id: string): string {
 }
 
 /**
+ * ゲストがまだ自己申告しておらず、guestName が既定値(番号そのまま)かどうかを判定する。
+ * index は参加者一覧内での位置(0始まり)。
+ */
+export function isUnclaimedGuestName(participant: Participant, index: number): boolean {
+  return participant.guest && (participant.guestName ?? '').trim() === String(index + 1)
+}
+
+/**
+ * 参加者の表示名を返す。未申告(番号のまま)のゲストは「ゲスト」と表示する。
+ * コート表示・参加者一覧など、番号バッジと並べて名前を出す箇所向け。
+ */
+export function participantDisplayNameForList(
+  participant: Participant,
+  index: number,
+  names: ReadonlyMap<string, string> = new Map(),
+): string {
+  return isUnclaimedGuestName(participant, index)
+    ? 'ゲスト'
+    : participantDisplayName(participant, names)
+}
+
+/**
  * ルームタイトルの初期値。今日の日付 + 時間帯ラベル。
  * 〜15時: 昼練 / 15時台: 夕練 / 16時〜: 夜練。
  */

@@ -1,19 +1,21 @@
 import type { Match, Participant } from '../../lib/types'
-import { participantDisplayName } from '../../lib/format'
+import { participantDisplayNameForList } from '../../lib/format'
 
 /**
  * ParticipantId -> 表示名 のルックアップを作る。
  * 試合のペアは ParticipantId を参照するため、ルームの参加者一覧と
  * userId -> 名前 のマップから解決する。
+ * まだ自己申告していないゲスト(名前が番号のまま)は「ゲスト」と表示する
+ * (番号バッジと同じ数字が並んで見えるのを避けるため)。
  */
 export function buildParticipantNameLookup(
   participants: Participant[],
   userNames: ReadonlyMap<string, string>,
 ): Map<string, string> {
   const lookup = new Map<string, string>()
-  for (const p of participants) {
-    lookup.set(p.id, participantDisplayName(p, userNames))
-  }
+  participants.forEach((p, i) => {
+    lookup.set(p.id, participantDisplayNameForList(p, i, userNames))
+  })
   return lookup
 }
 

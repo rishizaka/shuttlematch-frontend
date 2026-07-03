@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Check, LogOut, Pencil, RotateCcw, Trash2, X } from 'lucide-react'
 import type { Participant } from '../../lib/types'
-import { participantDisplayName } from '../../lib/format'
+import { isUnclaimedGuestName, participantDisplayName } from '../../lib/format'
 import { Badge } from '../ui/Badge'
 
 export function ParticipantList({
@@ -34,10 +34,6 @@ export function ParticipantList({
     return <p className="py-4 text-sm text-slate-500">まだ参加者がいません。</p>
   }
 
-  // 既定の名前(番号のまま)なら未設定=「ゲスト」表示。
-  const isUnnamed = (p: Participant, i: number) =>
-    p.guest && (p.guestName ?? '') === String(i + 1)
-
   const startEdit = (p: Participant, unnamed: boolean) => {
     setEditingId(p.id)
     setDraft(unnamed ? '' : (p.guestName ?? ''))
@@ -55,7 +51,7 @@ export function ParticipantList({
         const editing = editingId === p.id
         // ゲストのみ名前編集可。
         const canRename = !!onRename && p.guest
-        const unnamed = isUnnamed(p, i)
+        const unnamed = isUnclaimedGuestName(p, i)
         const displayName = unnamed ? 'ゲスト' : participantDisplayName(p, names)
         return (
           <li key={p.id} className="flex items-center justify-between gap-3 py-2.5">
@@ -82,7 +78,7 @@ export function ParticipantList({
                       if (e.key === 'Escape') setEditingId(null)
                     }}
                     placeholder="ニックネーム"
-                    className="w-full min-w-0 rounded-lg border border-slate-300 px-2 py-1 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    className="w-full min-w-0 rounded-lg border border-slate-300 px-2 py-1 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
                   />
                   <button
                     type="button"
