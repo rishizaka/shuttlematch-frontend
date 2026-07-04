@@ -3,7 +3,9 @@ import { useEffect } from 'react'
 import { Calendar, ListChecks, MapPin, Users } from 'lucide-react'
 import { useRoom, useUserNames } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
+import { roomApi } from '../../lib/api'
 import { addRoomId } from '../../lib/local-store'
+import { roomOgMeta } from '../../lib/og'
 import type { Room } from '../../lib/types'
 import { formatDateTime, roomStatusLabel } from '../../lib/format'
 import { Card, CardBody, CardHeader } from '../../components/ui/Card'
@@ -14,7 +16,21 @@ import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { ParticipationPanel } from '../../components/room/ParticipationPanel'
 import { GenerateMatchesButton } from '../../components/match/GenerateMatchesButton'
 
-export const Route = createFileRoute('/rooms/$roomId')({ component: RoomPage })
+export const Route = createFileRoute('/rooms/$roomId')({
+  // OGP(SNS のリンクカード)用。クローラーは JS を実行しないため、
+  // SSR の HTML にルーム名入りのメタタグを含める必要がある。
+  // 失敗してもページ自体はクライアント側の useRoom で表示できるので null に落とす。
+  loader: async ({ params }) => {
+    try {
+      return await roomApi.get(params.roomId)
+    } catch {
+      return null
+    }
+  },
+  head: ({ loaderData, params }) =>
+    loaderData ? { meta: roomOgMeta(loaderData, `/rooms/${params.roomId}`, 'ルーム') } : {},
+  component: RoomPage,
+})
 
 function isOrganizer(room: Room, userId: string | undefined): boolean {
   // ルームは作成者(オーナー)のみが運営操作できる。

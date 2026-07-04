@@ -23,7 +23,9 @@ import {
   useUserNames,
 } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
+import { roomApi } from '../../lib/api'
 import { getSelfParticipant, setSelfParticipant } from '../../lib/local-store'
+import { roomOgMeta } from '../../lib/og'
 import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
@@ -43,6 +45,18 @@ export const Route = createFileRoute('/rooms/$roomId_/matches')({
     openExternalBrowser:
       search.openExternalBrowser === 1 || search.openExternalBrowser === '1' ? 1 : undefined,
   }),
+  // OGP(SNS のリンクカード)用。SSR の HTML にルーム名入りメタタグを含める。
+  loader: async ({ params }) => {
+    try {
+      return await roomApi.get(params.roomId)
+    } catch {
+      return null
+    }
+  },
+  head: ({ loaderData, params }) =>
+    loaderData
+      ? { meta: roomOgMeta(loaderData, `/rooms/${params.roomId}/matches`, '試合表') }
+      : {},
   component: MatchesPage,
 })
 

@@ -9,6 +9,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 import { Header } from '../components/layout/Header'
 import { ToastProvider } from '../components/ui/Toast'
+import { defaultOgMeta } from '../lib/og'
 
 import appCss from '../styles.css?url'
 
@@ -23,7 +24,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'ShuttleMatch — バドミントンサークル管理' },
+      { title: 'ShuttleMatch — バドミントンの試合表をかんたん作成・共有' },
+      ...defaultOgMeta(),
     ],
     links: [{ rel: 'stylesheet', href: appCss }],
   }),
