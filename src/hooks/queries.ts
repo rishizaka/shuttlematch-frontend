@@ -13,7 +13,14 @@ import {
   type CreateUserInput,
 } from "../lib/api";
 import { addRoomId } from "../lib/local-store";
-import type { RoomStatus, User } from "../lib/types";
+import type { Room, RoomStatus, User } from "../lib/types";
+
+/**
+ * ライブ同期用のポーリング間隔 (ms)。
+ * 他端末の操作 (セット開始・ニックネーム変更など) をリロードなしで反映するために使う。
+ * コスト面の暴発を避けるため、進行中の試合表ページに限定して有効化すること。
+ */
+const LIVE_REFETCH_INTERVAL = 10_000;
 
 export const queryKeys = {
   user: (id: string) => ["user", id] as const,
@@ -40,11 +47,20 @@ export function useCreateUser() {
 
 // ---- Room (room) ----
 
-export function useRoom(roomId: string | undefined) {
+export function useRoom(
+  roomId: string | undefined,
+  options?: { live?: boolean },
+) {
   return useQuery({
     queryKey: queryKeys.room(roomId ?? ""),
     queryFn: () => roomApi.get(roomId as string),
     enabled: !!roomId,
+    // live 時は定期再取得。終了済みルームは変化しないので停止する。
+    // (タブが非アクティブの間は TanStack Query の既定で停止する)
+    refetchInterval: options?.live
+      ? (query) =>
+          query.state.data?.status === "CLOSED" ? false : LIVE_REFETCH_INTERVAL
+      : undefined,
   });
 }
 
@@ -162,13 +178,27 @@ export function useReactivateParticipant(roomId: string) {
 
 // ---- Match ----
 
-export function useMatches(roomId: string | undefined) {
+export function useMatches(
+  roomId: string | undefined,
+  options?: { live?: boolean },
+) {
+  const qc = useQueryClient();
   return useQuery({
     queryKey: queryKeys.matches(roomId ?? ""),
     queryFn: () => matchApi.get(roomId as string),
     enabled: !!roomId,
     // まだ生成されていない場合は 404 になるため、リトライしない。
     retry: false,
+    // live 時は定期再取得。未生成 (404) のまま叩き続けないよう、取得済みの場合のみ。
+    // ルームが終了済みなら試合表も変化しないので停止する (キャッシュ上の room で判定)。
+    refetchInterval: options?.live
+      ? (query) => {
+          if (!query.state.data) return false;
+          const room = qc.getQueryData<Room>(queryKeys.room(roomId ?? ""));
+          if (room?.status === "CLOSED") return false;
+          return LIVE_REFETCH_INTERVAL;
+        }
+      : undefined,
   });
 }
 

@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Archive,
   ChevronDown,
@@ -12,6 +13,7 @@ import {
   Users,
 } from 'lucide-react'
 import {
+  queryKeys,
   useAddSets,
   useCloseRoom,
   useMatches,
@@ -67,8 +69,35 @@ function MatchesPage() {
   const navigate = useNavigate()
   const { user } = useCurrentUser()
   const { showToast } = useToast()
-  const { data: room } = useRoom(roomId)
-  const { data: schedule, isLoading, isError, error } = useMatches(roomId)
+  // ポーリングで他端末の操作 (セット開始・ニックネーム変更・出入り) をリロードなしで反映する。
+  // 終了済みルームでは自動停止する (queries.ts 側の判定)。
+  const { data: schedule, isLoading, isError, error } = useMatches(roomId, {
+    live: true,
+  })
+  // ニックネーム変更 (自己申告) は序盤で終わるため、3セット目が開始されたら
+  // 参加者情報 (room) のポーリングは止める。試合表のポーリングは継続する。
+  const thirdSetStarted = useMemo(
+    () => (schedule?.matches ?? []).some((m) => m.setNumber >= 3 && !!m.startedAt),
+    [schedule],
+  )
+  const { data: room } = useRoom(roomId, { live: !thirdSetStarted })
+  const closed = room?.status === 'CLOSED'
+  const qc = useQueryClient()
+
+  // room ポーリング停止後でも、再編成で途中参加者が試合表に現れたら
+  // 名前を解決できるよう room を取り直す (未知の ParticipantId を検知したときのみ)。
+  useEffect(() => {
+    if (!schedule || !room) return
+    const known = new Set(room.participants.map((p) => p.id))
+    const hasUnknown = schedule.matches.some(
+      (m) =>
+        !known.has(m.pairA.player1Id) ||
+        !known.has(m.pairA.player2Id) ||
+        !known.has(m.pairB.player1Id) ||
+        !known.has(m.pairB.player2Id),
+    )
+    if (hasUnknown) qc.invalidateQueries({ queryKey: queryKeys.room(roomId) })
+  }, [schedule, room, roomId, qc])
   const startSet = useStartSet(roomId)
   const revertSet = useRevertSet(roomId)
   const addSets = useAddSets(roomId)
@@ -83,8 +112,6 @@ function MatchesPage() {
   const [showSelfModal, setShowSelfModal] = useState(false)
   // 自己申告で選んだ自分の ParticipantId (localStorage 由来)。
   const [selfParticipantId, setSelfParticipantId] = useState<string | null>(null)
-
-  const closed = room?.status === 'CLOSED'
 
   // LINE 等のアプリ内ブラウザで開かれたら、既定(外部)ブラウザで開き直す。
   // openExternalBrowser=1 を付けて1回だけリダイレクト(付与済み/通常ブラウザでは何もしない)。
@@ -165,6 +192,19 @@ function MatchesPage() {
     }
     return active
   }, [schedule])
+
+  // セットの開始を検知したらトーストで知らせる (ポーリングによる他端末からの反映でも気付けるように)。
+  // 初回読み込みと、開始前に戻す操作 (番号が減る) では通知しない。
+  const prevActiveSetRef = useRef<number | null | undefined>(undefined)
+  useEffect(() => {
+    if (!schedule) return
+    const prev = prevActiveSetRef.current
+    prevActiveSetRef.current = activeSetNumber
+    if (prev === undefined) return
+    if (activeSetNumber !== null && (prev === null || activeSetNumber > prev)) {
+      showToast(`第${activeSetNumber}セットが開始されました`)
+    }
+  }, [schedule, activeSetNumber, showToast])
 
   // 次に開始できるセット = 開始済みの最大セット + 1。セットは1から順番にのみ開始できる。
   const startableSetNumber = useMemo(() => {
