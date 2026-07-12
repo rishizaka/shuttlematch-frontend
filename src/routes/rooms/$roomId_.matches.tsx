@@ -8,6 +8,7 @@ import {
   Lock,
   Minus,
   Plus,
+  Camera,
   RefreshCw,
   Settings2,
   UserRound,
@@ -509,6 +510,32 @@ function MatchesPage() {
                       : '再編成に失敗しました'}
                   </p>
                 ) : null}
+              </div>
+
+              {/* スクショ用ページ */}
+              <div className="px-4 py-4 sm:px-5">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
+                      <Camera className="h-4 w-4 text-slate-400" />
+                      <h3 className="text-sm font-semibold text-slate-800">
+                        スクショ用ページ
+                      </h3>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      セット・コート・番号だけの一覧を別タブで開きます。
+                    </p>
+                  </div>
+                  <Link
+                    to="/rooms/$roomId/matches/print"
+                    params={{ roomId }}
+                    target="_blank"
+                    rel="noopener"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 transition-colors hover:bg-slate-50"
+                  >
+                    開く
+                  </Link>
+                </div>
               </div>
             </div>
           ) : null}
