@@ -51,7 +51,7 @@ export function ParticipantList({
         const editing = editingId === p.id
         // ゲストのみ名前編集可。
         const canRename = !!onRename && p.guest
-        const unnamed = isUnclaimedGuestName(p, i)
+        const unnamed = isUnclaimedGuestName(p)
         const displayName = unnamed ? 'ゲスト' : participantDisplayName(p, names)
         return (
           <li key={p.id} className="flex items-center justify-between gap-3 py-2.5">

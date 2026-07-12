@@ -41,13 +41,13 @@ export function SelfIdentifyModal({
     }
   }, [])
 
-  // 番号(index+1)がまだ既定名のままなら空き、名前が付いていたら使用中。
-  const isTaken = (p: Participant, index: number) => !isUnclaimedGuestName(p, index)
+  // 番号がまだ既定名(数字)のままなら空き、名前が付いていたら使用中。
+  const isTaken = (p: Participant) => !isUnclaimedGuestName(p)
 
   const num = Number(numberStr)
   const inRange = Number.isInteger(num) && num >= 1 && num <= participants.length
   const target = inRange ? participants[num - 1] : null
-  const taken = target ? isTaken(target, num - 1) : false
+  const taken = target ? isTaken(target) : false
 
   // 番号自体の問題(範囲外・使用中)は入力中に即表示する。
   const numberError = !numberStr
@@ -57,7 +57,14 @@ export function SelfIdentifyModal({
       : taken
         ? `${num} 番は使用中です（${participantDisplayName(target as Participant, names)}）`
         : null
-  const error = numberError ?? (!nickname.trim() ? 'ニックネームを入力してください' : null)
+  // 数字だけの名前は「未申告(機械採番のまま)」の判定と衝突するため許可しない。
+  const error =
+    numberError ??
+    (!nickname.trim()
+      ? 'ニックネームを入力してください'
+      : /^\d+$/.test(nickname.trim())
+        ? '数字だけのニックネームは使えません'
+        : null)
 
   // 範囲外・使用中は即時、それ以外(未入力・ニックネーム未入力)は決定を押してから表示。
   const shownError = numberStr && !inRange ? numberError : taken ? numberError : attempted ? error : null

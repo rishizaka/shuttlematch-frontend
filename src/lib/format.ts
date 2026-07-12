@@ -67,11 +67,14 @@ export function shortId(id: string): string {
 }
 
 /**
- * ゲストがまだ自己申告しておらず、guestName が既定値(番号そのまま)かどうかを判定する。
- * index は参加者一覧内での位置(0始まり)。
+ * ゲストがまだ自己申告しておらず、guestName が既定値(機械採番の数字)のままかどうかを判定する。
+ * かんたん作成は連番の数字を仮名として振るため、「数字のみ(または空)の名前」を未申告とみなす。
+ * 一覧内の位置(index)との一致で判定すると、途中の参加者を削除したときに
+ * 位置がずれて誤判定する(例: 4番を削除すると「5」という名前がそのまま表示される)。
  */
-export function isUnclaimedGuestName(participant: Participant, index: number): boolean {
-  return participant.guest && (participant.guestName ?? '').trim() === String(index + 1)
+export function isUnclaimedGuestName(participant: Participant): boolean {
+  const name = (participant.guestName ?? '').trim()
+  return participant.guest && (name === '' || /^\d+$/.test(name))
 }
 
 /**
@@ -80,10 +83,9 @@ export function isUnclaimedGuestName(participant: Participant, index: number): b
  */
 export function participantDisplayNameForList(
   participant: Participant,
-  index: number,
   names: ReadonlyMap<string, string> = new Map(),
 ): string {
-  return isUnclaimedGuestName(participant, index)
+  return isUnclaimedGuestName(participant)
     ? 'ゲスト'
     : participantDisplayName(participant, names)
 }

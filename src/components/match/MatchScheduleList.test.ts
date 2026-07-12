@@ -69,4 +69,14 @@ describe('buildParticipantNameLookup', () => {
     expect(lookup.get('p1')).toBe('ゲスト')
     expect(lookup.get('p2')).toBe('ゲスト')
   })
+
+  it('途中の参加者が削除されて位置がずれても、数字のままの名前は「ゲスト」と表示する', () => {
+    // 4番を削除した後の一覧: 「5」という名前の参加者が4番目に来る。
+    const participants: Participant[] = [
+      { id: 'p1', userId: null, guestName: '1', guest: true, status: 'ACTIVE' },
+      { id: 'p5', userId: null, guestName: '5', guest: true, status: 'ACTIVE' },
+    ]
+    const lookup = buildParticipantNameLookup(participants, new Map())
+    expect(lookup.get('p5')).toBe('ゲスト')
+  })
 })

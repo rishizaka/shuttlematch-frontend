@@ -14,8 +14,8 @@ export function buildParticipantNameLookup(
   userNames: ReadonlyMap<string, string>,
 ): Map<string, string> {
   const lookup = new Map<string, string>()
-  participants.forEach((p, i) => {
-    lookup.set(p.id, participantDisplayNameForList(p, i, userNames))
+  participants.forEach((p) => {
+    lookup.set(p.id, participantDisplayNameForList(p, userNames))
   })
   return lookup
 }
