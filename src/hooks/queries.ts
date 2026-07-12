@@ -11,9 +11,10 @@ import {
   type AddParticipantInput,
   type CreateRoomInput,
   type CreateUserInput,
+  type RoomListParams,
 } from "../lib/api";
 import { addRoomId } from "../lib/local-store";
-import type { Room, RoomStatus, User } from "../lib/types";
+import type { Room, User } from "../lib/types";
 
 /**
  * ライブ同期用のポーリング間隔 (ms)。
@@ -26,7 +27,8 @@ export const queryKeys = {
   user: (id: string) => ["user", id] as const,
   room: (id: string) => ["room", id] as const,
   matches: (id: string) => ["matches", id] as const,
-  openRooms: (status: RoomStatus) => ["rooms", "list", status] as const,
+  roomLists: ["rooms", "list"] as const,
+  roomList: (params: RoomListParams) => ["rooms", "list", params] as const,
 };
 
 // ---- User ----
@@ -64,11 +66,11 @@ export function useRoom(
   });
 }
 
-/** 募集中などのステータスのルーム一覧(公開・トップページ用)。 */
-export function useRoomList(status: RoomStatus = "OPEN") {
+/** 条件に合うルーム一覧(公開・トップページ/過去の開催用)。 */
+export function useRoomList(params: RoomListParams = {}) {
   return useQuery({
-    queryKey: queryKeys.openRooms(status),
-    queryFn: () => roomApi.list(status),
+    queryKey: queryKeys.roomList(params),
+    queryFn: () => roomApi.list(params),
   });
 }
 
@@ -98,7 +100,7 @@ export function useCloseRoom(roomId: string) {
     mutationFn: () => roomApi.close(roomId),
     onSuccess: (room) => {
       qc.setQueryData(queryKeys.room(roomId), room);
-      qc.invalidateQueries({ queryKey: queryKeys.openRooms("OPEN") });
+      qc.invalidateQueries({ queryKey: queryKeys.roomLists });
     },
   });
 }

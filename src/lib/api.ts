@@ -100,15 +100,30 @@ export interface AddParticipantInput {
   guestName?: string | null
 }
 
+/** ルーム一覧の絞り込み条件。いずれも省略可(省略時は絞り込まない)。 */
+export interface RoomListParams {
+  status?: RoomStatus
+  /** 開催日時がこの時刻以上 (ISO-8601)。 */
+  heldFrom?: string
+  /** 開催日時がこの時刻未満 (ISO-8601)。 */
+  heldTo?: string
+}
+
 export const roomApi = {
   create: (input: CreateRoomInput) =>
     request<Room>('/api/v1/rooms', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
-  /** ステータスでルーム一覧を取得する(公開)。 */
-  list: (status: RoomStatus = 'OPEN') =>
-    request<Room[]>(`/api/v1/rooms?status=${status}`),
+  /** 条件でルーム一覧を取得する(公開)。 */
+  list: (params: RoomListParams = {}) => {
+    const qs = new URLSearchParams()
+    if (params.status) qs.set('status', params.status)
+    if (params.heldFrom) qs.set('heldFrom', params.heldFrom)
+    if (params.heldTo) qs.set('heldTo', params.heldTo)
+    const q = qs.toString()
+    return request<Room[]>(`/api/v1/rooms${q ? `?${q}` : ''}`)
+  },
   get: (roomId: string) => request<Room>(`/api/v1/rooms/${roomId}`),
   /** かんたん作成: 参加人数・コート数・タイトルのみで、番号参加者+試合表まで作成。 */
   quickCreate: (input: {

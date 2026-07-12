@@ -91,6 +91,22 @@ export function participantDisplayNameForList(
 }
 
 /**
+ * 日本時間での「その日」の開始・終了(いずれもUTCの瞬間、ISO文字列)を返す。
+ * from は当日0時(JST)以上、to は翌日0時(JST)未満として API の絞り込みに使う。
+ * JST は UTC+9 固定(夏時間なし)。
+ */
+export function jstDayRange(now: Date = new Date()): { from: string; to: string } {
+  const DAY_MS = 86_400_000
+  const JST_OFFSET_MS = 9 * 3_600_000
+  const dayStartJst = Math.floor((now.getTime() + JST_OFFSET_MS) / DAY_MS) * DAY_MS
+  const fromMs = dayStartJst - JST_OFFSET_MS
+  return {
+    from: new Date(fromMs).toISOString(),
+    to: new Date(fromMs + DAY_MS).toISOString(),
+  }
+}
+
+/**
  * ルームタイトルの初期値。今日の日付 + 時間帯ラベル。
  * 〜15時: 昼練 / 15時台: 夕練 / 16時〜: 夜練。
  */

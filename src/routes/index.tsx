@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
+import { ChevronRight, History, Plus } from 'lucide-react'
 import { useRoomList } from '../hooks/queries'
 import { Card, CardBody } from '../components/ui/Card'
 import { ErrorBlock, LoadingBlock } from '../components/ui/Spinner'
 import { RoomCard } from '../components/room/RoomCard'
+import { jstDayRange } from '../lib/format'
 import { ogImageMeta } from '../lib/og'
 import type { Room } from '../lib/types'
 
@@ -14,18 +15,14 @@ export const Route = createFileRoute('/')({
 })
 
 function HomePage() {
-  // 開催中 = 募集中(OPEN) + 試合表生成済み(GENERATED)。過去 = 終了済み(CLOSED)。
-  const open = useRoomList('OPEN')
-  const generated = useRoomList('GENERATED')
-  const closed = useRoomList('CLOSED')
+  // TOP は本日の開催のみ。サーバ側で開催日時を絞り込み、1リクエストで取得する。
+  const { from, to } = jstDayRange()
+  const today = useRoomList({ heldFrom: from, heldTo: to })
 
-  const active: Room[] = [...(open.data ?? []), ...(generated.data ?? [])].sort(
-    (a, b) => (a.heldAt < b.heldAt ? 1 : -1),
-  )
-  const past: Room[] = (closed.data ?? []).slice().sort((a, b) => (a.heldAt < b.heldAt ? 1 : -1))
-
-  const loading = open.isLoading || generated.isLoading || closed.isLoading
-  const error = open.error ?? generated.error ?? closed.error
+  const byHeldAtDesc = (a: Room, b: Room) => (a.heldAt < b.heldAt ? 1 : -1)
+  const rooms = today.data ?? []
+  const active = rooms.filter((r) => r.status !== 'CLOSED').sort(byHeldAtDesc)
+  const closedToday = rooms.filter((r) => r.status === 'CLOSED').sort(byHeldAtDesc)
 
   return (
     <div className="space-y-8">
@@ -43,41 +40,56 @@ function HomePage() {
         </Link>
       </div>
 
-      {loading ? (
+      {today.isLoading ? (
         <LoadingBlock />
-      ) : error ? (
-        <ErrorBlock message={error instanceof Error ? error.message : '一覧を取得できませんでした'} />
+      ) : today.error ? (
+        <ErrorBlock
+          message={
+            today.error instanceof Error ? today.error.message : '一覧を取得できませんでした'
+          }
+        />
       ) : (
         <>
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-slate-700">開催中</h2>
-            {active.length === 0 ? (
-              <Card>
-                <CardBody>
-                  <p className="text-sm text-slate-500">開催中のルームはありません。</p>
-                </CardBody>
-              </Card>
-            ) : (
+          {rooms.length === 0 ? (
+            <Card>
+              <CardBody>
+                <p className="text-sm text-slate-500">本日のルームはまだありません。</p>
+              </CardBody>
+            </Card>
+          ) : null}
+
+          {active.length > 0 ? (
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold text-slate-700">開催中</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {active.map((s) => (
                   <RoomCard key={s.id} room={s} />
                 ))}
               </div>
-            )}
-          </section>
+            </section>
+          ) : null}
 
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-slate-700">過去</h2>
-            {past.length === 0 ? (
-              <p className="text-sm text-slate-400">過去のルームはまだありません。</p>
-            ) : (
+          {closedToday.length > 0 ? (
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold text-slate-700">終了済み</h2>
               <div className="grid gap-3 sm:grid-cols-2">
-                {past.map((s) => (
+                {closedToday.map((s) => (
                   <RoomCard key={s.id} room={s} />
                 ))}
               </div>
-            )}
-          </section>
+            </section>
+          ) : null}
+
+          <div className="border-t border-slate-100 pt-4">
+            <Link
+              to="/past"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-emerald-700"
+            >
+              <History className="h-4 w-4" />
+              過去の開催を見る
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
         </>
       )}
     </div>

@@ -10,16 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as PastRouteImport } from './routes/past'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoomsRoomIdRouteImport } from './routes/rooms/$roomId'
 import { Route as JoinRoomIdRouteImport } from './routes/join.$roomId'
 import { Route as RoomsRoomIdMatchesRouteImport } from './routes/rooms/$roomId_.matches'
 import { Route as OrganizerRoomsNewRouteImport } from './routes/organizer/rooms.new'
+import { Route as RoomsRoomIdMatchesPrintRouteImport } from './routes/rooms/$roomId_.matches_.print'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PastRoute = PastRouteImport.update({
+  id: '/past',
+  path: '/past',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -52,73 +59,92 @@ const OrganizerRoomsNewRoute = OrganizerRoomsNewRouteImport.update({
   path: '/organizer/rooms/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoomsRoomIdMatchesPrintRoute = RoomsRoomIdMatchesPrintRouteImport.update({
+  id: '/rooms/$roomId_/matches_/print',
+  path: '/rooms/$roomId/matches/print',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/past': typeof PastRoute
   '/signup': typeof SignupRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
+  '/rooms/$roomId/matches/print': typeof RoomsRoomIdMatchesPrintRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/past': typeof PastRoute
   '/signup': typeof SignupRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
+  '/rooms/$roomId/matches/print': typeof RoomsRoomIdMatchesPrintRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/past': typeof PastRoute
   '/signup': typeof SignupRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId_/matches': typeof RoomsRoomIdMatchesRoute
+  '/rooms/$roomId_/matches_/print': typeof RoomsRoomIdMatchesPrintRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
+    | '/past'
     | '/signup'
     | '/join/$roomId'
     | '/rooms/$roomId'
     | '/organizer/rooms/new'
     | '/rooms/$roomId/matches'
+    | '/rooms/$roomId/matches/print'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/past'
     | '/signup'
     | '/join/$roomId'
     | '/rooms/$roomId'
     | '/organizer/rooms/new'
     | '/rooms/$roomId/matches'
+    | '/rooms/$roomId/matches/print'
   id:
     | '__root__'
     | '/'
     | '/login'
+    | '/past'
     | '/signup'
     | '/join/$roomId'
     | '/rooms/$roomId'
     | '/organizer/rooms/new'
     | '/rooms/$roomId_/matches'
+    | '/rooms/$roomId_/matches_/print'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  PastRoute: typeof PastRoute
   SignupRoute: typeof SignupRoute
   JoinRoomIdRoute: typeof JoinRoomIdRoute
   RoomsRoomIdRoute: typeof RoomsRoomIdRoute
   OrganizerRoomsNewRoute: typeof OrganizerRoomsNewRoute
   RoomsRoomIdMatchesRoute: typeof RoomsRoomIdMatchesRoute
+  RoomsRoomIdMatchesPrintRoute: typeof RoomsRoomIdMatchesPrintRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -128,6 +154,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/past': {
+      id: '/past'
+      path: '/past'
+      fullPath: '/past'
+      preLoaderRoute: typeof PastRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -172,17 +205,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrganizerRoomsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rooms/$roomId_/matches_/print': {
+      id: '/rooms/$roomId_/matches_/print'
+      path: '/rooms/$roomId/matches/print'
+      fullPath: '/rooms/$roomId/matches/print'
+      preLoaderRoute: typeof RoomsRoomIdMatchesPrintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  PastRoute: PastRoute,
   SignupRoute: SignupRoute,
   JoinRoomIdRoute: JoinRoomIdRoute,
   RoomsRoomIdRoute: RoomsRoomIdRoute,
   OrganizerRoomsNewRoute: OrganizerRoomsNewRoute,
   RoomsRoomIdMatchesRoute: RoomsRoomIdMatchesRoute,
+  RoomsRoomIdMatchesPrintRoute: RoomsRoomIdMatchesPrintRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
