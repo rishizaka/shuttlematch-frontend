@@ -116,6 +116,8 @@ function MatchesPage() {
   const [density, setDensity] = useState<Density>('compact')
   const [addCount, setAddCount] = useState(3)
   const [confirmingClose, setConfirmingClose] = useState(false)
+  // 最下部の「セットを追加」の入力UI(ステッパー)の開閉。
+  const [addingSets, setAddingSets] = useState(false)
   // 運営メニューの開閉。参加者リストが長くなりがちなので、既定では畳んでおく。
   const [organizerOpen, setOrganizerOpen] = useState(false)
   const [showSelfModal, setShowSelfModal] = useState(false)
@@ -567,8 +569,64 @@ function MatchesPage() {
                 </Button>
               </div>
             </div>
+          ) : addingSets ? (
+            // セット追加の入力UI。押すまではボタンだけの控えめな表示にしておく。
+            // 運営メニュー内の追加と同じ addCount / addSets を共有する。
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <div className="flex items-center overflow-hidden rounded-lg border border-slate-300">
+                <button
+                  type="button"
+                  aria-label="追加セット数を減らす"
+                  onClick={() => setAddCount((c) => Math.max(1, c - 1))}
+                  className="px-2.5 py-2 text-slate-500 transition hover:bg-slate-50"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-8 text-center text-sm font-semibold text-slate-900 tabular-nums">
+                  {addCount}
+                </span>
+                <button
+                  type="button"
+                  aria-label="追加セット数を増やす"
+                  onClick={() => setAddCount((c) => Math.min(30, c + 1))}
+                  className="px-2.5 py-2 text-slate-500 transition hover:bg-slate-50"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+              <Button
+                size="sm"
+                onClick={() =>
+                  addSets.mutate(addCount, {
+                    onSuccess: () => {
+                      showToast('セットを追加しました')
+                      setAddingSets(false)
+                    },
+                  })
+                }
+                disabled={addSets.isPending}
+              >
+                {addSets.isPending ? '追加中…' : '追加'}
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setAddingSets(false)}
+                disabled={addSets.isPending}
+              >
+                キャンセル
+              </Button>
+            </div>
           ) : (
-            <div className="flex justify-center">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setAddingSets(true)}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 transition hover:text-emerald-700"
+              >
+                <ListPlus className="h-4 w-4" />
+                セットを追加
+              </button>
               <button
                 type="button"
                 onClick={() => setConfirmingClose(true)}
@@ -579,6 +637,13 @@ function MatchesPage() {
               </button>
             </div>
           )}
+          {!confirmingClose && addSets.isError ? (
+            <p className="mt-2 text-sm text-red-600">
+              {addSets.error instanceof Error
+                ? addSets.error.message
+                : 'セットの追加に失敗しました'}
+            </p>
+          ) : null}
           {closeRoom.isError ? (
             <p className="mt-2 text-center text-sm text-red-600">
               {closeRoom.error instanceof Error
