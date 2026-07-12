@@ -11,7 +11,11 @@ export const SITE_ORIGIN: string =
 export const SITE_NAME = 'ShuttleMatch'
 export const SITE_DESCRIPTION = 'バドミントンの試合表をかんたん作成・共有'
 
-/** サイト共通の OGP / Twitter カードメタタグ(ルートに置く)。 */
+/**
+ * サイト共通の OGP / Twitter カードメタタグ(ルートに置く)。
+ * 画像は含めない。ルートに置くと全ページに継承されて子ルートから外せないため、
+ * 画像を出したいページが ogImageMeta() を自分の head に足す(opt-in)。
+ */
 export function defaultOgMeta() {
   return [
     { name: 'description', content: SITE_DESCRIPTION },
@@ -19,6 +23,12 @@ export function defaultOgMeta() {
     { property: 'og:type', content: 'website' },
     { property: 'og:title', content: SITE_NAME },
     { property: 'og:description', content: SITE_DESCRIPTION },
+  ]
+}
+
+/** リンクカードに OG 画像を出すページ用(トップ・ルーム詳細など)。 */
+export function ogImageMeta() {
+  return [
     { property: 'og:image', content: `${SITE_ORIGIN}/og-image.png` },
     { name: 'twitter:card', content: 'summary_large_image' },
   ]

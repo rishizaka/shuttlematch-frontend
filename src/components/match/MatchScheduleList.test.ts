@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filterMatchesForParticipant, groupMatchesBySet } from './MatchScheduleList'
+import { groupMatchesBySet } from './MatchScheduleList'
 import { buildParticipantNameLookup } from './MatchCard'
 import type { Match, Participant } from '../../lib/types'
 
@@ -25,21 +25,6 @@ const matches: Match[] = [
   match(2, 'p5', 'p6', 'p1', 'p3'),
   match(3, 'p2', 'p4', 'p5', 'p6'),
 ]
-
-describe('filterMatchesForParticipant', () => {
-  it('participantId が null なら全試合を返す', () => {
-    expect(filterMatchesForParticipant(matches, null)).toHaveLength(3)
-  })
-
-  it('指定した参加者が出場する試合だけを返す', () => {
-    const result = filterMatchesForParticipant(matches, 'p1')
-    expect(result.map((m) => m.matchNumber)).toEqual([1, 2])
-  })
-
-  it('どの試合にもいない参加者は空配列', () => {
-    expect(filterMatchesForParticipant(matches, 'p99')).toEqual([])
-  })
-})
 
 describe('groupMatchesBySet', () => {
   it('セット番号でまとめ、セット昇順・各セット内はコート番号昇順にする', () => {

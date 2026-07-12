@@ -10,6 +10,7 @@ import {
   Plus,
   RefreshCw,
   Settings2,
+  UserRound,
   Users,
 } from 'lucide-react'
 import {
@@ -26,7 +27,11 @@ import {
 } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { roomApi } from '../../lib/api'
-import { getSelfParticipant, setSelfParticipant } from '../../lib/local-store'
+import {
+  getSelfParticipant,
+  setSelfParticipant,
+  skipSelfParticipant,
+} from '../../lib/local-store'
 import { roomOgMeta } from '../../lib/og'
 import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -35,10 +40,7 @@ import { useToast } from '../../components/ui/Toast'
 import { buildParticipantNameLookup } from '../../components/match/MatchCard'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { SelfIdentifyModal } from '../../components/room/SelfIdentifyModal'
-import {
-  MatchScheduleList,
-  filterMatchesForParticipant,
-} from '../../components/match/MatchScheduleList'
+import { MatchScheduleList } from '../../components/match/MatchScheduleList'
 
 export const Route = createFileRoute('/rooms/$roomId_/matches')({
   // LINE 等のアプリ内ブラウザから既定ブラウザで開かせるためのパラメータ。
@@ -55,14 +57,20 @@ export const Route = createFileRoute('/rooms/$roomId_/matches')({
       return null
     }
   },
+  // 試合表のリンクカードは画像なし(テキストのみ)。og:image はここでは足さない。
   head: ({ loaderData, params }) =>
     loaderData
-      ? { meta: roomOgMeta(loaderData, `/rooms/${params.roomId}/matches`, '試合表') }
+      ? {
+          meta: [
+            ...roomOgMeta(loaderData, `/rooms/${params.roomId}/matches`, '試合表'),
+            { name: 'twitter:card', content: 'summary' },
+          ],
+        }
       : {},
   component: MatchesPage,
 })
 
-type Filter = 'all' | 'mine'
+type Density = 'compact' | 'standard'
 
 function MatchesPage() {
   const { roomId } = Route.useParams()
@@ -104,7 +112,8 @@ function MatchesPage() {
   const replan = useReplanFutureSets(roomId)
   const closeRoom = useCloseRoom(roomId)
   const rename = useRenameParticipant(roomId)
-  const [filter, setFilter] = useState<Filter>('all')
+  // 表示密度。既定はコンパクト(1画面に多くのセットを収める)。
+  const [density, setDensity] = useState<Density>('compact')
   const [addCount, setAddCount] = useState(3)
   const [confirmingClose, setConfirmingClose] = useState(false)
   // 運営メニューの開閉。参加者リストが長くなりがちなので、既定では畳んでおく。
@@ -165,20 +174,21 @@ function MatchesPage() {
   }, [room, user, selfParticipantId])
 
   // マウント後に localStorage を読み、未申告なら自己紹介モーダルを出す(SSR不一致を避けるため effect 内で判定)。
-  // 運営者と、参加者に紐付いた登録ユーザーは申告不要なので対象外。
+  // 参加者に紐付いた登録ユーザーは申告不要なので対象外。
+  // 運営者にも出すが、スキップ可能(skipped を記憶したら以後は出さない。運営メニューから再設定できる)。
   useEffect(() => {
     if (!schedule || closed) return
     const participants = room?.participants ?? []
     if (participants.length === 0) return
-    if (isOrganizer) return
     if (user && participants.some((p) => p.userId === user.id)) return
     const stored = getSelfParticipant(roomId)
     if (stored?.participantId) {
       setSelfParticipantId(stored.participantId)
       return
     }
+    if (stored?.skipped) return
     setShowSelfModal(true)
-  }, [roomId, schedule, closed, room, user, isOrganizer])
+  }, [roomId, schedule, closed, room, user])
 
   // アクティブ(進行中)なセット = 最も新しい開始時刻を持つセット。
   const activeSetNumber = useMemo(() => {
@@ -235,10 +245,7 @@ function MatchesPage() {
     )
   }
 
-  const visible =
-    filter === 'mine'
-      ? filterMatchesForParticipant(schedule.matches, myParticipantId)
-      : schedule.matches
+  const dense = density === 'compact'
 
   return (
     <div className="space-y-5">
@@ -260,12 +267,20 @@ function MatchesPage() {
             )
           }
           onCancel={() => {
-            // 申告しないなら試合表は見せず、ルーム詳細へ戻す。
+            // 運営者は番号が未定でも試合表を使えるようにスキップ可。
+            // スキップを記憶して以後は自動で出さない(運営メニューから再設定できる)。
+            if (isOrganizer) {
+              skipSelfParticipant(roomId)
+              setShowSelfModal(false)
+              return
+            }
+            // 参加者が申告しないなら試合表は見せず、ルーム詳細へ戻す。
             // replace: true でこの試合表ページの履歴を残さない。
             // 残すとブラウザバックで試合表に戻ってモーダルが再度出て、
             // キャンセルするとまたルーム詳細へ…と無限に行き来してしまう。
             navigate({ to: '/rooms/$roomId', params: { roomId }, replace: true })
           }}
+          cancelLabel={isOrganizer ? 'あとで設定する' : 'キャンセル'}
         />
       ) : null}
 
@@ -289,35 +304,36 @@ function MatchesPage() {
           <p className="text-sm text-slate-500">
             全 {setCount} セット・{schedule.matchCount} 試合
           </p>
+          <p className="mt-0.5 text-xs text-slate-400">
+            番号をタップすると名前が表示されます
+          </p>
         </div>
-        {myParticipantId ? (
-          <div className="flex rounded-xl bg-slate-100 p-1" role="group" aria-label="表示切替">
-            <button
-              type="button"
-              onClick={() => setFilter('all')}
-              className={
-                'rounded-lg px-3 py-1.5 text-sm font-medium transition ' +
-                (filter === 'all'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700')
-              }
-            >
-              すべて
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter('mine')}
-              className={
-                'rounded-lg px-3 py-1.5 text-sm font-medium transition ' +
-                (filter === 'mine'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700')
-              }
-            >
-              自分の試合
-            </button>
-          </div>
-        ) : null}
+        <div className="flex rounded-xl bg-slate-100 p-1" role="group" aria-label="表示切替">
+          <button
+            type="button"
+            onClick={() => setDensity('compact')}
+            className={
+              'rounded-lg px-3 py-1.5 text-sm font-medium transition ' +
+              (density === 'compact'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700')
+            }
+          >
+            コンパクト
+          </button>
+          <button
+            type="button"
+            onClick={() => setDensity('standard')}
+            className={
+              'rounded-lg px-3 py-1.5 text-sm font-medium transition ' +
+              (density === 'standard'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700')
+            }
+          >
+            標準
+          </button>
+        </div>
       </div>
 
       {closed ? (
@@ -363,6 +379,30 @@ function MatchesPage() {
 
           {organizerOpen ? (
             <div className="divide-y divide-slate-100 border-t border-slate-100">
+              {/* 自分の番号 (運営者もプレーヤーとして参加する場合の自己申告) */}
+              <div className="px-4 py-4 sm:px-5">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
+                      <UserRound className="h-4 w-4 text-slate-400" />
+                      <h3 className="text-sm font-semibold text-slate-800">自分の番号</h3>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      {myParticipantId
+                        ? `${indexByParticipantId.get(myParticipantId) ?? '?'} 番として設定済み。自分の試合が強調表示されます。`
+                        : '未設定です。設定すると自分の試合が強調表示されます。'}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => setShowSelfModal(true)}
+                  >
+                    {myParticipantId ? '変更する' : '設定する'}
+                  </Button>
+                </div>
+              </div>
+
               {/* 参加者の出入り */}
               <div className="px-4 py-4 sm:px-5">
                 <div className="mb-3 flex items-center gap-2">
@@ -473,7 +513,7 @@ function MatchesPage() {
         </section>
       ) : null}
 
-      {visible.length === 0 ? (
+      {schedule.matches.length === 0 ? (
         <Card>
           <CardBody>
             <p className="text-sm text-slate-500">該当する試合がありません。</p>
@@ -481,10 +521,11 @@ function MatchesPage() {
         </Card>
       ) : (
         <MatchScheduleList
-          matches={visible}
+          matches={schedule.matches}
+          dense={dense}
           nameByParticipantId={nameByParticipantId}
           indexByParticipantId={indexByParticipantId}
-          highlightParticipantId={filter === 'all' ? myParticipantId : null}
+          highlightParticipantId={myParticipantId}
           activeSetNumber={activeSetNumber}
           startableSetNumber={startableSetNumber}
           isOrganizer={isOrganizer && !closed}

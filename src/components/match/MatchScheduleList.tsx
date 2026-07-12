@@ -4,21 +4,6 @@ import type { Match } from '../../lib/types'
 import { formatTime } from '../../lib/format'
 import { MatchCard } from './MatchCard'
 
-/** 指定 ParticipantId が出場する試合だけに絞り込む。 */
-export function filterMatchesForParticipant(
-  matches: Match[],
-  participantId: string | null,
-): Match[] {
-  if (!participantId) return matches
-  return matches.filter(
-    (m) =>
-      m.pairA.player1Id === participantId ||
-      m.pairA.player2Id === participantId ||
-      m.pairB.player1Id === participantId ||
-      m.pairB.player2Id === participantId,
-  )
-}
-
 export interface SetGroup {
   setNumber: number
   /** コート番号昇順に並んだ、このセットの試合。 */
@@ -56,6 +41,7 @@ function SetGroupView({
   starting,
   onRevert,
   reverting,
+  dense = false,
 }: {
   group: SetGroup
   nameByParticipantId: ReadonlyMap<string, string>
@@ -68,6 +54,7 @@ function SetGroupView({
   starting: boolean
   onRevert?: () => void
   reverting: boolean
+  dense?: boolean
 }) {
   // 「開始前に戻す」の確認状態。開始はワンタップなので確認しない。
   const [confirmingRevert, setConfirmingRevert] = useState(false)
@@ -84,14 +71,107 @@ function SetGroupView({
   // まだ開始できない未来のセット。
   const upcoming = !startedAt && !canStart
 
-  const isHighlighted = (m: Match) =>
-    !!highlightParticipantId &&
-    (m.pairA.player1Id === highlightParticipantId ||
-      m.pairA.player2Id === highlightParticipantId ||
-      m.pairB.player1Id === highlightParticipantId ||
-      m.pairB.player2Id === highlightParticipantId)
-
-  const hasMyMatch = group.matches.some(isHighlighted)
+  // コンパクト表示: カードをやめ、セットの区切りを「ラベル付き横線」にして密度を上げる。
+  // 進行中セットだけ薄緑の帯で示す。折りたたみは行が低いので提供しない。
+  if (dense) {
+    return (
+      <section>
+        <div className="flex items-center gap-2">
+          <span
+            className={
+              'flex shrink-0 items-center gap-1.5 text-xs font-bold ' +
+              (finished
+                ? 'text-slate-400'
+                : active
+                  ? 'text-emerald-700'
+                  : upcoming
+                    ? 'text-slate-500'
+                    : 'text-slate-700')
+            }
+          >
+            {finished ? <Check className="h-3 w-3 text-slate-300" /> : null}
+            {active ? (
+              <span className="relative flex h-1.5 w-1.5" aria-hidden>
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              </span>
+            ) : null}
+            第{group.setNumber}セット
+            {startedTime ? (
+              <span className="text-[10px] font-medium text-slate-400 tabular-nums">
+                {startedTime}〜
+              </span>
+            ) : null}
+          </span>
+          <span className={'h-px flex-1 ' + (active ? 'bg-emerald-200' : 'bg-slate-200')} />
+          {canStart ? (
+            <button
+              type="button"
+              disabled={starting}
+              onClick={() => onStart?.()}
+              className="inline-flex shrink-0 items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
+            >
+              <Play className="h-3 w-3 fill-current" />
+              {starting ? '開始中…' : '開始'}
+            </button>
+          ) : null}
+          {canRevert ? (
+            confirmingRevert ? (
+              <span className="flex shrink-0 items-center gap-1">
+                <span className="text-[10px] font-medium text-slate-500">戻す？</span>
+                <button
+                  type="button"
+                  disabled={reverting}
+                  onClick={() => {
+                    onRevert?.()
+                    setConfirmingRevert(false)
+                  }}
+                  className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+                >
+                  はい
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmingRevert(false)}
+                  className="rounded px-1 py-0.5 text-[10px] font-medium text-slate-500 hover:bg-slate-100"
+                >
+                  いいえ
+                </button>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmingRevert(true)}
+                className="inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              >
+                <RotateCcw className="h-2.5 w-2.5" />
+                戻す
+              </button>
+            )
+          ) : null}
+        </div>
+        <div
+          className={
+            'mt-1.5 space-y-1' +
+            (active ? ' -mx-2 rounded-lg bg-emerald-50 px-2 py-1.5' : '')
+          }
+        >
+          {group.matches.map((m) => (
+            <MatchCard
+              key={m.matchNumber}
+              match={m}
+              nameByParticipantId={nameByParticipantId}
+              indexByParticipantId={indexByParticipantId}
+              highlightParticipantId={highlightParticipantId}
+              active={active}
+              finished={finished}
+              dense
+            />
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   // 終了セットは1行のサマリーに畳む。
   if (finished && !expanded) {
@@ -110,27 +190,22 @@ function SetGroupView({
         {startedTime ? (
           <span className="text-xs text-slate-400 tabular-nums">{startedTime}〜</span>
         ) : null}
-        {hasMyMatch ? (
-          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
-            出場
-          </span>
-        ) : null}
         <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-slate-300" />
       </button>
     )
   }
 
   const container = active
-    ? 'rounded-2xl border-2 border-emerald-500 bg-emerald-50/50 p-4 shadow-sm shadow-emerald-100'
+    ? 'rounded-2xl border-2 border-emerald-500 bg-emerald-50/50 p-3 shadow-sm shadow-emerald-100 sm:p-4'
     : finished
-      ? 'rounded-2xl border border-slate-200 bg-white p-4'
+      ? 'rounded-2xl border border-slate-200 bg-white p-3 sm:p-4'
       : canStart
-        ? 'rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm'
-        : 'rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-4'
+        ? 'rounded-2xl border border-emerald-200 bg-white p-3 shadow-sm sm:p-4'
+        : 'rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-3 sm:p-4'
 
   return (
     <section className={container}>
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="mb-2.5 flex flex-wrap items-center gap-2">
         {active ? (
           <span className="relative flex h-2.5 w-2.5" aria-hidden>
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -167,6 +242,17 @@ function SetGroupView({
         ) : null}
 
         <span className="ml-auto flex items-center gap-1.5">
+          {canStart ? (
+            <button
+              type="button"
+              disabled={starting}
+              onClick={() => onStart?.()}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
+            >
+              <Play className="h-3.5 w-3.5 fill-current" />
+              {starting ? '開始中…' : '開始'}
+            </button>
+          ) : null}
           {canRevert ? (
             confirmingRevert ? (
               <span className="flex items-center gap-1.5">
@@ -217,33 +303,21 @@ function SetGroupView({
         </span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {/* スマホのワンビューに収めるため、コートごとに1行のコンパクト表示にする。 */}
+      <div className="space-y-1.5">
         {group.matches.map((m) => (
           <MatchCard
             key={m.matchNumber}
             match={m}
             nameByParticipantId={nameByParticipantId}
             indexByParticipantId={indexByParticipantId}
-            highlight={isHighlighted(m)}
+            highlightParticipantId={highlightParticipantId}
             active={active}
             finished={finished}
           />
         ))}
       </div>
 
-      {canStart ? (
-        <div className="mt-3 sm:flex sm:justify-end">
-          <button
-            type="button"
-            disabled={starting}
-            onClick={() => onStart?.()}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.99] disabled:opacity-50 sm:w-auto sm:px-6"
-          >
-            <Play className="h-4 w-4 fill-current" />
-            {starting ? '開始中…' : `第 ${group.setNumber} セットを開始`}
-          </button>
-        </div>
-      ) : null}
     </section>
   )
 }
@@ -260,6 +334,7 @@ export function MatchScheduleList({
   startingSetNumber,
   onRevertSet,
   revertingSetNumber,
+  dense = false,
 }: {
   matches: Match[]
   nameByParticipantId: ReadonlyMap<string, string>
@@ -281,6 +356,8 @@ export function MatchScheduleList({
   onRevertSet?: (setNumber: number) => void
   /** 戻し処理中のセット番号。 */
   revertingSetNumber?: number | null
+  /** コンパクト表示(枠なし・高密度)。 */
+  dense?: boolean
 }) {
   if (matches.length === 0) {
     return <p className="py-6 text-sm text-slate-500">表示できる試合がありません。</p>
@@ -289,10 +366,11 @@ export function MatchScheduleList({
   const groups = groupMatchesBySet(matches)
 
   return (
-    <div className="space-y-3">
+    <div className={dense ? 'space-y-3.5' : 'space-y-3'}>
       {groups.map((group) => (
         <SetGroupView
           key={group.setNumber}
+          dense={dense}
           group={group}
           nameByParticipantId={nameByParticipantId}
           indexByParticipantId={indexByParticipantId}

@@ -7,7 +7,8 @@ import { Button } from '../ui/Button'
 /**
  * 試合表を開いたときに「あなたの番号とニックネームは？」と尋ねるモーダル。
  * 番号(参加者)を選んでニックネームを入力すると、その参加者の名前を更新する。
- * 自己申告するまで試合表は見せない想定のため、閉じる手段はキャンセル(戻る)のみ。
+ * 参加者は自己申告するまで試合表を見せない想定(キャンセルで戻す)。
+ * 運営者はスキップして先に進める(cancelLabel で文言を差し替える)。
  */
 export function SelfIdentifyModal({
   participants,
@@ -15,13 +16,16 @@ export function SelfIdentifyModal({
   submitting,
   onSubmit,
   onCancel,
+  cancelLabel = 'キャンセル',
 }: {
   participants: Participant[]
   names?: ReadonlyMap<string, string>
   submitting: boolean
   onSubmit: (participantId: string, nickname: string) => void
-  /** キャンセル時のハンドラ。呼び出し側でルーム詳細へ戻す。 */
+  /** キャンセル時のハンドラ。呼び出し側で戻す/閉じるを決める。 */
   onCancel: () => void
+  /** キャンセルボタンの文言。 */
+  cancelLabel?: string
 }) {
   const [numberStr, setNumberStr] = useState('')
   const [nickname, setNickname] = useState('')
@@ -121,7 +125,7 @@ export function SelfIdentifyModal({
             {submitting ? '登録中…' : '決定'}
           </Button>
           <Button variant="ghost" onClick={onCancel} disabled={submitting}>
-            キャンセル
+            {cancelLabel}
           </Button>
         </div>
       </div>

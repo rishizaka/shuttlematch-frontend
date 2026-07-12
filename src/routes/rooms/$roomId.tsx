@@ -5,7 +5,7 @@ import { useRoom, useUserNames } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { roomApi } from '../../lib/api'
 import { addRoomId } from '../../lib/local-store'
-import { roomOgMeta } from '../../lib/og'
+import { ogImageMeta, roomOgMeta } from '../../lib/og'
 import type { Room } from '../../lib/types'
 import { formatDateTime, roomStatusLabel } from '../../lib/format'
 import { Card, CardBody, CardHeader } from '../../components/ui/Card'
@@ -28,7 +28,14 @@ export const Route = createFileRoute('/rooms/$roomId')({
     }
   },
   head: ({ loaderData, params }) =>
-    loaderData ? { meta: roomOgMeta(loaderData, `/rooms/${params.roomId}`, 'ルーム') } : {},
+    loaderData
+      ? {
+          meta: [
+            ...roomOgMeta(loaderData, `/rooms/${params.roomId}`, 'ルーム'),
+            ...ogImageMeta(),
+          ],
+        }
+      : {},
   component: RoomPage,
 })
 
