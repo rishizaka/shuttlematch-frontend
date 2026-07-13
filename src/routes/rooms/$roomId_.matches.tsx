@@ -307,19 +307,36 @@ function MatchesPage() {
           participants={room?.participants ?? []}
           names={userNames}
           submitting={rename.isPending}
-          onSubmit={(participantId, nickname) =>
+          onSubmit={(participantId, nickname) => {
+            const prevId = myParticipantId
             rename.mutate(
               { participantId, name: nickname },
               {
                 onSuccess: () => {
+                  // 番号の変更なら、以前の自分の枠は名前を番号(数字)に戻して
+                  // 空き扱いにし、他の人がその番号を申告できるようにする。
+                  if (prevId && prevId !== participantId) {
+                    const prevIndex = indexByParticipantId.get(prevId)
+                    if (prevIndex != null) {
+                      rename.mutate({ participantId: prevId, name: String(prevIndex) })
+                    }
+                  }
                   setSelfParticipant(roomId, participantId)
                   setSelfParticipantId(participantId)
                   setShowSelfModal(false)
+                  if (prevId && prevId !== participantId) {
+                    showToast('番号を変更しました(元の番号は空きに戻ります)')
+                  }
                 },
               },
             )
-          }
+          }}
           onCancel={() => {
+            // 申告済みの人が「変更する」から開いた場合は閉じるだけ。
+            if (myParticipantId) {
+              setShowSelfModal(false)
+              return
+            }
             // 運営者は番号が未定でも試合表を使えるようにスキップ可。
             // スキップを記憶して以後は自動で出さない(運営メニューから再設定できる)。
             if (isOrganizer) {
@@ -333,7 +350,9 @@ function MatchesPage() {
             // キャンセルするとまたルーム詳細へ…と無限に行き来してしまう。
             navigate({ to: '/rooms/$roomId', params: { roomId }, replace: true })
           }}
-          cancelLabel={isOrganizer ? 'あとで設定する' : 'キャンセル'}
+          cancelLabel={
+            myParticipantId ? 'キャンセル' : isOrganizer ? 'あとで設定する' : 'キャンセル'
+          }
         />
       ) : null}
 
@@ -360,6 +379,22 @@ function MatchesPage() {
           <p className="mt-0.5 text-xs text-slate-400">
             番号をタップすると名前が表示されます
           </p>
+          {/* 申告済みの参加者は自分の番号を確認・変更できる(運営者は運営メニューから)。 */}
+          {myParticipantId && !isOrganizer && !closed ? (
+            <p className="mt-0.5 text-xs text-slate-500">
+              あなた: {indexByParticipantId.get(myParticipantId) ?? '?'}番
+              {nameByParticipantId.get(myParticipantId)
+                ? `(${nameByParticipantId.get(myParticipantId)})`
+                : ''}
+              <button
+                type="button"
+                onClick={() => setShowSelfModal(true)}
+                className="ml-1.5 font-medium text-emerald-600 hover:underline"
+              >
+                変更する
+              </button>
+            </p>
+          ) : null}
         </div>
         <div className="flex rounded-xl bg-slate-100 p-1" role="group" aria-label="表示切替">
           <button
