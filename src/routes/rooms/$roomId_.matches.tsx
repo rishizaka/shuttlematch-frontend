@@ -42,6 +42,7 @@ import { buildParticipantNameLookup } from '../../components/match/MatchCard'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { SelfIdentifyModal } from '../../components/room/SelfIdentifyModal'
 import { MatchScheduleList } from '../../components/match/MatchScheduleList'
+import { SetStartAnnouncement } from '../../components/match/SetStartAnnouncement'
 
 export const Route = createFileRoute('/rooms/$roomId_/matches')({
   // LINE 等のアプリ内ブラウザから既定ブラウザで開かせるためのパラメータ。
@@ -206,18 +207,45 @@ function MatchesPage() {
     return active
   }, [schedule])
 
-  // セットの開始を検知したらトーストで知らせる (ポーリングによる他端末からの反映でも気付けるように)。
+  // セットの開始を検知して知らせる (ポーリングによる他端末からの反映でも気付けるように)。
+  // 自分で開始ボタンを押した場合はトースト、他端末からの検知は全画面アナウンス。
   // 初回読み込みと、開始前に戻す操作 (番号が減る) では通知しない。
   const prevActiveSetRef = useRef<number | null | undefined>(undefined)
+  // 直前のセット開始が自分の操作によるものか (アナウンス抑制用)。
+  const selfStartedRef = useRef(false)
+  // 全画面アナウンス中のセット番号 (null = 非表示)。
+  const [announcedSet, setAnnouncedSet] = useState<number | null>(null)
   useEffect(() => {
     if (!schedule) return
     const prev = prevActiveSetRef.current
     prevActiveSetRef.current = activeSetNumber
     if (prev === undefined) return
     if (activeSetNumber !== null && (prev === null || activeSetNumber > prev)) {
-      showToast(`第${activeSetNumber}セットが開始されました`)
+      if (selfStartedRef.current) {
+        selfStartedRef.current = false
+        showToast(`第${activeSetNumber}セットが開始されました`)
+      } else {
+        setAnnouncedSet(activeSetNumber)
+      }
     }
   }, [schedule, activeSetNumber, showToast])
+
+  // アナウンス対象セットでの自分の試合 (出ないセットなら null)。
+  const announcedMatch = useMemo(() => {
+    if (announcedSet == null || !schedule || !myParticipantId) return null
+    return (
+      schedule.matches.find(
+        (m) =>
+          m.setNumber === announcedSet &&
+          [
+            m.pairA.player1Id,
+            m.pairA.player2Id,
+            m.pairB.player1Id,
+            m.pairB.player2Id,
+          ].includes(myParticipantId),
+      ) ?? null
+    )
+  }, [announcedSet, schedule, myParticipantId])
 
   // 次に開始できるセット = 開始済みの最大セット + 1。セットは1から順番にのみ開始できる。
   const startableSetNumber = useMemo(() => {
@@ -252,6 +280,28 @@ function MatchesPage() {
 
   return (
     <div className="space-y-5">
+      {announcedSet != null ? (
+        <SetStartAnnouncement
+          setNumber={announcedSet}
+          courtNumber={announcedMatch?.courtNumber ?? null}
+          memberIndexes={
+            announcedMatch
+              ? [
+                  announcedMatch.pairA.player1Id,
+                  announcedMatch.pairA.player2Id,
+                  announcedMatch.pairB.player1Id,
+                  announcedMatch.pairB.player2Id,
+                ].map((id) => ({
+                  index: indexByParticipantId.get(id) ?? '?',
+                  self: id === myParticipantId,
+                }))
+              : null
+          }
+          identified={!!myParticipantId}
+          onClose={() => setAnnouncedSet(null)}
+        />
+      ) : null}
+
       {showSelfModal ? (
         <SelfIdentifyModal
           participants={room?.participants ?? []}
@@ -559,7 +609,11 @@ function MatchesPage() {
           activeSetNumber={activeSetNumber}
           startableSetNumber={startableSetNumber}
           isOrganizer={isOrganizer && !closed}
-          onStartSet={(setNumber) => startSet.mutate(setNumber)}
+          onStartSet={(setNumber) => {
+            // 自分の操作による開始では全画面アナウンスを出さない (トーストのみ)。
+            selfStartedRef.current = true
+            startSet.mutate(setNumber)
+          }}
           startingSetNumber={startSet.isPending ? startSet.variables : null}
           onRevertSet={(setNumber) => revertSet.mutate(setNumber)}
           revertingSetNumber={revertSet.isPending ? revertSet.variables : null}
