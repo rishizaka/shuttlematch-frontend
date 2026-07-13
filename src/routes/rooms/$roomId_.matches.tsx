@@ -414,6 +414,7 @@ function MatchesPage() {
                 </div>
                 <ParticipantManager
                   roomId={roomId}
+                  shareCode={room?.shareCode}
                   participants={room?.participants ?? []}
                   names={userNames}
                   generated

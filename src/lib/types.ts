@@ -25,6 +25,8 @@ export interface Participant {
 
 export interface Room {
   id: string
+  /** URL共有用の短いコード。/r/{shareCode} でアクセスできる。 */
+  shareCode: string
   title: string
   /** ISO-8601 (UTC, 末尾 Z)。 */
   heldAt: string

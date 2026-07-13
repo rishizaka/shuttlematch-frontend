@@ -4,6 +4,7 @@ import type { Room } from '../../lib/types'
 
 const base: Room = {
   id: 's1',
+  shareCode: 'abcd1234',
   title: 'テスト',
   heldAt: '2026-06-30T10:00:00Z',
   location: null,

@@ -14,6 +14,7 @@ import { Route as PastRouteImport } from './routes/past'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoomsRoomIdRouteImport } from './routes/rooms/$roomId'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as JoinRoomIdRouteImport } from './routes/join.$roomId'
 import { Route as RoomsRoomIdMatchesRouteImport } from './routes/rooms/$roomId_.matches'
 import { Route as OrganizerRoomsNewRouteImport } from './routes/organizer/rooms.new'
@@ -44,6 +45,11 @@ const RoomsRoomIdRoute = RoomsRoomIdRouteImport.update({
   path: '/rooms/$roomId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JoinRoomIdRoute = JoinRoomIdRouteImport.update({
   id: '/join/$roomId',
   path: '/join/$roomId',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/past': typeof PastRoute
   '/signup': typeof SignupRoute
   '/join/$roomId': typeof JoinRoomIdRoute
+  '/r/$code': typeof RCodeRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/past': typeof PastRoute
   '/signup': typeof SignupRoute
   '/join/$roomId': typeof JoinRoomIdRoute
+  '/r/$code': typeof RCodeRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/past': typeof PastRoute
   '/signup': typeof SignupRoute
   '/join/$roomId': typeof JoinRoomIdRoute
+  '/r/$code': typeof RCodeRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId_/matches': typeof RoomsRoomIdMatchesRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/past'
     | '/signup'
     | '/join/$roomId'
+    | '/r/$code'
     | '/rooms/$roomId'
     | '/organizer/rooms/new'
     | '/rooms/$roomId/matches'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/past'
     | '/signup'
     | '/join/$roomId'
+    | '/r/$code'
     | '/rooms/$roomId'
     | '/organizer/rooms/new'
     | '/rooms/$roomId/matches'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/past'
     | '/signup'
     | '/join/$roomId'
+    | '/r/$code'
     | '/rooms/$roomId'
     | '/organizer/rooms/new'
     | '/rooms/$roomId_/matches'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   PastRoute: typeof PastRoute
   SignupRoute: typeof SignupRoute
   JoinRoomIdRoute: typeof JoinRoomIdRoute
+  RCodeRoute: typeof RCodeRoute
   RoomsRoomIdRoute: typeof RoomsRoomIdRoute
   OrganizerRoomsNewRoute: typeof OrganizerRoomsNewRoute
   RoomsRoomIdMatchesRoute: typeof RoomsRoomIdMatchesRoute
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoomsRoomIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/join/$roomId': {
       id: '/join/$roomId'
       path: '/join/$roomId'
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   PastRoute: PastRoute,
   SignupRoute: SignupRoute,
   JoinRoomIdRoute: JoinRoomIdRoute,
+  RCodeRoute: RCodeRoute,
   RoomsRoomIdRoute: RoomsRoomIdRoute,
   OrganizerRoomsNewRoute: OrganizerRoomsNewRoute,
   RoomsRoomIdMatchesRoute: RoomsRoomIdMatchesRoute,

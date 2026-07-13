@@ -23,11 +23,14 @@ import { ParticipantList } from './ParticipantList'
  */
 export function ParticipantManager({
   roomId,
+  shareCode,
   participants,
   names,
   generated = false,
 }: {
   roomId: string
+  /** 共有コード。あれば短縮URL(/r/{code})で共有する。 */
+  shareCode?: string
   participants: Participant[]
   names?: ReadonlyMap<string, string>
   /** 試合生成済みか。生成後は削除ではなく早退/復帰を使う。 */
@@ -59,12 +62,15 @@ export function ParticipantManager({
     )
   }
 
-  // 試合表の共有リンク。openExternalBrowser=1 は LINE 等のアプリ内ブラウザから
+  // 試合表の共有リンク。共有コードがあれば短縮URL(/r/{code})を使う。
+  // openExternalBrowser=1 は LINE 等のアプリ内ブラウザから
   // 既定(外部)ブラウザで開かせるためのパラメータ。
   const shareUrl =
     typeof window === 'undefined'
       ? ''
-      : `${window.location.origin}/rooms/${roomId}/matches?openExternalBrowser=1`
+      : shareCode
+        ? `${window.location.origin}/r/${shareCode}?openExternalBrowser=1`
+        : `${window.location.origin}/rooms/${roomId}/matches?openExternalBrowser=1`
 
   const shareLink = async () => {
     if (typeof window === 'undefined') return

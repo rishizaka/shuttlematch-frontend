@@ -149,6 +149,7 @@ function RoomPage() {
               {organizer && !closed ? (
                 <ParticipantManager
                   roomId={room.id}
+                  shareCode={room.shareCode}
                   participants={room.participants}
                   names={names}
                   generated={generated}

@@ -125,6 +125,8 @@ export const roomApi = {
     return request<Room[]>(`/api/v1/rooms${q ? `?${q}` : ''}`)
   },
   get: (roomId: string) => request<Room>(`/api/v1/rooms/${roomId}`),
+  /** 共有コードでルームを取得する(短縮URL /r/{code} の解決用)。 */
+  getByCode: (shareCode: string) => request<Room>(`/api/v1/rooms/code/${shareCode}`),
   /** かんたん作成: 参加人数・コート数・タイトルのみで、番号参加者+試合表まで作成。 */
   quickCreate: (input: {
     title: string
