@@ -84,18 +84,15 @@ function MatchesPage() {
   const { data: schedule, isLoading, isError, error } = useMatches(roomId, {
     live: true,
   })
-  // ニックネーム変更 (自己申告) は序盤で終わるため、3セット目が開始されたら
-  // 参加者情報 (room) のポーリングは止める。試合表のポーリングは継続する。
-  const thirdSetStarted = useMemo(
-    () => (schedule?.matches ?? []).some((m) => m.setNumber >= 3 && !!m.startedAt),
-    [schedule],
-  )
-  const { data: room } = useRoom(roomId, { live: !thirdSetStarted })
+  // 参加者情報 (room) もルーム終了までポーリングする (終了判定は queries.ts 側)。
+  // 番号の変更・途中参加・早退・終了検知が他端末に反映されるようにするため。
+  // 内容が変わらない間は TanStack Query の structural sharing により再レンダリングは発生しない。
+  const { data: room } = useRoom(roomId, { live: true })
   const closed = room?.status === 'CLOSED'
   const qc = useQueryClient()
 
-  // room ポーリング停止後でも、再編成で途中参加者が試合表に現れたら
-  // 名前を解決できるよう room を取り直す (未知の ParticipantId を検知したときのみ)。
+  // 再編成で途中参加者が試合表に現れたら、次の room ポーリングを待たずに
+  // すぐ名前を解決できるよう room を取り直す (未知の ParticipantId を検知したときのみ)。
   useEffect(() => {
     if (!schedule || !room) return
     const known = new Set(room.participants.map((p) => p.id))
