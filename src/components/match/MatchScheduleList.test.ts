@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { groupMatchesBySet } from './MatchScheduleList'
-import { buildParticipantNameLookup } from './MatchCard'
-import type { Match, Participant } from '../../lib/types'
+import type { Match } from '../../lib/types'
 
 const match = (
   n: number,
@@ -45,38 +44,5 @@ describe('groupMatchesBySet', () => {
     const groups = groupMatchesBySet(matches)
     expect(groups.map((g) => g.setNumber)).toEqual([1, 2, 3])
     expect(groups.every((g) => g.matches.length === 1)).toBe(true)
-  })
-})
-
-describe('buildParticipantNameLookup', () => {
-  it('ParticipantId -> 表示名 のマップを作る (登録ユーザーとゲスト)', () => {
-    const participants: Participant[] = [
-      { id: 'p1', userId: 'u1', guestName: null, guest: false, status: 'ACTIVE' },
-      { id: 'p2', userId: null, guestName: 'ゲスト花子', guest: true, status: 'ACTIVE' },
-    ]
-    const userNames = new Map([['u1', '太郎']])
-    const lookup = buildParticipantNameLookup(participants, userNames)
-    expect(lookup.get('p1')).toBe('太郎')
-    expect(lookup.get('p2')).toBe('ゲスト花子')
-  })
-
-  it('自己申告していないゲスト(名前が番号のまま)は「ゲスト」と表示する', () => {
-    const participants: Participant[] = [
-      { id: 'p1', userId: null, guestName: '1', guest: true, status: 'ACTIVE' },
-      { id: 'p2', userId: null, guestName: '2', guest: true, status: 'ACTIVE' },
-    ]
-    const lookup = buildParticipantNameLookup(participants, new Map())
-    expect(lookup.get('p1')).toBe('ゲスト')
-    expect(lookup.get('p2')).toBe('ゲスト')
-  })
-
-  it('途中の参加者が削除されて位置がずれても、数字のままの名前は「ゲスト」と表示する', () => {
-    // 4番を削除した後の一覧: 「5」という名前の参加者が4番目に来る。
-    const participants: Participant[] = [
-      { id: 'p1', userId: null, guestName: '1', guest: true, status: 'ACTIVE' },
-      { id: 'p5', userId: null, guestName: '5', guest: true, status: 'ACTIVE' },
-    ]
-    const lookup = buildParticipantNameLookup(participants, new Map())
-    expect(lookup.get('p5')).toBe('ゲスト')
   })
 })

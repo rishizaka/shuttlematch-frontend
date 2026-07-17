@@ -6,7 +6,6 @@ import {
   useMarkParticipantLeft,
   useReactivateParticipant,
   useRemoveParticipant,
-  useRenameParticipant,
   useReplanFutureSets,
 } from '../../hooks/queries'
 import { copyToClipboard } from '../../lib/clipboard'
@@ -25,14 +24,12 @@ export function ParticipantManager({
   roomId,
   shareCode,
   participants,
-  names,
   generated = false,
 }: {
   roomId: string
   /** 共有コード。あれば短縮URL(/r/{code})で共有する。 */
   shareCode?: string
   participants: Participant[]
-  names?: ReadonlyMap<string, string>
   /** 試合生成済みか。生成後は削除ではなく早退/復帰を使う。 */
   generated?: boolean
 }) {
@@ -40,7 +37,6 @@ export function ParticipantManager({
   const remove = useRemoveParticipant(roomId)
   const markLeft = useMarkParticipantLeft(roomId)
   const reactivate = useReactivateParticipant(roomId)
-  const rename = useRenameParticipant(roomId)
   const replan = useReplanFutureSets(roomId)
   const { showToast } = useToast()
   // ゲスト追加・早退・復帰の後に「未開始セットを再編成しますか？」と確認するモーダルの開閉。
@@ -101,14 +97,12 @@ export function ParticipantManager({
 
       <ParticipantList
         participants={participants}
-        names={names}
         onRemove={generated ? undefined : (p) => remove.mutate(p.id)}
         removingId={remove.isPending ? (remove.variables as string) : null}
         onMarkLeft={generated ? (p) => markLeft.mutate(p.id, { onSuccess: askReplan }) : undefined}
         onReactivate={
           generated ? (p) => reactivate.mutate(p.id, { onSuccess: askReplan }) : undefined
         }
-        onRename={(p, name) => rename.mutate({ participantId: p.id, name })}
         updatingId={
           markLeft.isPending
             ? (markLeft.variables as string)
@@ -127,7 +121,6 @@ export function ParticipantManager({
       {add.isError ? <ErrorBlock message={(add.error as Error).message} /> : null}
       {markLeft.isError ? <ErrorBlock message={(markLeft.error as Error).message} /> : null}
       {reactivate.isError ? <ErrorBlock message={(reactivate.error as Error).message} /> : null}
-      {rename.isError ? <ErrorBlock message={(rename.error as Error).message} /> : null}
 
       {showReplanConfirm ? (
         <ConfirmModal

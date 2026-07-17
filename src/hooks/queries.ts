@@ -14,7 +14,7 @@ import {
   type RoomListParams,
 } from "../lib/api";
 import { addRoomId } from "../lib/local-store";
-import type { Room, User } from "../lib/types";
+import type { Room } from "../lib/types";
 
 /**
  * ライブ同期用のポーリング間隔 (ms)。
@@ -116,18 +116,6 @@ export function useQuickCreateRoom() {
     }) => roomApi.quickCreate(input),
     onSuccess: (room) => {
       addRoomId(room.id);
-    },
-  });
-}
-
-/** 参加者の名前(ニックネーム)変更 (運営者操作)。 */
-export function useRenameParticipant(roomId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: { participantId: string; name: string }) =>
-      roomApi.renameParticipant(roomId, input.participantId, input.name),
-    onSuccess: (room) => {
-      qc.setQueryData(queryKeys.room(roomId), room);
     },
   });
 }
@@ -259,23 +247,3 @@ export function useReplanFutureSets(roomId: string) {
   });
 }
 
-/**
- * 参加者 (登録ユーザー) の表示名を userId -> 名前 のマップで解決する。
- * 試合表示でプレイヤー名を出すために使う。
- */
-export function useUserNames(userIds: string[]): Map<string, string> {
-  const unique = Array.from(new Set(userIds));
-  const results = useQueries({
-    queries: unique.map((id) => ({
-      queryKey: queryKeys.user(id),
-      queryFn: () => userApi.get(id),
-      staleTime: 5 * 60 * 1000,
-    })),
-  });
-  const map = new Map<string, string>();
-  results.forEach((r, i) => {
-    const user = r.data as User | undefined;
-    if (user) map.set(unique[i], user.name);
-  });
-  return map;
-}

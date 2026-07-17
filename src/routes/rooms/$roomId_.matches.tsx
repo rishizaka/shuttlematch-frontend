@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -19,28 +19,25 @@ import {
   useAddSets,
   useCloseRoom,
   useMatches,
-  useRenameParticipant,
   useReplanFutureSets,
   useRevertSet,
   useRoom,
   useStartSet,
-  useUserNames,
 } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { roomApi } from '../../lib/api'
 import {
   getSelfParticipant,
   setSelfParticipant,
-  skipSelfParticipant,
+  removeSelfParticipant,
 } from '../../lib/local-store'
 import { roomOgMeta } from '../../lib/og'
 import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
 import { useToast } from '../../components/ui/Toast'
-import { buildParticipantNameLookup } from '../../components/match/MatchCard'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
-import { SelfIdentifyModal } from '../../components/room/SelfIdentifyModal'
+import { SelfNumberModal } from '../../components/room/SelfNumberModal'
 import { MatchScheduleList } from '../../components/match/MatchScheduleList'
 import { SetStartAnnouncement } from '../../components/match/SetStartAnnouncement'
 
@@ -76,7 +73,6 @@ type Density = 'compact' | 'standard'
 
 function MatchesPage() {
   const { roomId } = Route.useParams()
-  const navigate = useNavigate()
   const { user } = useCurrentUser()
   const { showToast } = useToast()
   // ポーリングで他端末の操作 (セット開始・ニックネーム変更・出入り) をリロードなしで反映する。
@@ -110,7 +106,6 @@ function MatchesPage() {
   const addSets = useAddSets(roomId)
   const replan = useReplanFutureSets(roomId)
   const closeRoom = useCloseRoom(roomId)
-  const rename = useRenameParticipant(roomId)
   // 表示密度。既定はコンパクト(1画面に多くのセットを収める)。
   const [density, setDensity] = useState<Density>('compact')
   const [addCount, setAddCount] = useState(3)
@@ -147,16 +142,6 @@ function MatchesPage() {
     [user, room],
   )
 
-  const userIds = (room?.participants ?? [])
-    .map((p) => p.userId)
-    .filter((id): id is string => !!id)
-  const userNames = useUserNames(userIds)
-
-  const nameByParticipantId = useMemo(
-    () => buildParticipantNameLookup(room?.participants ?? [], userNames),
-    [room, userNames],
-  )
-
   // 参加者一覧の並び順を 1 始まりの番号として割り当てる。
   const indexByParticipantId = useMemo(() => {
     const map = new Map<string, number>()
@@ -174,22 +159,13 @@ function MatchesPage() {
     return null
   }, [room, user, selfParticipantId])
 
-  // マウント後に localStorage を読み、未申告なら自己紹介モーダルを出す(SSR不一致を避けるため effect 内で判定)。
-  // 参加者に紐付いた登録ユーザーは申告不要なので対象外。
-  // 運営者にも出すが、スキップ可能(skipped を記憶したら以後は出さない。運営メニューから再設定できる)。
+  // マウント後に localStorage から「自分の番号」設定を読み込む(SSR不一致を避けるため effect 内)。
+  // これは任意の見やすさ設定なので、未設定でもモーダルは自動では出さない
+  // (自分の番号は各自が明示的に設定ボタンから設定する)。
   useEffect(() => {
-    if (!schedule || closed) return
-    const participants = room?.participants ?? []
-    if (participants.length === 0) return
-    if (user && participants.some((p) => p.userId === user.id)) return
     const stored = getSelfParticipant(roomId)
-    if (stored?.participantId) {
-      setSelfParticipantId(stored.participantId)
-      return
-    }
-    if (stored?.skipped) return
-    setShowSelfModal(true)
-  }, [roomId, schedule, closed, room, user])
+    if (stored?.participantId) setSelfParticipantId(stored.participantId)
+  }, [roomId])
 
   // アクティブ(進行中)なセット = 最も新しい開始時刻を持つセット。
   const activeSetNumber = useMemo(() => {
@@ -300,56 +276,29 @@ function MatchesPage() {
       ) : null}
 
       {showSelfModal ? (
-        <SelfIdentifyModal
+        <SelfNumberModal
           participants={room?.participants ?? []}
-          names={userNames}
-          submitting={rename.isPending}
-          onSubmit={(participantId, nickname) => {
-            const prevId = myParticipantId
-            rename.mutate(
-              { participantId, name: nickname },
-              {
-                onSuccess: () => {
-                  // 番号の変更なら、以前の自分の枠は名前を番号(数字)に戻して
-                  // 空き扱いにし、他の人がその番号を申告できるようにする。
-                  if (prevId && prevId !== participantId) {
-                    const prevIndex = indexByParticipantId.get(prevId)
-                    if (prevIndex != null) {
-                      rename.mutate({ participantId: prevId, name: String(prevIndex) })
-                    }
-                  }
-                  setSelfParticipant(roomId, participantId)
-                  setSelfParticipantId(participantId)
-                  setShowSelfModal(false)
-                  if (prevId && prevId !== participantId) {
-                    showToast('番号を変更しました(元の番号は空きに戻ります)')
-                  }
-                },
-              },
-            )
-          }}
-          onCancel={() => {
-            // 申告済みの人が「変更する」から開いた場合は閉じるだけ。
-            if (myParticipantId) {
-              setShowSelfModal(false)
-              return
-            }
-            // 運営者は番号が未定でも試合表を使えるようにスキップ可。
-            // スキップを記憶して以後は自動で出さない(運営メニューから再設定できる)。
-            if (isOrganizer) {
-              skipSelfParticipant(roomId)
-              setShowSelfModal(false)
-              return
-            }
-            // 参加者が申告しないなら試合表は見せず、ルーム詳細へ戻す。
-            // replace: true でこの試合表ページの履歴を残さない。
-            // 残すとブラウザバックで試合表に戻ってモーダルが再度出て、
-            // キャンセルするとまたルーム詳細へ…と無限に行き来してしまう。
-            navigate({ to: '/rooms/$roomId', params: { roomId }, replace: true })
-          }}
-          cancelLabel={
-            myParticipantId ? 'キャンセル' : isOrganizer ? 'あとで設定する' : 'キャンセル'
+          initialNumber={
+            myParticipantId ? indexByParticipantId.get(myParticipantId) ?? null : null
           }
+          onSubmit={(participantId) => {
+            // DB には送らず localStorage に保存するだけ(重複可)。
+            setSelfParticipant(roomId, participantId)
+            setSelfParticipantId(participantId)
+            setShowSelfModal(false)
+            showToast('自分の番号を設定しました')
+          }}
+          onClear={
+            myParticipantId
+              ? () => {
+                  removeSelfParticipant(roomId)
+                  setSelfParticipantId(null)
+                  setShowSelfModal(false)
+                  showToast('自分の番号を解除しました')
+                }
+              : undefined
+          }
+          onCancel={() => setShowSelfModal(false)}
         />
       ) : null}
 
@@ -373,24 +322,29 @@ function MatchesPage() {
           <p className="text-sm text-slate-500">
             全 {setCount} セット・{schedule.matchCount} 試合
           </p>
-          <p className="mt-0.5 text-xs text-slate-400">
-            番号をタップすると名前が表示されます
-          </p>
-          {/* 申告済みの参加者は自分の番号を確認・変更できる(運営者は運営メニューから)。 */}
-          {myParticipantId && !isOrganizer && !closed ? (
-            <p className="mt-0.5 text-xs text-slate-500">
-              あなた: {indexByParticipantId.get(myParticipantId) ?? '?'}番
-              {nameByParticipantId.get(myParticipantId)
-                ? `(${nameByParticipantId.get(myParticipantId)})`
-                : ''}
+          {/* 参加者は任意で自分の番号を設定でき、設定すると自分の試合が強調される
+              (運営者は運営メニューから設定する)。 */}
+          {!isOrganizer && !closed ? (
+            myParticipantId ? (
+              <p className="mt-0.5 text-xs text-slate-500">
+                あなた: {indexByParticipantId.get(myParticipantId) ?? '?'}番
+                <button
+                  type="button"
+                  onClick={() => setShowSelfModal(true)}
+                  className="ml-1.5 font-medium text-emerald-600 hover:underline"
+                >
+                  変更する
+                </button>
+              </p>
+            ) : (
               <button
                 type="button"
                 onClick={() => setShowSelfModal(true)}
-                className="ml-1.5 font-medium text-emerald-600 hover:underline"
+                className="mt-0.5 text-xs font-medium text-emerald-600 hover:underline"
               >
-                変更する
+                自分の番号を設定（自分の試合が強調表示されます）
               </button>
-            </p>
+            )
           ) : null}
         </div>
         <div className="flex rounded-xl bg-slate-100 p-1" role="group" aria-label="表示切替">
@@ -498,7 +452,6 @@ function MatchesPage() {
                   roomId={roomId}
                   shareCode={room?.shareCode}
                   participants={room?.participants ?? []}
-                  names={userNames}
                   generated
                 />
               </div>
@@ -635,7 +588,6 @@ function MatchesPage() {
         <MatchScheduleList
           matches={schedule.matches}
           dense={dense}
-          nameByParticipantId={nameByParticipantId}
           indexByParticipantId={indexByParticipantId}
           highlightParticipantId={myParticipantId}
           activeSetNumber={activeSetNumber}

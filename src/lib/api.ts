@@ -138,12 +138,6 @@ export const roomApi = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
-  /** 参加者の名前(ニックネーム)を変更する。 */
-  renameParticipant: (roomId: string, participantId: string, name: string) =>
-    request<Room>(`/api/v1/rooms/${roomId}/participants/${participantId}/rename`, {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    }),
   /** ルームを終了する(終了済みとして履歴に残す)。 */
   close: (roomId: string) =>
     request<Room>(`/api/v1/rooms/${roomId}/close`, { method: 'POST' }),

@@ -31,7 +31,6 @@ export function groupMatchesBySet(matches: Match[]): SetGroup[] {
 
 function SetGroupView({
   group,
-  nameByParticipantId,
   indexByParticipantId,
   highlightParticipantId,
   active,
@@ -44,7 +43,6 @@ function SetGroupView({
   dense = false,
 }: {
   group: SetGroup
-  nameByParticipantId: ReadonlyMap<string, string>
   indexByParticipantId?: ReadonlyMap<string, number>
   highlightParticipantId?: string | null
   active: boolean
@@ -160,7 +158,6 @@ function SetGroupView({
             <MatchCard
               key={m.matchNumber}
               match={m}
-              nameByParticipantId={nameByParticipantId}
               indexByParticipantId={indexByParticipantId}
               highlightParticipantId={highlightParticipantId}
               active={active}
@@ -309,7 +306,6 @@ function SetGroupView({
           <MatchCard
             key={m.matchNumber}
             match={m}
-            nameByParticipantId={nameByParticipantId}
             indexByParticipantId={indexByParticipantId}
             highlightParticipantId={highlightParticipantId}
             active={active}
@@ -324,7 +320,6 @@ function SetGroupView({
 
 export function MatchScheduleList({
   matches,
-  nameByParticipantId,
   indexByParticipantId,
   highlightParticipantId,
   activeSetNumber,
@@ -337,7 +332,6 @@ export function MatchScheduleList({
   dense = false,
 }: {
   matches: Match[]
-  nameByParticipantId: ReadonlyMap<string, string>
   /** ParticipantId -> 参加者番号(1始まり)。 */
   indexByParticipantId?: ReadonlyMap<string, number>
   /** この ParticipantId が出場するコートを強調する。 */
@@ -372,7 +366,6 @@ export function MatchScheduleList({
           key={group.setNumber}
           dense={dense}
           group={group}
-          nameByParticipantId={nameByParticipantId}
           indexByParticipantId={indexByParticipantId}
           highlightParticipantId={highlightParticipantId}
           active={activeSetNumber === group.setNumber}

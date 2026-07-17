@@ -98,15 +98,15 @@ export function removeRoomId(id: string) {
   persist(KEYS.roomIds, c.roomIds)
 }
 
-// ---- self participant (試合表での自己申告) ----
-// ルームごとに「自分が何番か(＝ニックネーム入力済み)」を保存する。
-// これがあれば試合表の自己申告モーダルは出さない。skipped は「あとで」を選んだ状態。
+// ---- self participant (試合表で「自分の番号」を覚える) ----
+// ルームごとに「自分が何番か」を保存する任意設定。試合表で自分の試合を
+// 強調表示するためだけに使い、サーバー(DB)には送らない。
+// あくまでローカルの見やすさ設定なので、他の参加者と番号が重複しても構わない。
 
 const SELF_PREFIX = 'shuttlematch.self.'
 
 export interface SelfParticipant {
   participantId?: string
-  skipped?: boolean
 }
 
 export function getSelfParticipant(roomId: string): SelfParticipant | null {
@@ -120,9 +120,9 @@ export function setSelfParticipant(roomId: string, participantId: string) {
   emit()
 }
 
-export function skipSelfParticipant(roomId: string) {
+export function removeSelfParticipant(roomId: string) {
   if (isBrowser()) {
-    window.localStorage.setItem(SELF_PREFIX + roomId, JSON.stringify({ skipped: true }))
+    window.localStorage.removeItem(SELF_PREFIX + roomId)
   }
   emit()
 }

@@ -12,13 +12,6 @@ const match: Match = {
   startedAt: null,
 }
 
-const names = new Map([
-  ['p1', '太郎'],
-  ['p2', '次郎'],
-  ['p3', '三郎'],
-  ['p4', '花子'],
-])
-
 const indexes = new Map([
   ['p1', 1],
   ['p2', 4],
@@ -28,51 +21,32 @@ const indexes = new Map([
 
 describe('MatchCard', () => {
   it('コート番号と4名の参加者番号を1行で表示する(ペア/vsは出さない)', () => {
-    render(
-      <MatchCard
-        match={match}
-        nameByParticipantId={names}
-        indexByParticipantId={indexes}
-      />,
-    )
+    render(<MatchCard match={match} indexByParticipantId={indexes} />)
     expect(
       screen.getByText((_, el) => el?.textContent === '2コート' && el?.tagName === 'SPAN'),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '太郎' })).toHaveTextContent('1')
-    expect(screen.getByRole('button', { name: '次郎' })).toHaveTextContent('4')
-    expect(screen.getByRole('button', { name: '三郎' })).toHaveTextContent('8')
-    expect(screen.getByRole('button', { name: '花子' })).toHaveTextContent('9')
+    expect(screen.getByLabelText('1番')).toHaveTextContent('1')
+    expect(screen.getByLabelText('4番')).toHaveTextContent('4')
+    expect(screen.getByLabelText('8番')).toHaveTextContent('8')
+    expect(screen.getByLabelText('9番')).toHaveTextContent('9')
     expect(screen.queryByText('VS')).not.toBeInTheDocument()
   })
 
-  it('ニックネームはツールチップとして描画される', () => {
-    render(
-      <MatchCard
-        match={match}
-        nameByParticipantId={names}
-        indexByParticipantId={indexes}
-      />,
-    )
-    const tooltips = screen.getAllByRole('tooltip')
-    expect(tooltips.map((t) => t.textContent)).toEqual([
-      '太郎',
-      '次郎',
-      '三郎',
-      '花子',
-    ])
+  it('名前(ニックネーム)は表示せず、番号だけで運用する', () => {
+    render(<MatchCard match={match} indexByParticipantId={indexes} />)
+    // 番号のみ。名前のツールチップは描画されない。
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
   })
 
-  it('名前が未解決の ParticipantId は短縮 ID で表示する', () => {
-    render(<MatchCard match={match} nameByParticipantId={new Map()} />)
-    // p1 などは 8 文字未満なのでそのまま表示される。
-    expect(screen.getAllByText('p1').length).toBeGreaterThan(0)
+  it('番号が未指定のチップは ? を表示する', () => {
+    render(<MatchCard match={match} />)
+    expect(screen.getAllByText('?').length).toBe(4)
   })
 
   it('自分のチップと「あなた」バッジを強調表示する', () => {
     render(
       <MatchCard
         match={match}
-        nameByParticipantId={names}
         indexByParticipantId={indexes}
         highlightParticipantId="p2"
       />,

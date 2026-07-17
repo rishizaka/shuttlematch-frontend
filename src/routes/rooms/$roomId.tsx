@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { Calendar, ListChecks, MapPin, Users } from 'lucide-react'
-import { useRoom, useUserNames } from '../../hooks/queries'
+import { useRoom } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { roomApi } from '../../lib/api'
 import { addRoomId } from '../../lib/local-store'
@@ -52,11 +52,6 @@ function RoomPage() {
   useEffect(() => {
     if (room) addRoomId(room.id)
   }, [room])
-
-  const userIds = (room?.participants ?? [])
-    .map((p) => p.userId)
-    .filter((id): id is string => !!id)
-  const names = useUserNames(userIds)
 
   if (isLoading) return <LoadingBlock />
   if (isError || !room) {
@@ -151,11 +146,10 @@ function RoomPage() {
                   roomId={room.id}
                   shareCode={room.shareCode}
                   participants={room.participants}
-                  names={names}
                   generated={generated}
                 />
               ) : (
-                <ParticipantList participants={room.participants} names={names} />
+                <ParticipantList participants={room.participants} />
               )}
             </CardBody>
           </Card>
