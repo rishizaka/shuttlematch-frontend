@@ -131,6 +131,30 @@ export function useAddParticipant(roomId: string) {
   });
 }
 
+/** 固定ペア(常に同じチームで組む2人)を追加する。 */
+export function useAddFixedPair(roomId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { participantA: string; participantB: string }) =>
+      roomApi.addFixedPair(roomId, input.participantA, input.participantB),
+    onSuccess: (room) => {
+      qc.setQueryData(queryKeys.room(roomId), room);
+    },
+  });
+}
+
+/** 固定ペアを解除する。 */
+export function useRemoveFixedPair(roomId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { participantA: string; participantB: string }) =>
+      roomApi.removeFixedPair(roomId, input.participantA, input.participantB),
+    onSuccess: (room) => {
+      qc.setQueryData(queryKeys.room(roomId), room);
+    },
+  });
+}
+
 export function useRemoveParticipant(roomId: string) {
   const qc = useQueryClient();
   return useMutation({

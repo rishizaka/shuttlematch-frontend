@@ -452,6 +452,7 @@ function MatchesPage() {
                   roomId={roomId}
                   shareCode={room?.shareCode}
                   participants={room?.participants ?? []}
+                  fixedPairs={room?.fixedPairs ?? []}
                   generated
                 />
               </div>

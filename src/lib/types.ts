@@ -23,6 +23,12 @@ export interface Participant {
   status: ParticipantStatus
 }
 
+/** 固定ペア(常に同じチームで組む2人)。participantA/B は ParticipantId を指す。 */
+export interface FixedPair {
+  participantA: string
+  participantB: string
+}
+
 export interface Room {
   id: string
   /** URL共有用の短いコード。/r/{shareCode} でアクセスできる。 */
@@ -37,6 +43,8 @@ export interface Room {
   createdBy: string
   participantCount: number
   participants: Participant[]
+  /** 固定ペア(常に同じチームで組む2人)の一覧。 */
+  fixedPairs: FixedPair[]
 }
 
 /** 試合のペア。player1Id / player2Id は ParticipantId を指す。 */

@@ -141,6 +141,15 @@ export const roomApi = {
   /** ルームを終了する(終了済みとして履歴に残す)。 */
   close: (roomId: string) =>
     request<Room>(`/api/v1/rooms/${roomId}/close`, { method: 'POST' }),
+    addFixedPair: (roomId: string, participantA: string, participantB: string) =>
+      request<Room>(`/api/v1/rooms/${roomId}/fixed-pairs`, {
+        method: 'POST',
+        body: JSON.stringify({ participantA, participantB }),
+      }),
+    removeFixedPair: (roomId: string, participantA: string, participantB: string) =>
+      request<Room>(`/api/v1/rooms/${roomId}/fixed-pairs/${participantA}/${participantB}`, {
+        method: 'DELETE',
+      }),
   addParticipant: (roomId: string, input: AddParticipantInput) =>
     request<Room>(`/api/v1/rooms/${roomId}/participants`, {
       method: 'POST',

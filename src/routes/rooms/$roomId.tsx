@@ -146,6 +146,7 @@ function RoomPage() {
                   roomId={room.id}
                   shareCode={room.shareCode}
                   participants={room.participants}
+                  fixedPairs={room.fixedPairs}
                   generated={generated}
                 />
               ) : (

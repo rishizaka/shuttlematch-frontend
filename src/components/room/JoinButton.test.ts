@@ -14,6 +14,7 @@ const base: Room = {
   createdBy: 'u1',
   participantCount: 0,
   participants: [],
+  fixedPairs: [],
 }
 
 describe('canJoin', () => {
