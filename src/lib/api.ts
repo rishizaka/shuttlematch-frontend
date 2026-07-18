@@ -1,9 +1,20 @@
 import type { MatchSchedule, Room, RoomStatus, User } from './types'
 
-// バックエンドのベース URL。本番では VITE_API_BASE_URL を設定する。
+// バックエンドのベース URL は実行環境で変わる:
+//  - SSR(サーバー): 同一ホスト上の backend を直接叩く(localhost:8080)。CORS 不要。
+//  - 本番ブラウザ: 相対パス('')で同一オリジンへ。serve.mjs が /api を backend へ中継する。
+//  - 開発ブラウザ: プロキシが無いので backend を直接叩く(localhost:8080、CORS 許可済み)。
+// VITE_API_BASE_URL が設定されていればそれを優先する(ドメイン/ALB 経由にする場合など)。
+const CONFIGURED_BASE_URL = (
+  import.meta.env?.VITE_API_BASE_URL as string | undefined
+)?.replace(/\/$/, '')
+
 export const API_BASE_URL: string =
-  (import.meta.env?.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '') ??
-  'http://localhost:8080'
+  typeof window === 'undefined'
+    ? CONFIGURED_BASE_URL ?? 'http://localhost:8080'
+    : import.meta.env?.PROD
+      ? CONFIGURED_BASE_URL ?? ''
+      : CONFIGURED_BASE_URL ?? 'http://localhost:8080'
 
 /**
  * バックエンドの ProblemDetail (RFC 7807) に対応するエラー。
