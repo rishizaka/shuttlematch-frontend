@@ -15,10 +15,10 @@ function PlayerChip({
   finished: boolean
   dense: boolean
 }) {
-  // 自分は深緑の塗りで示す(進行中の emerald-600 より一段濃い色)。
+  // 自分は深緑の塗りで示す(進行中の brand-600 より一段濃い色)。
   // 他の参加者は白地+枠線でシンプルに番号だけを見せる。
   const chip = self
-    ? 'bg-emerald-900 text-white'
+    ? 'bg-brand-900 text-white'
     : finished
       ? 'border border-slate-200 bg-white text-slate-400'
       : 'border border-slate-300 bg-white text-slate-700 shadow-sm'
@@ -73,13 +73,13 @@ export function MatchCard({
 
   // 自分の表示は番号チップと「あなた」バッジのみで示し、行の枠線は状態(進行中/終了)だけで決める。
   const container = active
-    ? 'border-emerald-200 bg-white'
+    ? 'border-brand-200 bg-white'
     : finished
       ? 'border-slate-100 bg-white'
       : 'border-slate-200 bg-white'
 
   const courtChip = active
-    ? 'bg-emerald-600 text-white'
+    ? 'bg-brand-600 text-white'
     : finished
       ? 'bg-slate-50 text-slate-400'
       : 'bg-slate-200/80 text-slate-600'
@@ -105,7 +105,7 @@ export function MatchCard({
   // コンパクト表示では行を詰めるため「あなた」バッジは出さず、深緑チップのみで示す。
   const youBadge =
     highlight && !dense ? (
-      <span className="ml-auto inline-flex shrink-0 items-center rounded-full bg-emerald-900 px-2 py-0.5 text-xs font-semibold text-white">
+      <span className="ml-auto inline-flex shrink-0 items-center rounded-full bg-brand-900 px-2 py-0.5 text-xs font-semibold text-white">
         あなた
       </span>
     ) : null
@@ -113,7 +113,7 @@ export function MatchCard({
   // コンパクト表示: 枠なしの1行。コートは「1コ」の短縮ラベルで最小幅にする。
   if (dense) {
     const denseCourt = active
-      ? 'text-emerald-700'
+      ? 'text-brand-700'
       : finished
         ? 'text-slate-300'
         : 'text-slate-500'

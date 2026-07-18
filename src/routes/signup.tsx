@@ -82,7 +82,7 @@ function SignupPage() {
           </form>
           <p className="mt-4 text-center text-sm text-slate-500">
             すでにアカウントをお持ちですか？{' '}
-            <Link to="/login" className="text-emerald-600 hover:underline">
+            <Link to="/login" className="text-brand-600 hover:underline">
               ログイン
             </Link>
           </p>

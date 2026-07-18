@@ -53,7 +53,7 @@ export function ParticipantList({
                   type="button"
                   onClick={() => onReactivate(p)}
                   disabled={updatingId === p.id}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 transition hover:text-emerald-700 disabled:opacity-40"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 transition hover:text-brand-700 disabled:opacity-40"
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   復帰

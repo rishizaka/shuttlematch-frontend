@@ -33,7 +33,7 @@ function HomePage() {
         </div>
         <Link
           to="/organizer/rooms/new"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
         >
           <Plus className="h-4 w-4" />
           ルームを作成
@@ -83,7 +83,7 @@ function HomePage() {
           <div className="border-t border-slate-100 pt-4">
             <Link
               to="/past"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-emerald-700"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-brand-700"
             >
               <History className="h-4 w-4" />
               過去の開催を見る

@@ -47,11 +47,11 @@ export function SetStartAnnouncement({
           🏸
         </div>
         <p className="mt-3 text-3xl font-extrabold text-slate-900">第{setNumber}セット</p>
-        <p className="mt-1 text-sm font-bold text-emerald-600">開始しました！</p>
+        <p className="mt-1 text-sm font-bold text-brand-600">開始しました！</p>
 
         {playing ? (
-          <div className="mt-6 rounded-2xl bg-emerald-50 px-4 py-4">
-            <p className="text-xl font-bold text-emerald-800">
+          <div className="mt-6 rounded-2xl bg-brand-50 px-4 py-4">
+            <p className="text-xl font-bold text-brand-800">
               {courtNumber != null ? `あなたは ${courtNumber}コート` : 'あなたは出場します'}
             </p>
             <div className="mt-3 flex items-center justify-center gap-1.5">
@@ -61,8 +61,8 @@ export function SetStartAnnouncement({
                   className={
                     'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold tabular-nums ' +
                     (m.self
-                      ? 'bg-emerald-900 text-white'
-                      : 'border border-emerald-200 bg-white text-slate-700')
+                      ? 'bg-brand-900 text-white'
+                      : 'border border-brand-200 bg-white text-slate-700')
                   }
                 >
                   {m.index}

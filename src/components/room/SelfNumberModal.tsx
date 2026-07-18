@@ -92,7 +92,7 @@ export function SelfNumberModal({
               }}
               placeholder="あなたの番号"
               autoFocus
-              className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             />
           </label>
 

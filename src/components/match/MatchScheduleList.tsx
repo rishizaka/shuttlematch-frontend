@@ -81,7 +81,7 @@ function SetGroupView({
               (finished
                 ? 'text-slate-400'
                 : active
-                  ? 'text-emerald-700'
+                  ? 'text-brand-700'
                   : upcoming
                     ? 'text-slate-500'
                     : 'text-slate-700')
@@ -90,8 +90,8 @@ function SetGroupView({
             {finished ? <Check className="h-3 w-3 text-slate-300" /> : null}
             {active ? (
               <span className="relative flex h-1.5 w-1.5" aria-hidden>
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand-500" />
               </span>
             ) : null}
             第{group.setNumber}セット
@@ -101,13 +101,13 @@ function SetGroupView({
               </span>
             ) : null}
           </span>
-          <span className={'h-px flex-1 ' + (active ? 'bg-emerald-200' : 'bg-slate-200')} />
+          <span className={'h-px flex-1 ' + (active ? 'bg-brand-200' : 'bg-slate-200')} />
           {canStart ? (
             <button
               type="button"
               disabled={starting}
               onClick={() => onStart?.()}
-              className="inline-flex shrink-0 items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
+              className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50"
             >
               <Play className="h-3 w-3 fill-current" />
               {starting ? '開始中…' : '開始'}
@@ -151,7 +151,7 @@ function SetGroupView({
         <div
           className={
             'mt-1.5 space-y-1' +
-            (active ? ' -mx-2 rounded-lg bg-emerald-50 px-2 py-1.5' : '')
+            (active ? ' -mx-2 rounded-lg bg-brand-50 px-2 py-1.5' : '')
           }
         >
           {group.matches.map((m) => (
@@ -193,11 +193,11 @@ function SetGroupView({
   }
 
   const container = active
-    ? 'rounded-2xl border-2 border-emerald-500 bg-emerald-50/50 p-3 shadow-sm shadow-emerald-100 sm:p-4'
+    ? 'rounded-2xl border-2 border-brand-500 bg-brand-50/50 p-3 shadow-sm shadow-brand-100 sm:p-4'
     : finished
       ? 'rounded-2xl border border-slate-200 bg-white p-3 sm:p-4'
       : canStart
-        ? 'rounded-2xl border border-emerald-200 bg-white p-3 shadow-sm sm:p-4'
+        ? 'rounded-2xl border border-brand-200 bg-white p-3 shadow-sm sm:p-4'
         : 'rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-3 sm:p-4'
 
   return (
@@ -205,8 +205,8 @@ function SetGroupView({
       <div className="mb-2.5 flex flex-wrap items-center gap-2">
         {active ? (
           <span className="relative flex h-2.5 w-2.5" aria-hidden>
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-brand-500" />
           </span>
         ) : null}
         <h2
@@ -223,7 +223,7 @@ function SetGroupView({
           </span>
         ) : null}
         {active ? (
-          <span className="inline-flex items-center rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white">
+          <span className="inline-flex items-center rounded-full bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white">
             進行中
           </span>
         ) : null}
@@ -244,7 +244,7 @@ function SetGroupView({
               type="button"
               disabled={starting}
               onClick={() => onStart?.()}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50"
             >
               <Play className="h-3.5 w-3.5 fill-current" />
               {starting ? '開始中…' : '開始'}

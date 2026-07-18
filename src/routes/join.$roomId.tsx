@@ -76,9 +76,9 @@ function JoinPage() {
           </dl>
 
           {joinedNumber != null ? (
-            <div className="space-y-3 rounded-2xl bg-emerald-50 py-6 text-center">
-              <p className="text-sm text-emerald-700">あなたの番号は</p>
-              <p className="text-5xl font-bold text-emerald-900 tabular-nums">
+            <div className="space-y-3 rounded-2xl bg-brand-50 py-6 text-center">
+              <p className="text-sm text-brand-700">あなたの番号は</p>
+              <p className="text-5xl font-bold text-brand-900 tabular-nums">
                 {joinedNumber}
                 <span className="ml-1 text-2xl font-semibold">番</span>
               </p>
@@ -87,7 +87,7 @@ function JoinPage() {
                 to="/rooms/$roomId/matches"
                 params={{ roomId }}
                 search={{ openExternalBrowser: 1 }}
-                className="inline-block text-sm font-medium text-emerald-600 hover:underline"
+                className="inline-block text-sm font-medium text-brand-600 hover:underline"
               >
                 試合表を見る →
               </Link>

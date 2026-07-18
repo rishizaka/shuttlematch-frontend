@@ -1,6 +1,22 @@
 
 @import "tailwindcss";
 
+/* ブランドカラー: ロゴ(ShuttleMatch)のブルーに合わせた azure→navy スケール。
+   600 がロゴの鮮やかなブルー #0060c0、900 がロゴのダークネイビー #002050。
+   従来のエメラルドに代わる主要アクセント色として全体で使う。 */
+@theme {
+  --color-brand-50: #eef5fc;
+  --color-brand-100: #d6e6f8;
+  --color-brand-200: #aecdf0;
+  --color-brand-300: #7aade6;
+  --color-brand-400: #3d86d8;
+  --color-brand-500: #0f6bc9;
+  --color-brand-600: #0060c0;
+  --color-brand-700: #004f9e;
+  --color-brand-800: #003a75;
+  --color-brand-900: #002050;
+}
+
 * {
   box-sizing: border-box;
 }

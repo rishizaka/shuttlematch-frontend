@@ -312,7 +312,7 @@ function MatchesPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link to="/" className="text-sm text-emerald-600 hover:underline">
+          <Link to="/" className="text-sm text-brand-600 hover:underline">
             ← ルーム一覧へ
           </Link>
           <div className="mt-1 flex items-center gap-2">
@@ -334,7 +334,7 @@ function MatchesPage() {
               <button
                 type="button"
                 onClick={() => setShowSelfModal(true)}
-                className="ml-1.5 font-medium text-emerald-600 hover:underline"
+                className="ml-1.5 font-medium text-brand-600 hover:underline"
               >
                 変更する
               </button>
@@ -412,7 +412,7 @@ function MatchesPage() {
             aria-expanded={organizerOpen}
             className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-slate-50 sm:px-5"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
               <Settings2 className="h-4.5 w-4.5" />
             </span>
             <span className="min-w-0 flex-1">
@@ -761,7 +761,7 @@ function MatchesPage() {
               <button
                 type="button"
                 onClick={() => setAddingSets(true)}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 transition hover:text-emerald-700"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 transition hover:text-brand-700"
               >
                 <ListPlus className="h-4 w-4" />
                 セットを追加

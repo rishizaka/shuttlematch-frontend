@@ -68,7 +68,7 @@ function LoginPage() {
           </form>
           <p className="mt-4 text-center text-sm text-slate-500">
             アカウントがありませんか？{' '}
-            <Link to="/signup" className="text-emerald-600 hover:underline">
+            <Link to="/signup" className="text-brand-600 hover:underline">
               新規登録
             </Link>
           </p>
