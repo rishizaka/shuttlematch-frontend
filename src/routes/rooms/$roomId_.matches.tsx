@@ -304,15 +304,11 @@ function MatchesPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link
-            to="/rooms/$roomId"
-            params={{ roomId }}
-            className="text-sm text-emerald-600 hover:underline"
-          >
-            ← ルームへ戻る
+          <Link to="/" className="text-sm text-emerald-600 hover:underline">
+            ← ルーム一覧へ
           </Link>
           <div className="mt-1 flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-slate-900">試合表</h1>
+            <h1 className="text-2xl font-bold text-slate-900">{room?.title ?? '試合表'}</h1>
             {closed ? (
               <span className="inline-flex items-center rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
                 終了済み

@@ -7,8 +7,9 @@ import { Badge, statusTone } from '../ui/Badge'
 export function RoomCard({ room }: { room: Room }) {
   return (
     <Link
-      to="/rooms/$roomId"
+      to="/rooms/$roomId/matches"
       params={{ roomId: room.id }}
+      search={{ openExternalBrowser: 1 }}
       className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow"
     >
       <div className="flex items-start justify-between gap-3">
