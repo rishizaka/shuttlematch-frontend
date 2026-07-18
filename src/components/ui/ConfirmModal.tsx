@@ -8,6 +8,7 @@ export function ConfirmModal({
   confirmLabel = 'はい',
   cancelLabel = 'いいえ',
   confirming = false,
+  danger = false,
   onConfirm,
   onCancel,
 }: {
@@ -16,6 +17,8 @@ export function ConfirmModal({
   confirmLabel?: string
   cancelLabel?: string
   confirming?: boolean
+  /** 破壊的操作(削除など)のとき確認ボタンを赤にする。 */
+  danger?: boolean
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -33,7 +36,12 @@ export function ConfirmModal({
         <h2 className="text-lg font-bold text-slate-900">{title}</h2>
         {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}
         <div className="mt-5 flex items-center gap-2">
-          <Button className="flex-1" onClick={onConfirm} disabled={confirming}>
+          <Button
+            className="flex-1"
+            variant={danger ? 'danger' : 'primary'}
+            onClick={onConfirm}
+            disabled={confirming}
+          >
             {confirming ? '処理中…' : confirmLabel}
           </Button>
           <Button variant="ghost" onClick={onCancel} disabled={confirming}>

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -11,6 +11,7 @@ import {
   Camera,
   RefreshCw,
   Settings2,
+  Trash2,
   UserRound,
   Users,
 } from 'lucide-react'
@@ -18,6 +19,7 @@ import {
   queryKeys,
   useAddSets,
   useCloseRoom,
+  useDeleteRoom,
   useMatches,
   useReplanFutureSets,
   useRevertSet,
@@ -30,7 +32,9 @@ import {
   getSelfParticipant,
   setSelfParticipant,
   removeSelfParticipant,
+  removeRoomId,
 } from '../../lib/local-store'
+import { ConfirmModal } from '../../components/ui/ConfirmModal'
 import { roomOgMeta } from '../../lib/og'
 import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -106,10 +110,14 @@ function MatchesPage() {
   const addSets = useAddSets(roomId)
   const replan = useReplanFutureSets(roomId)
   const closeRoom = useCloseRoom(roomId)
+  const deleteRoom = useDeleteRoom(roomId)
+  const navigate = useNavigate()
   // 表示密度。既定はコンパクト(1画面に多くのセットを収める)。
   const [density, setDensity] = useState<Density>('compact')
   const [addCount, setAddCount] = useState(3)
   const [confirmingClose, setConfirmingClose] = useState(false)
+  // ルーム削除の確認モーダルの開閉。
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   // 最下部の「セットを追加」の入力UI(ステッパー)の開閉。
   const [addingSets, setAddingSets] = useState(false)
   // 運営メニューの開閉。参加者リストが長くなりがちなので、既定では畳んでおく。
@@ -585,9 +593,62 @@ function MatchesPage() {
                   </Link>
                 </div>
               </div>
+
+              {/* ルーム削除(危険操作)。間違えて作成した場合などにデータごと破棄する。 */}
+              <div className="bg-red-50/40 px-4 py-4 sm:px-5">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                      <h3 className="text-sm font-semibold text-red-700">ルームを削除</h3>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      参加者・試合表を含めてすべて完全に削除します。元に戻せません。
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="danger"
+                    onClick={() => setConfirmingDelete(true)}
+                    disabled={deleteRoom.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    削除する
+                  </Button>
+                </div>
+                {deleteRoom.isError ? (
+                  <p className="mt-2 text-sm text-red-600">
+                    {deleteRoom.error instanceof Error
+                      ? deleteRoom.error.message
+                      : 'ルームの削除に失敗しました'}
+                  </p>
+                ) : null}
+              </div>
             </div>
           ) : null}
         </section>
+      ) : null}
+
+      {confirmingDelete ? (
+        <ConfirmModal
+          title="このルームを削除しますか？"
+          description="参加者・固定ペア・試合表を含めてすべて完全に削除します。元に戻せません。"
+          confirmLabel="削除する"
+          cancelLabel="やめる"
+          danger
+          confirming={deleteRoom.isPending}
+          onConfirm={() =>
+            deleteRoom.mutate(undefined, {
+              onSuccess: () => {
+                removeRoomId(roomId)
+                setConfirmingDelete(false)
+                showToast('ルームを削除しました')
+                void navigate({ to: '/' })
+              },
+            })
+          }
+          onCancel={() => setConfirmingDelete(false)}
+        />
       ) : null}
 
       {schedule.matches.length === 0 ? (

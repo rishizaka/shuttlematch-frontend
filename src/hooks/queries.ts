@@ -105,6 +105,18 @@ export function useCloseRoom(roomId: string) {
   });
 }
 
+/** ルームを配下データごと完全に削除する。間違えて作成した場合などに使う。 */
+export function useDeleteRoom(roomId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => roomApi.deleteRoom(roomId),
+    onSuccess: () => {
+      qc.removeQueries({ queryKey: queryKeys.room(roomId) });
+      qc.invalidateQueries({ queryKey: queryKeys.roomLists });
+    },
+  });
+}
+
 /** かんたん作成。番号参加者+試合表まで作成し、識別子を localStore に保存する。 */
 export function useQuickCreateRoom() {
   return useMutation({

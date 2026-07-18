@@ -152,6 +152,9 @@ export const roomApi = {
   /** ルームを終了する(終了済みとして履歴に残す)。 */
   close: (roomId: string) =>
     request<Room>(`/api/v1/rooms/${roomId}/close`, { method: 'POST' }),
+  /** ルームを配下データ(参加者・固定ペア・試合表)ごと完全に削除する。 */
+  deleteRoom: (roomId: string) =>
+    request<void>(`/api/v1/rooms/${roomId}`, { method: 'DELETE' }),
     addFixedPair: (roomId: string, participantA: string, participantB: string) =>
       request<Room>(`/api/v1/rooms/${roomId}/fixed-pairs`, {
         method: 'POST',
