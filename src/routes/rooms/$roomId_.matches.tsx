@@ -319,28 +319,18 @@ function MatchesPage() {
             全 {setCount} セット・{schedule.matchCount} 試合
           </p>
           {/* 参加者は任意で自分の番号を設定でき、設定すると自分の試合が強調される
-              (運営者は運営メニューから設定する)。 */}
-          {!isOrganizer && !closed ? (
-            myParticipantId ? (
-              <p className="mt-0.5 text-xs text-slate-500">
-                あなた: {indexByParticipantId.get(myParticipantId) ?? '?'}番
-                <button
-                  type="button"
-                  onClick={() => setShowSelfModal(true)}
-                  className="ml-1.5 font-medium text-emerald-600 hover:underline"
-                >
-                  変更する
-                </button>
-              </p>
-            ) : (
+              (運営者は運営メニューから設定する)。未設定時は下部の note で目立たせて誘導する。 */}
+          {!isOrganizer && !closed && myParticipantId ? (
+            <p className="mt-0.5 text-xs text-slate-500">
+              あなた: {indexByParticipantId.get(myParticipantId) ?? '?'}番
               <button
                 type="button"
                 onClick={() => setShowSelfModal(true)}
-                className="mt-0.5 text-xs font-medium text-emerald-600 hover:underline"
+                className="ml-1.5 font-medium text-emerald-600 hover:underline"
               >
-                自分の番号を設定（自分の試合が強調表示されます）
+                変更する
               </button>
-            )
+            </p>
           ) : null}
         </div>
         <div className="flex rounded-xl bg-slate-100 p-1" role="group" aria-label="表示切替">
@@ -370,6 +360,28 @@ function MatchesPage() {
           </button>
         </div>
       </div>
+
+      {/* 自分の番号が未設定の参加者に、設定すると見やすくなることを note で目立たせて誘導する。 */}
+      {!isOrganizer && !closed && !myParticipantId ? (
+        <button
+          type="button"
+          onClick={() => setShowSelfModal(true)}
+          className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+            <UserRound className="h-4.5 w-4.5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-amber-900">
+              自分の番号を設定しましょう
+            </span>
+            <span className="block text-xs text-amber-700">
+              設定すると、自分が出る試合が強調表示されて見やすくなります。
+            </span>
+          </span>
+          <span className="shrink-0 text-sm font-semibold text-amber-700">設定 →</span>
+        </button>
+      ) : null}
 
       {closed ? (
         <div className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
