@@ -61,7 +61,7 @@ export function SetStartAnnouncement({
                   className={
                     'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold tabular-nums ' +
                     (m.self
-                      ? 'bg-brand-900 text-white'
+                      ? 'bg-accent-500 text-brand-900'
                       : 'border border-brand-200 bg-white text-slate-700')
                   }
                 >

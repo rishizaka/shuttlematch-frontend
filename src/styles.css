@@ -1,20 +1,30 @@
 
 @import "tailwindcss";
 
-/* ブランドカラー: ロゴ(ShuttleMatch)のブルーに合わせた azure→navy スケール。
-   600 がロゴの鮮やかなブルー #0060c0、900 がロゴのダークネイビー #002050。
-   従来のエメラルドに代わる主要アクセント色として全体で使う。 */
+/* ブランドカラー: ロゴ(ShuttleMatch)のネイビーに合わせた navy スケール。
+   800 がロゴのダークネイビー #002050。主色(ボタン・リンク・見出し)に使う。 */
 @theme {
-  --color-brand-50: #eef5fc;
-  --color-brand-100: #d6e6f8;
-  --color-brand-200: #aecdf0;
-  --color-brand-300: #7aade6;
-  --color-brand-400: #3d86d8;
-  --color-brand-500: #0f6bc9;
-  --color-brand-600: #0060c0;
-  --color-brand-700: #004f9e;
-  --color-brand-800: #003a75;
-  --color-brand-900: #002050;
+  --color-brand-50: #eef2f8;
+  --color-brand-100: #d4e0ef;
+  --color-brand-200: #a9c0dd;
+  --color-brand-300: #7196c3;
+  --color-brand-400: #3d68a2;
+  --color-brand-500: #1d4685;
+  --color-brand-600: #123a70;
+  --color-brand-700: #0b2c58;
+  --color-brand-800: #002050;
+  --color-brand-900: #001433;
+
+  /* アクセント: ロゴのゴールド #e0a020。白文字ボタンには使わず、
+     「自分の試合」ハイライトなどの差し色として使う(下地はゴールド+濃紺文字)。 */
+  --color-accent-50: #fdf6e7;
+  --color-accent-100: #fae9c0;
+  --color-accent-200: #f4d488;
+  --color-accent-300: #edbb4e;
+  --color-accent-400: #e5a62a;
+  --color-accent-500: #e0a020;
+  --color-accent-600: #c4870f;
+  --color-accent-700: #9c6a0c;
 }
 
 * {

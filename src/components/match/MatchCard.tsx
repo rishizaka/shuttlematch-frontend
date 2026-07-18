@@ -15,10 +15,10 @@ function PlayerChip({
   finished: boolean
   dense: boolean
 }) {
-  // 自分は深緑の塗りで示す(進行中の brand-600 より一段濃い色)。
+  // 自分はロゴのゴールドの塗り+濃紺文字で示す(進行中の navy とは別の差し色)。
   // 他の参加者は白地+枠線でシンプルに番号だけを見せる。
   const chip = self
-    ? 'bg-brand-900 text-white'
+    ? 'bg-accent-500 text-brand-900'
     : finished
       ? 'border border-slate-200 bg-white text-slate-400'
       : 'border border-slate-300 bg-white text-slate-700 shadow-sm'
@@ -102,10 +102,10 @@ export function MatchCard({
     </span>
   )
 
-  // コンパクト表示では行を詰めるため「あなた」バッジは出さず、深緑チップのみで示す。
+  // コンパクト表示では行を詰めるため「あなた」バッジは出さず、ゴールドのチップのみで示す。
   const youBadge =
     highlight && !dense ? (
-      <span className="ml-auto inline-flex shrink-0 items-center rounded-full bg-brand-900 px-2 py-0.5 text-xs font-semibold text-white">
+      <span className="ml-auto inline-flex shrink-0 items-center rounded-full bg-accent-500 px-2 py-0.5 text-xs font-semibold text-brand-900">
         あなた
       </span>
     ) : null
