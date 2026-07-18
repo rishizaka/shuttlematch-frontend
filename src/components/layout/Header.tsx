@@ -26,11 +26,14 @@ export function Header() {
   return (
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <Link to="/" className="flex items-center gap-2" onClick={close}>
-          <span className="text-lg" aria-hidden>
-            🏸
-          </span>
-          <span className="text-lg font-bold text-slate-900">ShuttleMatch</span>
+        <Link to="/" className="flex items-center" onClick={close}>
+          <img
+            src="/header-logo.png"
+            alt="ShuttleMatch"
+            className="h-8 w-auto"
+            width={437}
+            height={96}
+          />
         </Link>
 
         <button
