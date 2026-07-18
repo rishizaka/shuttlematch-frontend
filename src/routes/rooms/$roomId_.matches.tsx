@@ -373,13 +373,16 @@ function MatchesPage() {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-amber-900">
-              自分の番号を設定しましょう
+              自分の番号を入力しましょう
             </span>
             <span className="block text-xs text-amber-700">
               設定すると、自分が出る試合が強調表示されて見やすくなります。
             </span>
           </span>
-          <span className="shrink-0 text-sm font-semibold text-amber-700">設定 →</span>
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
+            <Plus className="h-4 w-4" />
+            入力
+          </span>
         </button>
       ) : null}
 
