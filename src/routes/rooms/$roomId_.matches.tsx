@@ -253,9 +253,6 @@ function MatchesPage() {
     )
   }
 
-  // 表示は常にコンパクト(1画面に多くのセットを収める。標準表示は廃止)。
-  const dense = true
-
   return (
     <div className="space-y-5">
       {announcedSet != null ? (
@@ -631,7 +628,6 @@ function MatchesPage() {
       ) : (
         <MatchScheduleList
           matches={schedule.matches}
-          dense={dense}
           indexByParticipantId={indexByParticipantId}
           highlightParticipantId={myParticipantId}
           activeSetNumber={activeSetNumber}

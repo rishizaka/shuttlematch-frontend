@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, ChevronDown, ChevronUp, Play, RotateCcw } from 'lucide-react'
+import { Check, Play, RotateCcw } from 'lucide-react'
 import type { Match } from '../../lib/types'
 import { formatTime } from '../../lib/format'
 import { MatchCard } from './MatchCard'
@@ -29,6 +29,11 @@ export function groupMatchesBySet(matches: Match[]): SetGroup[] {
     }))
 }
 
+/**
+ * 1セット分の表示(コンパクト固定)。カードをやめ、セットの区切りを
+ * 「ラベル付き横線」にして密度を上げる。進行中セットだけ薄い帯で示す。
+ * 行が低いので折りたたみは提供しない。
+ */
 function SetGroupView({
   group,
   indexByParticipantId,
@@ -40,7 +45,6 @@ function SetGroupView({
   starting,
   onRevert,
   reverting,
-  dense = false,
 }: {
   group: SetGroup
   indexByParticipantId?: ReadonlyMap<string, number>
@@ -52,13 +56,9 @@ function SetGroupView({
   starting: boolean
   onRevert?: () => void
   reverting: boolean
-  dense?: boolean
 }) {
   // 「開始前に戻す」の確認状態。開始はワンタップなので確認しない。
   const [confirmingRevert, setConfirmingRevert] = useState(false)
-  // 終了セットは手動でのみ折りたためる。次のセット開始時に自動で畳まれると
-  // びっくりするため、既定は展開のまま(折りたたみは任意)。
-  const [expanded, setExpanded] = useState(true)
 
   // セットの開始時刻は同一セット共通。任意の1試合から拾う。
   const startedAt = group.matches.find((m) => m.startedAt)?.startedAt ?? null
@@ -69,239 +69,87 @@ function SetGroupView({
   // まだ開始できない未来のセット。
   const upcoming = !startedAt && !canStart
 
-  // コンパクト表示: カードをやめ、セットの区切りを「ラベル付き横線」にして密度を上げる。
-  // 進行中セットだけ薄緑の帯で示す。折りたたみは行が低いので提供しない。
-  if (dense) {
-    return (
-      <section>
-        <div className="flex items-center gap-2">
-          <span
-            className={
-              'flex shrink-0 items-center gap-1.5 text-xs font-bold ' +
-              (finished
-                ? 'text-slate-400'
-                : active
-                  ? 'text-brand-700'
-                  : upcoming
-                    ? 'text-slate-500'
-                    : 'text-slate-700')
-            }
-          >
-            {finished ? <Check className="h-3 w-3 text-slate-300" /> : null}
-            {active ? (
-              <span className="relative flex h-1.5 w-1.5" aria-hidden>
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand-500" />
-              </span>
-            ) : null}
-            第{group.setNumber}セット
-            {startedTime ? (
-              <span className="text-[10px] font-medium text-slate-400 tabular-nums">
-                {startedTime}〜
-              </span>
-            ) : null}
-          </span>
-          <span className={'h-px flex-1 ' + (active ? 'bg-brand-200' : 'bg-slate-200')} />
-          {canStart ? (
-            <button
-              type="button"
-              disabled={starting}
-              onClick={() => onStart?.()}
-              className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50"
-            >
-              <Play className="h-3 w-3 fill-current" />
-              {starting ? '開始中…' : '開始'}
-            </button>
-          ) : null}
-          {canRevert ? (
-            confirmingRevert ? (
-              <span className="flex shrink-0 items-center gap-1">
-                <span className="text-[10px] font-medium text-slate-500">戻す？</span>
-                <button
-                  type="button"
-                  disabled={reverting}
-                  onClick={() => {
-                    onRevert?.()
-                    setConfirmingRevert(false)
-                  }}
-                  className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
-                >
-                  はい
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmingRevert(false)}
-                  className="rounded px-1 py-0.5 text-[10px] font-medium text-slate-500 hover:bg-slate-100"
-                >
-                  いいえ
-                </button>
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setConfirmingRevert(true)}
-                className="inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-              >
-                <RotateCcw className="h-2.5 w-2.5" />
-                戻す
-              </button>
-            )
-          ) : null}
-        </div>
-        <div
-          className={
-            'mt-1.5 space-y-1' +
-            (active ? ' -mx-2 rounded-lg bg-brand-50 px-2 py-1.5' : '')
-          }
-        >
-          {group.matches.map((m) => (
-            <MatchCard
-              key={m.matchNumber}
-              match={m}
-              indexByParticipantId={indexByParticipantId}
-              highlightParticipantId={highlightParticipantId}
-              active={active}
-              finished={finished}
-              dense
-            />
-          ))}
-        </div>
-      </section>
-    )
-  }
-
-  // 終了セットは1行のサマリーに畳む。
-  if (finished && !expanded) {
-    return (
-      <button
-        type="button"
-        onClick={() => setExpanded(true)}
-        className="flex w-full items-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-left transition hover:border-slate-300 hover:bg-slate-50"
-      >
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100">
-          <Check className="h-3 w-3 text-slate-400" />
-        </span>
-        <span className="text-sm font-semibold text-slate-500">
-          第 {group.setNumber} セット
-        </span>
-        {startedTime ? (
-          <span className="text-xs text-slate-400 tabular-nums">{startedTime}〜</span>
-        ) : null}
-        <ChevronDown className="ml-auto h-4 w-4 shrink-0 text-slate-300" />
-      </button>
-    )
-  }
-
-  const container = active
-    ? 'rounded-2xl border-2 border-brand-500 bg-brand-50/50 p-3 shadow-sm shadow-brand-100 sm:p-4'
-    : finished
-      ? 'rounded-2xl border border-slate-200 bg-white p-3 sm:p-4'
-      : canStart
-        ? 'rounded-2xl border border-brand-200 bg-white p-3 shadow-sm sm:p-4'
-        : 'rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-3 sm:p-4'
-
   return (
-    <section className={container}>
-      <div className="mb-2.5 flex flex-wrap items-center gap-2">
-        {active ? (
-          <span className="relative flex h-2.5 w-2.5" aria-hidden>
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-brand-500" />
-          </span>
-        ) : null}
-        <h2
+    <section>
+      <div className="flex items-center gap-2">
+        <span
           className={
-            'text-base font-bold ' +
-            (finished ? 'text-slate-500' : upcoming ? 'text-slate-600' : 'text-slate-900')
+            'flex shrink-0 items-center gap-1.5 text-xs font-bold ' +
+            (finished
+              ? 'text-slate-400'
+              : active
+                ? 'text-brand-700'
+                : upcoming
+                  ? 'text-slate-500'
+                  : 'text-slate-700')
           }
         >
-          第 {group.setNumber} セット
-        </h2>
-        {startedTime ? (
-          <span className="text-xs font-medium text-slate-500 tabular-nums">
-            {startedTime}〜
-          </span>
-        ) : null}
-        {active ? (
-          <span className="inline-flex items-center rounded-full bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white">
-            進行中
-          </span>
-        ) : null}
-        {finished ? (
-          <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
-            終了
-          </span>
-        ) : null}
-        {upcoming && !canStart ? (
-          <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-400">
-            待機中
-          </span>
-        ) : null}
-
-        <span className="ml-auto flex items-center gap-1.5">
-          {canStart ? (
-            <button
-              type="button"
-              disabled={starting}
-              onClick={() => onStart?.()}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50"
-            >
-              <Play className="h-3.5 w-3.5 fill-current" />
-              {starting ? '開始中…' : '開始'}
-            </button>
+          {finished ? <Check className="h-3 w-3 text-slate-300" /> : null}
+          {active ? (
+            <span className="relative flex h-1.5 w-1.5" aria-hidden>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand-500" />
+            </span>
           ) : null}
-          {canRevert ? (
-            confirmingRevert ? (
-              <span className="flex items-center gap-1.5">
-                <span className="text-xs font-medium text-slate-600">
-                  開始前に戻しますか？
-                </span>
-                <button
-                  type="button"
-                  disabled={reverting}
-                  onClick={() => {
-                    onRevert?.()
-                    setConfirmingRevert(false)
-                  }}
-                  className="rounded-md bg-slate-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
-                >
-                  はい
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmingRevert(false)}
-                  className="rounded-md px-2 py-1 text-xs font-medium text-slate-500 hover:bg-white"
-                >
-                  いいえ
-                </button>
-              </span>
-            ) : (
-              // 誤操作を避けたい補助操作なので、あえて控えめな見た目にする。
-              <button
-                type="button"
-                onClick={() => setConfirmingRevert(true)}
-                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-400 transition hover:bg-white hover:text-slate-600"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                戻す
-              </button>
-            )
-          ) : null}
-          {finished ? (
-            <button
-              type="button"
-              onClick={() => setExpanded(false)}
-              aria-label="たたむ"
-              className="inline-flex items-center rounded-lg p-1 text-slate-300 transition hover:bg-slate-100 hover:text-slate-500"
-            >
-              <ChevronUp className="h-4 w-4" />
-            </button>
+          第{group.setNumber}セット
+          {startedTime ? (
+            <span className="text-[10px] font-medium text-slate-400 tabular-nums">
+              {startedTime}〜
+            </span>
           ) : null}
         </span>
+        <span className={'h-px flex-1 ' + (active ? 'bg-brand-200' : 'bg-slate-200')} />
+        {canStart ? (
+          <button
+            type="button"
+            disabled={starting}
+            onClick={() => onStart?.()}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50"
+          >
+            <Play className="h-3 w-3 fill-current" />
+            {starting ? '開始中…' : '開始'}
+          </button>
+        ) : null}
+        {canRevert ? (
+          confirmingRevert ? (
+            <span className="flex shrink-0 items-center gap-1">
+              <span className="text-[10px] font-medium text-slate-500">戻す？</span>
+              <button
+                type="button"
+                disabled={reverting}
+                onClick={() => {
+                  onRevert?.()
+                  setConfirmingRevert(false)
+                }}
+                className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+              >
+                はい
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingRevert(false)}
+                className="rounded px-1 py-0.5 text-[10px] font-medium text-slate-500 hover:bg-slate-100"
+              >
+                いいえ
+              </button>
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmingRevert(true)}
+              className="inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            >
+              <RotateCcw className="h-2.5 w-2.5" />
+              戻す
+            </button>
+          )
+        ) : null}
       </div>
-
-      {/* スマホのワンビューに収めるため、コートごとに1行のコンパクト表示にする。 */}
-      <div className="space-y-1.5">
+      <div
+        className={
+          'mt-1.5 space-y-1' + (active ? ' -mx-2 rounded-lg bg-brand-50 px-2 py-1.5' : '')
+        }
+      >
         {group.matches.map((m) => (
           <MatchCard
             key={m.matchNumber}
@@ -313,7 +161,6 @@ function SetGroupView({
           />
         ))}
       </div>
-
     </section>
   )
 }
@@ -329,7 +176,6 @@ export function MatchScheduleList({
   startingSetNumber,
   onRevertSet,
   revertingSetNumber,
-  dense = false,
 }: {
   matches: Match[]
   /** ParticipantId -> 参加者番号(1始まり)。 */
@@ -350,8 +196,6 @@ export function MatchScheduleList({
   onRevertSet?: (setNumber: number) => void
   /** 戻し処理中のセット番号。 */
   revertingSetNumber?: number | null
-  /** コンパクト表示(枠なし・高密度)。 */
-  dense?: boolean
 }) {
   if (matches.length === 0) {
     return <p className="py-6 text-sm text-slate-500">表示できる試合がありません。</p>
@@ -360,11 +204,10 @@ export function MatchScheduleList({
   const groups = groupMatchesBySet(matches)
 
   return (
-    <div className={dense ? 'space-y-3.5' : 'space-y-3'}>
+    <div className="space-y-3.5">
       {groups.map((group) => (
         <SetGroupView
           key={group.setNumber}
-          dense={dense}
           group={group}
           indexByParticipantId={indexByParticipantId}
           highlightParticipantId={highlightParticipantId}
