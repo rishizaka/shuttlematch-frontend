@@ -7,7 +7,14 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 - Node.js **22 以上が必須**。マシンのデフォルト node は v20 で、そのままだと vitest が起動エラー（`styleText` の `ERR_INVALID_ARG_VALUE`）になる。fnm に v22 が入っているので `fnm exec --using=22 <cmd>` で実行する。
 - 開発: `fnm exec --using=22 npm run dev`（http://localhost:3000）
 - 型チェック: `npm run typecheck`（v20 でも可）
-- テスト: `fnm exec --using=22 npm run test`
+- テスト（単体・vitest）: `fnm exec --using=22 npm run test`
+- E2E（Playwright, ブラウザ操作）:
+  - ローカル: **backend を 8080 で起動**したうえで `fnm exec --using=22 npm run e2e`
+    （frontend の dev サーバーは Playwright が自動起動）。
+  - 本番スモーク: `fnm exec --using=22 npm run e2e:prod`（`E2E_BASE_URL` を本番に向ける。
+    QA用ルームを作成し最後に自動削除する）。
+  - 仕様は `e2e/`（作成→試合表→削除、参加者の番号ハイライト、旧URLリダイレクト）。
+    ルームを作る副作用があるので直列実行(`workers: 1`)。成果物は `.gitignore` 済み。
 
 ## デプロイ（本番反映）
 
