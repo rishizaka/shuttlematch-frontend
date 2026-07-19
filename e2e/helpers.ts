@@ -64,3 +64,117 @@ export async function quickCreateRoom(
 export async function deleteRoom(request: APIRequestContext, roomId: string) {
   await request.delete(`${API_BASE}/api/v1/rooms/${roomId}`).catch(() => {})
 }
+
+/** 現在の試合表(スケジュール)を取得する。UI がレンダするのと同じデータ。 */
+export async function getSchedule(request: APIRequestContext, roomId: string) {
+  const res = await request.get(`${API_BASE}/api/v1/rooms/${roomId}/matches`)
+  return res.json()
+}
+
+type Match = {
+  setNumber: number
+  courtNumber: number | null
+  pairA: { player1Id: string; player2Id: string }
+  pairB: { player1Id: string; player2Id: string }
+}
+
+/** 1試合の出場者4名(ParticipantId)。 */
+export function playersOf(m: Match): string[] {
+  return [m.pairA.player1Id, m.pairA.player2Id, m.pairB.player1Id, m.pairB.player2Id]
+}
+
+/**
+ * 試合表の偏り指標を算出する。number は参加者一覧の並び順(1始まり)。
+ * onlyPresent を渡すと、その番号集合(全期間在席の人)だけで公平性を評価する
+ * (途中参加・早退者は出場総数が違って当然なので除外する)。
+ */
+export function analyzeFairness(
+  matches: Match[],
+  idByNumber: Map<number, string>,
+  onlyPresent?: Set<number>,
+) {
+  const idToNum = new Map<string, number>()
+  for (const [num, id] of idByNumber) idToNum.set(id, num)
+  const sets = [...new Set(matches.map((m) => m.setNumber))].sort((a, b) => a - b)
+
+  const playingBySet = new Map<number, Set<number>>()
+  for (const s of sets) playingBySet.set(s, new Set())
+  const cooc = new Map<string, number>() // 同じコートに一緒になった回数(番号ペア)
+  for (const m of matches) {
+    const nums = playersOf(m).map((id) => idToNum.get(id)!).filter((n) => n != null)
+    for (const n of nums) playingBySet.get(m.setNumber)!.add(n)
+    for (let i = 0; i < nums.length; i++)
+      for (let j = i + 1; j < nums.length; j++) {
+        const key = [nums[i], nums[j]].sort((a, b) => a - b).join('-')
+        cooc.set(key, (cooc.get(key) ?? 0) + 1)
+      }
+  }
+
+  const target = onlyPresent ?? new Set(idByNumber.keys())
+  const play = new Map<number, number>()
+  const rest = new Map<number, number>()
+  for (const n of target) {
+    play.set(n, 0)
+    rest.set(n, 0)
+  }
+  for (const s of sets) {
+    const pl = playingBySet.get(s)!
+    for (const n of target) {
+      if (pl.has(n)) play.set(n, play.get(n)! + 1)
+      else rest.set(n, rest.get(n)! + 1)
+    }
+  }
+  // 各人の最大連続出場(休みスパン)
+  let maxStreak = 0
+  for (const n of target) {
+    let cur = 0
+    for (const s of sets) {
+      cur = playingBySet.get(s)!.has(n) ? cur + 1 : 0
+      maxStreak = Math.max(maxStreak, cur)
+    }
+  }
+  const playVals = [...play.values()]
+  const restVals = [...rest.values()]
+  const coocVals = [...cooc.values()]
+  const diff = (a: number[]) => (a.length ? Math.max(...a) - Math.min(...a) : 0)
+  return {
+    sets: sets.length,
+    playDiff: diff(playVals),
+    restDiff: diff(restVals),
+    maxStreak,
+    coocMax: coocVals.length ? Math.max(...coocVals) : 0,
+    coocMin: coocVals.length ? Math.min(...coocVals) : 0,
+    coocAvg: coocVals.length ? coocVals.reduce((a, b) => a + b, 0) / coocVals.length : 0,
+    playingBySet,
+  }
+}
+
+/** ルームを作成し、このブラウザを運営者(createdBy)として振る舞わせる。 */
+export async function createRoomAsOrganizer(
+  page: Page,
+  request: APIRequestContext,
+  opts: { participantCount: number; courtCount: number },
+) {
+  const uid = await createGuest(request)
+  const res = await request.post(`${API_BASE}/api/v1/rooms/quick`, {
+    data: {
+      title: `E2E QA ${Date.now()}`,
+      courtCount: opts.courtCount,
+      participantCount: opts.participantCount,
+      createdBy: uid,
+    },
+  })
+  const room = await res.json()
+  await page.addInitScript(
+    (user) => localStorage.setItem('shuttlematch.currentUser', JSON.stringify(user)),
+    { id: uid, name: 'e2e', email: null },
+  )
+  return room
+}
+
+/** room.participants の並び順を 1始まりの番号に写像する。 */
+export function numberMap(participants: Array<{ id: string }>): Map<number, string> {
+  const m = new Map<number, string>()
+  participants.forEach((p, i) => m.set(i + 1, p.id))
+  return m
+}

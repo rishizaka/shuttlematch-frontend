@@ -13,8 +13,13 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
     （frontend の dev サーバーは Playwright が自動起動）。
   - 本番スモーク: `fnm exec --using=22 npm run e2e:prod`（`E2E_BASE_URL` を本番に向ける。
     QA用ルームを作成し最後に自動削除する）。
-  - 仕様は `e2e/`（作成→試合表→削除、参加者の番号ハイライト、旧URLリダイレクト）。
-    ルームを作る副作用があるので直列実行(`workers: 1`)。成果物は `.gitignore` 済み。
+  - 仕様は `e2e/`:
+    - `fairness`: 実際に試合表を生成しUIから操作(セット追加・早退・遅刻・再編成)しても、
+      出場/休み回数・休みスパン(最大連続出場)・ペア偏り(同コート共起)が偏らないかを検証
+      （6人1コート/10人2コート/13人2コート）。結果はUIがレンダするのと同じ試合表データで判定。
+    - `organizer-lifecycle`（作成→試合表→削除）、`participant-self-number`（番号ハイライト）、
+      `redirect`（旧URL→試合表）。
+  - ルームを作る副作用があるので直列実行(`workers: 1`)。成果物は `.gitignore` 済み。
 
 ## デプロイ（本番反映）
 
