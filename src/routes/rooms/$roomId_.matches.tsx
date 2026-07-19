@@ -73,8 +73,6 @@ export const Route = createFileRoute('/rooms/$roomId_/matches')({
   component: MatchesPage,
 })
 
-type Density = 'compact' | 'standard'
-
 function MatchesPage() {
   const { roomId } = Route.useParams()
   const { user } = useCurrentUser()
@@ -112,8 +110,6 @@ function MatchesPage() {
   const closeRoom = useCloseRoom(roomId)
   const deleteRoom = useDeleteRoom(roomId)
   const navigate = useNavigate()
-  // 表示密度。既定はコンパクト(1画面に多くのセットを収める)。
-  const [density, setDensity] = useState<Density>('compact')
   const [addCount, setAddCount] = useState(3)
   const [confirmingClose, setConfirmingClose] = useState(false)
   // ルーム削除の確認モーダルの開閉。
@@ -257,7 +253,8 @@ function MatchesPage() {
     )
   }
 
-  const dense = density === 'compact'
+  // 表示は常にコンパクト(1画面に多くのセットを収める。標準表示は廃止)。
+  const dense = true
 
   return (
     <div className="space-y-5">
@@ -340,32 +337,6 @@ function MatchesPage() {
               </button>
             </p>
           ) : null}
-        </div>
-        <div className="flex rounded-xl bg-slate-100 p-1" role="group" aria-label="表示切替">
-          <button
-            type="button"
-            onClick={() => setDensity('compact')}
-            className={
-              'rounded-lg px-3 py-1.5 text-sm font-medium transition ' +
-              (density === 'compact'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700')
-            }
-          >
-            コンパクト
-          </button>
-          <button
-            type="button"
-            onClick={() => setDensity('standard')}
-            className={
-              'rounded-lg px-3 py-1.5 text-sm font-medium transition ' +
-              (density === 'standard'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700')
-            }
-          >
-            標準
-          </button>
         </div>
       </div>
 
