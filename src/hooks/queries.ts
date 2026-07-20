@@ -13,7 +13,7 @@ import {
   type CreateUserInput,
   type RoomListParams,
 } from "../lib/api";
-import { addRoomId } from "../lib/local-store";
+import { addRoomId, setSelfParticipant } from "../lib/local-store";
 import type { Room } from "../lib/types";
 
 /**
@@ -113,6 +113,22 @@ export function useDeleteRoom(roomId: string) {
     onSuccess: () => {
       qc.removeQueries({ queryKey: queryKeys.room(roomId) });
       qc.invalidateQueries({ queryKey: queryKeys.roomLists });
+    },
+  });
+}
+
+/**
+ * 受付中ルームに本人が参加する(名前必須)。参加すると番号が自動採番される。
+ * 参加した本人の participantId を localStore に保存し、自分の試合ハイライトに使う。
+ */
+export function useJoinRoom(roomId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => roomApi.join(roomId, name),
+    onSuccess: (result) => {
+      setSelfParticipant(roomId, result.participantId);
+      qc.setQueryData(queryKeys.room(roomId), result.room);
+      addRoomId(roomId);
     },
   });
 }

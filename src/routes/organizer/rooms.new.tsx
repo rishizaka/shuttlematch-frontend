@@ -1,6 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
-import { useQuickCreateRoom } from '../../hooks/queries'
+import { useCreateRoom, useQuickCreateRoom } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { userApi } from '../../lib/api'
 import { defaultRoomTitle } from '../../lib/format'
@@ -12,16 +12,21 @@ export const Route = createFileRoute('/organizer/rooms/new')({
   component: NewRoomPage,
 })
 
+// quick: 人数を入れて即・番号参加者+試合表を作る(従来)。
+// reception: コート数だけで受付を開始し、各自が名前で参加→番号自動。
+type Mode = 'quick' | 'reception'
+
 function NewRoomPage() {
   const router = useRouter()
   const { user, login } = useCurrentUser()
-  const create = useQuickCreateRoom()
+  const quickCreate = useQuickCreateRoom()
+  const createRoom = useCreateRoom()
 
+  const [mode, setMode] = useState<Mode>('quick')
   const [title, setTitle] = useState(defaultRoomTitle())
   const [participantCount, setParticipantCount] = useState('')
   const [courtCount, setCourtCount] = useState('2')
   const [attempted, setAttempted] = useState(false)
-  // 未ログイン時のゲストユーザー発行の状態。
   const [issuingGuest, setIssuingGuest] = useState(false)
   const [guestError, setGuestError] = useState<string | null>(null)
 
@@ -31,19 +36,28 @@ function NewRoomPage() {
 
   const titleError = !title.trim() ? 'タイトルを入力してください' : null
   const courtError = !courtCount || courts < 1 ? 'コート数を入力してください' : null
-  const peopleError = !participantCount
-    ? '参加人数を入力してください'
-    : people < required
-      ? `コート ${courts || 1} 面には最低 ${required} 人必要です`
+  const peopleError =
+    mode !== 'quick'
+      ? null
+      : !participantCount
+        ? '参加人数を入力してください'
+        : people < required
+          ? `コート ${courts || 1} 面には最低 ${required} 人必要です`
+          : null
+
+  const pending = quickCreate.isPending || createRoom.isPending || issuingGuest
+  const createError = quickCreate.isError
+    ? (quickCreate.error as Error).message
+    : createRoom.isError
+      ? (createRoom.error as Error).message
       : null
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setAttempted(true)
-    if (titleError || courtError || peopleError) return
+    if (mode === 'quick' ? titleError || courtError || peopleError : courtError) return
 
     // 未ログインならゲストユーザーを発行し、この端末のユーザーとして保存する。
-    // 以後は通常ログインと同じく user.id === room.createdBy で運営者と判定される。
     let creatorId = user?.id
     if (!creatorId) {
       setGuestError(null)
@@ -53,56 +67,87 @@ function NewRoomPage() {
         login(guest)
         creatorId = guest.id
       } catch (err) {
-        setGuestError(
-          err instanceof Error ? err.message : 'ゲストユーザーの発行に失敗しました',
-        )
+        setGuestError(err instanceof Error ? err.message : 'ゲストユーザーの発行に失敗しました')
         return
       } finally {
         setIssuingGuest(false)
       }
     }
 
-    create.mutate(
-      {
-        title: title.trim(),
-        courtCount: courts,
-        participantCount: people,
-        createdBy: creatorId,
-      },
-      {
-        onSuccess: (room) => {
-          void router.navigate({
-            to: '/rooms/$roomId/matches',
-            params: { roomId: room.id },
-            search: { openExternalBrowser: 1 },
-          })
+    const goMatches = (roomId: string) =>
+      void router.navigate({
+        to: '/rooms/$roomId/matches',
+        params: { roomId },
+        search: { openExternalBrowser: 1 },
+      })
+
+    if (mode === 'quick') {
+      quickCreate.mutate(
+        {
+          title: title.trim(),
+          courtCount: courts,
+          participantCount: people,
+          createdBy: creatorId,
         },
-      },
-    )
+        { onSuccess: (room) => goMatches(room.id) },
+      )
+    } else {
+      // 受付モード: コート数だけで OPEN ルームを作成 → 受付ロビー(試合表ページの未生成状態)へ。
+      createRoom.mutate(
+        {
+          title: defaultRoomTitle(),
+          heldAt: new Date().toISOString(),
+          courtCount: courts,
+          createdBy: creatorId,
+        },
+        { onSuccess: (room) => goMatches(room.id) },
+      )
+    }
   }
+
+  const modeButton = (m: Mode, title: string, desc: string) => (
+    <button
+      type="button"
+      onClick={() => setMode(m)}
+      className={
+        'rounded-xl border px-3 py-3 text-left text-sm transition ' +
+        (mode === m
+          ? 'border-brand-500 bg-brand-50 text-brand-900'
+          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300')
+      }
+    >
+      <span className="block font-semibold">{title}</span>
+      <span className="mt-0.5 block text-xs opacity-80">{desc}</span>
+    </button>
+  )
 
   return (
     <div className="mx-auto max-w-lg">
       <Card>
-        <CardHeader
-          title="ルームを作成"
-          description="人数とコート数を入れるだけ。番号で試合表を作り、名前は後から付けられます。"
-        />
+        <CardHeader title="ルームを作成" description="作り方を選べます。" />
         <CardBody>
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            {modeButton('quick', '人数を入れて作成', '番号で試合表をすぐ作る')}
+            {modeButton('reception', '参加リンクで受付', '各自が名前で参加→番号自動')}
+          </div>
+
           <form onSubmit={submit} className="space-y-4" noValidate>
-            <Field label="参加人数" htmlFor="participantCount">
-              <Input
-                id="participantCount"
-                type="number"
-                min={required}
-                value={participantCount}
-                onChange={(e) => setParticipantCount(e.target.value)}
-                placeholder="例: 8"
-              />
-              {attempted && peopleError ? (
-                <p className="mt-1 text-sm text-red-600">{peopleError}</p>
-              ) : null}
-            </Field>
+            {mode === 'quick' ? (
+              <Field label="参加人数" htmlFor="participantCount">
+                <Input
+                  id="participantCount"
+                  type="number"
+                  min={required}
+                  value={participantCount}
+                  onChange={(e) => setParticipantCount(e.target.value)}
+                  placeholder="例: 8"
+                />
+                {attempted && peopleError ? (
+                  <p className="mt-1 text-sm text-red-600">{peopleError}</p>
+                ) : null}
+              </Field>
+            ) : null}
+
             <Field label="コート数" htmlFor="courtCount">
               <Input
                 id="courtCount"
@@ -116,27 +161,30 @@ function NewRoomPage() {
                 <p className="mt-1 text-sm text-red-600">{courtError}</p>
               ) : null}
             </Field>
-            <Field label="タイトル" htmlFor="title">
-              <Input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="7/2 夜練"
-              />
-              {attempted && titleError ? (
-                <p className="mt-1 text-sm text-red-600">{titleError}</p>
-              ) : null}
-            </Field>
+
+            {mode === 'quick' ? (
+              <Field label="タイトル" htmlFor="title">
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="7/2 夜練"
+                />
+                {attempted && titleError ? (
+                  <p className="mt-1 text-sm text-red-600">{titleError}</p>
+                ) : null}
+              </Field>
+            ) : (
+              <p className="text-xs text-slate-500">
+                受付モードでは、作成後に共有リンクを渡すと、各自が名前で参加して番号が自動で
+                割り振られます。人数が集まったら「試合表を生成」を押します。
+              </p>
+            )}
+
             {guestError ? <p className="text-sm text-red-600">{guestError}</p> : null}
-            {create.isError ? (
-              <p className="text-sm text-red-600">{(create.error as Error).message}</p>
-            ) : null}
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={create.isPending || issuingGuest}
-            >
-              {create.isPending || issuingGuest ? '作成中…' : '試合表を作成'}
+            {createError ? <p className="text-sm text-red-600">{createError}</p> : null}
+            <Button type="submit" className="w-full" disabled={pending}>
+              {pending ? '作成中…' : mode === 'quick' ? '試合表を作成' : '受付を開始'}
             </Button>
             {!user ? (
               <p className="text-center text-xs text-slate-400">

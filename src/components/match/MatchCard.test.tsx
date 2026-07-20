@@ -22,8 +22,9 @@ const indexes = new Map([
 describe('MatchCard', () => {
   it('コート番号と4名の参加者番号を1行で表示する(ペア/vsは出さない)', () => {
     render(<MatchCard match={match} indexByParticipantId={indexes} />)
+    // コンパクト表示ではコートは「2コ」の短縮ラベル。
     expect(
-      screen.getByText((_, el) => el?.textContent === '2コート' && el?.tagName === 'SPAN'),
+      screen.getByText((_, el) => el?.textContent === '2コ' && el?.tagName === 'SPAN'),
     ).toBeInTheDocument()
     expect(screen.getByLabelText('1番')).toHaveTextContent('1')
     expect(screen.getByLabelText('4番')).toHaveTextContent('4')
@@ -43,7 +44,7 @@ describe('MatchCard', () => {
     expect(screen.getAllByText('?').length).toBe(4)
   })
 
-  it('自分のチップと「あなた」バッジを強調表示する', () => {
+  it('自分のチップをゴールドで強調表示する(コンパクトなので「あなた」バッジは出さない)', () => {
     render(
       <MatchCard
         match={match}
@@ -51,6 +52,9 @@ describe('MatchCard', () => {
         highlightParticipantId="p2"
       />,
     )
-    expect(screen.getByText('あなた')).toBeInTheDocument()
+    // p2 は 4番。自分のチップはロゴのゴールド(accent)で塗られる。
+    expect(screen.getByLabelText('4番').className).toContain('bg-accent-500')
+    // 他のチップはゴールドにならない。
+    expect(screen.getByLabelText('1番').className).not.toContain('bg-accent-500')
   })
 })

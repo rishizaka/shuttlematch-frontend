@@ -29,6 +29,14 @@ export interface FixedPair {
   participantB: string
 }
 
+/** 自己参加(join)のレスポンス。participantId を端末に保存して「自分」を識別する。 */
+export interface JoinResult {
+  participantId: string
+  /** 参加時点で割り当てられた番号(目安)。権威は最新ロスターでの並び順。 */
+  number: number
+  room: Room
+}
+
 export interface Room {
   id: string
   /** URL共有用の短いコード。/r/{shareCode} でアクセスできる。 */

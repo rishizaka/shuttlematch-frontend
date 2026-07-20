@@ -40,6 +40,7 @@ import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
 import { useToast } from '../../components/ui/Toast'
+import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { SelfNumberModal } from '../../components/room/SelfNumberModal'
 import { MatchScheduleList } from '../../components/match/MatchScheduleList'
@@ -79,7 +80,7 @@ function MatchesPage() {
   const { showToast } = useToast()
   // ポーリングで他端末の操作 (セット開始・ニックネーム変更・出入り) をリロードなしで反映する。
   // 終了済みルームでは自動停止する (queries.ts 側の判定)。
-  const { data: schedule, isLoading, isError, error } = useMatches(roomId, {
+  const { data: schedule, isLoading, error } = useMatches(roomId, {
     live: true,
   })
   // 参加者情報 (room) もルーム終了までポーリングする (終了判定は queries.ts 側)。
@@ -243,7 +244,12 @@ function MatchesPage() {
   }, [schedule])
 
   if (isLoading) return <LoadingBlock />
-  if (isError || !schedule) {
+  if (!schedule) {
+    // 未生成: 受付中(OPEN/PREPARING)ならロビーを表示。終了済み等はエラー。
+    if (!room) return <LoadingBlock />
+    if (room.status !== 'CLOSED') {
+      return <Lobby room={room} isOrganizer={isOrganizer} />
+    }
     return (
       <ErrorBlock
         message={

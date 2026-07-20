@@ -1,4 +1,4 @@
-import type { MatchSchedule, Room, RoomStatus, User } from './types'
+import type { JoinResult, MatchSchedule, Room, RoomStatus, User } from './types'
 
 // バックエンドのベース URL は実行環境で変わる:
 //  - SSR(サーバー): 同一ホスト上の backend を直接叩く(localhost:8080)。CORS 不要。
@@ -164,6 +164,12 @@ export const roomApi = {
       request<Room>(`/api/v1/rooms/${roomId}/fixed-pairs/${participantA}/${participantB}`, {
         method: 'DELETE',
       }),
+  /** 受付中ルームに本人が参加する(名前必須)。参加順で番号が自動採番される。 */
+  join: (roomId: string, name: string) =>
+    request<JoinResult>(`/api/v1/rooms/${roomId}/participants/join`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
   addParticipant: (roomId: string, input: AddParticipantInput) =>
     request<Room>(`/api/v1/rooms/${roomId}/participants`, {
       method: 'POST',
