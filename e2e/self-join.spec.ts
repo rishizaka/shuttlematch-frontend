@@ -54,7 +54,13 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     await gen.click()
     await expect(page.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
 
-    // 生成後、APIで公平性の最低限(全員出場・重複なし)を確認。
+    // 生成後も参加者名簿(番号→名前)が全員に見える(アコーディオンを開くと名前が並ぶ)。
+    const roster = page.getByRole('button', { name: /参加者名簿/ })
+    await expect(roster).toBeVisible()
+    await roster.click()
+    await expect(page.getByText('たろう')).toBeVisible()
+
+    // 生成後、APIで最低限(試合が生成されている)を確認。
     const sched = await (await request.get(`${API_BASE}/api/v1/rooms/${roomId}/matches`)).json()
     expect(sched.matches.length).toBeGreaterThan(0)
   } finally {

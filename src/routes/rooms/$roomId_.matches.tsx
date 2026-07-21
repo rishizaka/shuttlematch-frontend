@@ -42,6 +42,7 @@ import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
 import { useToast } from '../../components/ui/Toast'
 import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
+import { RosterAccordion } from '../../components/room/RosterAccordion'
 import { SelfNumberModal } from '../../components/room/SelfNumberModal'
 import { MatchScheduleList } from '../../components/match/MatchScheduleList'
 import { SetStartAnnouncement } from '../../components/match/SetStartAnnouncement'
@@ -376,6 +377,12 @@ function MatchesPage() {
           </p>
         </div>
       ) : null}
+
+      {/* 参加者名簿(番号→名前)。名前が付いているとき(受付モード)だけ全員に表示する。 */}
+      <RosterAccordion
+        participants={room?.participants ?? []}
+        selfParticipantId={myParticipantId}
+      />
 
       {isOrganizer && !closed ? (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
