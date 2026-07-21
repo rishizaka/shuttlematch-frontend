@@ -19,6 +19,7 @@ import {
 import {
   queryKeys,
   useAddSets,
+  useClaimNumber,
   useCloseRoom,
   useDeleteRoom,
   useJoinRoom,
@@ -43,6 +44,7 @@ import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
 import { useToast } from '../../components/ui/Toast'
+import { ClaimNumberModal } from '../../components/room/ClaimNumberModal'
 import { JoinModal } from '../../components/room/JoinModal'
 import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
@@ -116,6 +118,7 @@ function MatchesPage() {
   const closeRoom = useCloseRoom(roomId)
   const deleteRoom = useDeleteRoom(roomId)
   const join = useJoinRoom(roomId)
+  const claim = useClaimNumber(roomId)
   const navigate = useNavigate()
   const [addCount, setAddCount] = useState(3)
   const [confirmingClose, setConfirmingClose] = useState(false)
@@ -128,6 +131,8 @@ function MatchesPage() {
   const [showSelfModal, setShowSelfModal] = useState(false)
   // 受付モードの自己参加(名前で参加)モーダルの開閉。
   const [showJoinModal, setShowJoinModal] = useState(false)
+  // 既存の番号(番号だけの枠)に名前を付けて当てはまるモーダルの開閉。
+  const [showClaimModal, setShowClaimModal] = useState(false)
   // 自分の ParticipantId (localStorage 由来)。参加(join)や番号設定で store が更新されたら
   // 即座に反映されるよう、リアクティブに購読する(useCurrentUser と同じ仕組み)。
   const selfParticipantId = useSyncExternalStore(
@@ -285,6 +290,23 @@ function MatchesPage() {
     })
   }
 
+  // 名前なし(番号だけ)の在席枠。遅刻者が「既存の番号に名前を付けて当てはまる」対象。
+  const openSlots = (room?.participants ?? []).filter(
+    (p) => p.status === 'ACTIVE' && (!p.guestName || /^\d+$/.test(p.guestName.trim())),
+  )
+
+  const submitClaim = (participantId: string, name: string) => {
+    claim.mutate(
+      { participantId, name },
+      {
+        onSuccess: () => {
+          setShowClaimModal(false)
+          showToast(`${name}として参加しました`)
+        },
+      },
+    )
+  }
+
   return (
     <div className="space-y-5">
       {announcedSet != null ? (
@@ -343,6 +365,16 @@ function MatchesPage() {
         />
       ) : null}
 
+      {showClaimModal ? (
+        <ClaimNumberModal
+          participants={room?.participants ?? []}
+          pending={claim.isPending}
+          error={claim.isError ? (claim.error as Error).message : null}
+          onSubmit={submitClaim}
+          onCancel={() => setShowClaimModal(false)}
+        />
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link to="/" className="text-sm text-brand-600 hover:underline">
@@ -386,7 +418,8 @@ function MatchesPage() {
           番号運用は「自分の番号を入力(既存番号を選ぶ)」を出す。 */}
       {!isOrganizer && !closed && !myParticipantId ? (
         receptionMode ? (
-          <div className="space-y-1">
+          <div className="space-y-2">
+            {/* 選択肢1: 新しく参加(名前→番号自動採番)。 */}
             <button
               type="button"
               onClick={() => setShowJoinModal(true)}
@@ -396,9 +429,9 @@ function MatchesPage() {
                 <UserPlus className="h-4.5 w-4.5" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-amber-900">参加する</span>
+                <span className="block text-sm font-semibold text-amber-900">新しく参加する</span>
                 <span className="block text-xs text-amber-700">
-                  名前を入れると番号が自動で割り振られ、自分の試合が強調表示されます。
+                  名前を入れると番号が自動で割り振られます。
                 </span>
               </span>
               <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
@@ -406,13 +439,38 @@ function MatchesPage() {
                 参加
               </span>
             </button>
-            {/* 既に別端末で参加済みの人は、既存の番号を選んで自分を再識別する。 */}
+
+            {/* 選択肢2: 既存の「番号だけの枠」に名前を付けて当てはまる(空き枠があるときだけ)。 */}
+            {openSlots.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setShowClaimModal(true)}
+                className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:bg-slate-50"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                  <UserRound className="h-4.5 w-4.5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-slate-800">
+                    既にある自分の番号を選ぶ
+                  </span>
+                  <span className="block text-xs text-slate-500">
+                    番号だけの枠に名前を付けて自分に割り当てます。
+                  </span>
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-sm font-semibold text-slate-600">
+                  番号を選ぶ
+                </span>
+              </button>
+            ) : null}
+
+            {/* 別端末で既に参加済みの人は、既存の番号を選んで自分を再識別する(ハイライトのみ)。 */}
             <button
               type="button"
               onClick={() => setShowSelfModal(true)}
               className="px-1 text-xs font-medium text-brand-600 hover:underline"
             >
-              既に参加済みの方はこちら（自分の番号を選ぶ）
+              別端末で参加済みの方はこちら（自分の番号を選ぶ）
             </button>
           </div>
         ) : (

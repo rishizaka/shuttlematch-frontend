@@ -94,6 +94,22 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     await expect(page.getByRole('button', { name: /参加者名簿/ })).toBeHidden()
     await lateCtx.close()
 
+    // 既存の番号に当てはまる: 運営者が番号だけの枠を用意 → 別の遅刻者が名前を付けて当てはまる。
+    await request.post(`${API_BASE}/api/v1/rooms/${roomId}/participants`, {
+      data: { guestName: '99' },
+    })
+    const claimCtx = await browser.newContext()
+    const claimPage = await claimCtx.newPage()
+    await claimPage.goto(`/rooms/${roomId}/matches`)
+    await expect(claimPage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
+    await claimPage.getByRole('button', { name: /既にある自分の番号を選ぶ/ }).click()
+    const claimDialog = claimPage.getByRole('dialog', { name: '番号を選んで参加' })
+    await claimDialog.getByRole('combobox').selectOption({ index: 1 })
+    await claimDialog.getByPlaceholder('あなたの名前').fill('あとから')
+    await claimDialog.getByRole('button', { name: 'この番号で参加' }).click()
+    await expect(claimPage.getByText(/あなた:\s*\d+番/)).toBeVisible({ timeout: 10_000 })
+    await claimCtx.close()
+
     // 生成後、APIで最低限(試合が生成されている)を確認。
     const sched = await (await request.get(`${API_BASE}/api/v1/rooms/${roomId}/matches`)).json()
     expect(sched.matches.length).toBeGreaterThan(0)

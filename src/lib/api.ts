@@ -170,6 +170,12 @@ export const roomApi = {
       method: 'POST',
       body: JSON.stringify({ name }),
     }),
+  /** 参加者の名前(ニックネーム)を変更する。番号だけの枠に後から名前を付けるのに使う。 */
+  renameParticipant: (roomId: string, participantId: string, name: string) =>
+    request<Room>(`/api/v1/rooms/${roomId}/participants/${participantId}/rename`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
   addParticipant: (roomId: string, input: AddParticipantInput) =>
     request<Room>(`/api/v1/rooms/${roomId}/participants`, {
       method: 'POST',

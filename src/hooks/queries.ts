@@ -133,6 +133,23 @@ export function useJoinRoom(roomId: string) {
   });
 }
 
+/**
+ * 番号だけの枠に名前を付けて自分に割り当てる(遅刻者が既存の番号に当てはまる)。
+ * rename 後、その participantId を自分として localStore に保存する。
+ */
+export function useClaimNumber(roomId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { participantId: string; name: string }) =>
+      roomApi.renameParticipant(roomId, input.participantId, input.name),
+    onSuccess: (room, input) => {
+      setSelfParticipant(roomId, input.participantId);
+      qc.setQueryData(queryKeys.room(roomId), room);
+      addRoomId(roomId);
+    },
+  });
+}
+
 /** かんたん作成。番号参加者+試合表まで作成し、識別子を localStore に保存する。 */
 export function useQuickCreateRoom() {
   return useMutation({
