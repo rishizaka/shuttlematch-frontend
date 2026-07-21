@@ -71,11 +71,24 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     ).toBeHidden()
     await meCtx.close()
 
-    // 生成後も参加者名簿(番号→名前)が全員に見える(アコーディオンを開くと名前が並ぶ)。
-    const roster = page.getByRole('button', { name: /参加者名簿/ })
+    // 遅刻者: 生成後の試合表からも「参加する」で自己参加でき、番号が自動反映される。
+    const lateCtx = await browser.newContext()
+    const latePage = await lateCtx.newPage()
+    await latePage.goto(`/rooms/${roomId}/matches`)
+    await expect(latePage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
+    await latePage.getByRole('button', { name: /参加する/ }).first().click()
+    const joinDialog = latePage.getByRole('dialog', { name: '参加する' })
+    await joinDialog.getByPlaceholder('あなたの名前').fill('ちこく')
+    await joinDialog.getByRole('button', { name: '参加する' }).click()
+    await expect(latePage.getByText(/あなた:\s*\d+番/)).toBeVisible({ timeout: 10_000 })
+
+    // 参加者(非運営者)には参加者名簿(番号→名前)が見える。運営者側は名簿を出さない。
+    const roster = latePage.getByRole('button', { name: /参加者名簿/ })
     await expect(roster).toBeVisible()
     await roster.click()
-    await expect(page.getByText('たろう')).toBeVisible()
+    await expect(latePage.getByText('たろう')).toBeVisible()
+    await expect(page.getByRole('button', { name: /参加者名簿/ })).toBeHidden()
+    await lateCtx.close()
 
     // 生成後、APIで最低限(試合が生成されている)を確認。
     const sched = await (await request.get(`${API_BASE}/api/v1/rooms/${roomId}/matches`)).json()

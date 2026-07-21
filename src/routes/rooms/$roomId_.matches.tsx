@@ -12,6 +12,7 @@ import {
   RefreshCw,
   Settings2,
   Trash2,
+  UserPlus,
   UserRound,
   Users,
 } from 'lucide-react'
@@ -20,6 +21,7 @@ import {
   useAddSets,
   useCloseRoom,
   useDeleteRoom,
+  useJoinRoom,
   useMatches,
   useReplanFutureSets,
   useRevertSet,
@@ -41,6 +43,7 @@ import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
 import { useToast } from '../../components/ui/Toast'
+import { JoinModal } from '../../components/room/JoinModal'
 import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { RosterAccordion } from '../../components/room/RosterAccordion'
@@ -112,6 +115,7 @@ function MatchesPage() {
   const replan = useReplanFutureSets(roomId)
   const closeRoom = useCloseRoom(roomId)
   const deleteRoom = useDeleteRoom(roomId)
+  const join = useJoinRoom(roomId)
   const navigate = useNavigate()
   const [addCount, setAddCount] = useState(3)
   const [confirmingClose, setConfirmingClose] = useState(false)
@@ -122,6 +126,8 @@ function MatchesPage() {
   // 運営メニューの開閉。参加者リストが長くなりがちなので、既定では畳んでおく。
   const [organizerOpen, setOrganizerOpen] = useState(false)
   const [showSelfModal, setShowSelfModal] = useState(false)
+  // 受付モードの自己参加(名前で参加)モーダルの開閉。
+  const [showJoinModal, setShowJoinModal] = useState(false)
   // 自分の ParticipantId (localStorage 由来)。参加(join)や番号設定で store が更新されたら
   // 即座に反映されるよう、リアクティブに購読する(useCurrentUser と同じ仕組み)。
   const selfParticipantId = useSyncExternalStore(
@@ -258,6 +264,20 @@ function MatchesPage() {
     )
   }
 
+  // 名前運用(受付モード)か。参加者に非数字の名前が付いていれば受付モードとみなす。
+  const receptionMode = (room?.participants ?? []).some(
+    (p) => p.guestName != null && !/^\d+$/.test(p.guestName.trim()),
+  )
+
+  const submitJoin = (name: string) => {
+    join.mutate(name, {
+      onSuccess: (result) => {
+        setShowJoinModal(false)
+        showToast(`${result.number}番で参加しました`)
+      },
+    })
+  }
+
   return (
     <div className="space-y-5">
       {announcedSet != null ? (
@@ -307,6 +327,15 @@ function MatchesPage() {
         />
       ) : null}
 
+      {showJoinModal ? (
+        <JoinModal
+          pending={join.isPending}
+          error={join.isError ? (join.error as Error).message : null}
+          onSubmit={submitJoin}
+          onCancel={() => setShowJoinModal(false)}
+        />
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link to="/" className="text-sm text-brand-600 hover:underline">
@@ -340,29 +369,62 @@ function MatchesPage() {
         </div>
       </div>
 
-      {/* 自分の番号が未設定の参加者に、設定すると見やすくなることを note で目立たせて誘導する。 */}
+      {/* 自分がまだ未設定の参加者への誘導。受付モードは「参加する(名前で参加→番号自動)」、
+          番号運用は「自分の番号を入力(既存番号を選ぶ)」を出す。 */}
       {!isOrganizer && !closed && !myParticipantId ? (
-        <button
-          type="button"
-          onClick={() => setShowSelfModal(true)}
-          className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-            <UserRound className="h-4.5 w-4.5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-amber-900">
-              自分の番号を入力しましょう
+        receptionMode ? (
+          <div className="space-y-1">
+            <button
+              type="button"
+              onClick={() => setShowJoinModal(true)}
+              className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                <UserPlus className="h-4.5 w-4.5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-amber-900">参加する</span>
+                <span className="block text-xs text-amber-700">
+                  名前を入れると番号が自動で割り振られ、自分の試合が強調表示されます。
+                </span>
+              </span>
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
+                <Plus className="h-4 w-4" />
+                参加
+              </span>
+            </button>
+            {/* 既に別端末で参加済みの人は、既存の番号を選んで自分を再識別する。 */}
+            <button
+              type="button"
+              onClick={() => setShowSelfModal(true)}
+              className="px-1 text-xs font-medium text-brand-600 hover:underline"
+            >
+              既に参加済みの方はこちら（自分の番号を選ぶ）
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowSelfModal(true)}
+            className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+              <UserRound className="h-4.5 w-4.5" />
             </span>
-            <span className="block text-xs text-amber-700">
-              設定すると、自分が出る試合が強調表示されて見やすくなります。
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-amber-900">
+                自分の番号を入力しましょう
+              </span>
+              <span className="block text-xs text-amber-700">
+                設定すると、自分が出る試合が強調表示されて見やすくなります。
+              </span>
             </span>
-          </span>
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
-            <Plus className="h-4 w-4" />
-            入力
-          </span>
-        </button>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
+              <Plus className="h-4 w-4" />
+              入力
+            </span>
+          </button>
+        )
       ) : null}
 
       {closed ? (
@@ -374,11 +436,14 @@ function MatchesPage() {
         </div>
       ) : null}
 
-      {/* 参加者名簿(番号→名前)。名前が付いているとき(受付モード)だけ全員に表示する。 */}
-      <RosterAccordion
-        participants={room?.participants ?? []}
-        selfParticipantId={myParticipantId}
-      />
+      {/* 参加者名簿(番号→名前)。運営者は運営メニューの参加者管理で名前を見られるので、
+          ここは非運営者(参加者)向けに表示する。名前運用(受付モード)のときだけ出る。 */}
+      {!isOrganizer ? (
+        <RosterAccordion
+          participants={room?.participants ?? []}
+          selfParticipantId={myParticipantId}
+        />
+      ) : null}
 
       {isOrganizer && !closed ? (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

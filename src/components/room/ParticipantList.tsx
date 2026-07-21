@@ -42,8 +42,10 @@ export function ParticipantList({
               >
                 {i + 1}
               </span>
-              {/* 番号だけで運用するため名前は扱わず、参加者は一律「ゲスト」と表示する。 */}
-              <span className={'truncate ' + (left ? 'line-through' : '')}>ゲスト</span>
+              {/* 受付モードなど名前が付いていれば名前を表示。番号運用(名前=番号)なら「ゲスト」。 */}
+              <span className={'truncate ' + (left ? 'line-through' : '')}>
+                {p.guestName && !/^\d+$/.test(p.guestName.trim()) ? p.guestName : 'ゲスト'}
+              </span>
               {left ? <Badge tone="slate">早退</Badge> : null}
             </span>
 
