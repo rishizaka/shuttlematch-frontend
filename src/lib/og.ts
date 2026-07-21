@@ -8,7 +8,7 @@ import type { Room } from './types'
 export const SITE_ORIGIN: string =
   (import.meta.env?.VITE_SITE_ORIGIN as string | undefined)?.replace(/\/$/, '') ?? ''
 
-export const SITE_NAME = 'ShuttleMatch'
+export const SITE_NAME = 'HaneRoom'
 export const SITE_DESCRIPTION = 'バドミントンの試合表をかんたん作成・共有'
 
 /**

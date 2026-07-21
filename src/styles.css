@@ -1,7 +1,7 @@
 
 @import "tailwindcss";
 
-/* ブランドカラー: ロゴ(ShuttleMatch)のネイビーに合わせた navy スケール。
+/* ブランドカラー: ロゴ(HaneRoom)のネイビーに合わせた navy スケール。
    800 がロゴのダークネイビー #002050。主色(ボタン・リンク・見出し)に使う。 */
 @theme {
   --color-brand-50: #eef2f8;
