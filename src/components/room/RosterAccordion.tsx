@@ -31,9 +31,7 @@ export function RosterAccordion({
         className="flex w-full items-center gap-2 px-4 py-3 text-left transition hover:bg-slate-50"
       >
         <Users className="h-4 w-4 text-slate-400" />
-        <span className="text-sm font-semibold text-slate-800">
-          参加者名簿（番号→名前）
-        </span>
+        <span className="text-sm font-semibold text-slate-800">参加者名簿</span>
         <span className="text-xs text-slate-400">{participants.length}人</span>
         <ChevronDown
           className={

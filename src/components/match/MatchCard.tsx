@@ -1,33 +1,61 @@
+import { useState } from 'react'
 import type { Match } from '../../lib/types'
 
 /**
- * 参加者番号のチップ。試合表は番号だけで運用するため、名前は表示しない。
- * 自分(self)だけロゴのゴールドで強調して、自分の試合を見つけやすくする。
+ * 参加者番号のチップ。試合表は番号で運用する。名前(ニックネーム)が付いている場合は
+ * 番号をタップするとツールチップで名前を表示する。自分(self)はゴールドで強調。
  */
 function PlayerChip({
   index,
+  name,
   self,
   finished,
 }: {
   index: number | undefined
+  /** 付いていればタップで表示する名前。無ければ番号のみの非インタラクティブなチップ。 */
+  name?: string
   self: boolean
   finished: boolean
 }) {
+  const [open, setOpen] = useState(false)
+
   // 自分はロゴのゴールドの塗り+濃紺文字で示す。他は白地+枠線でシンプルに番号だけ。
   const chip = self
     ? 'bg-accent-500 text-brand-900'
     : finished
       ? 'border border-slate-200 bg-white text-slate-400'
       : 'border border-slate-300 bg-white text-slate-700 shadow-sm'
+  const base =
+    'flex h-7 w-7 select-none items-center justify-center rounded-full text-xs font-semibold tabular-nums '
+
+  // 名前が無ければ従来どおり非インタラクティブなチップ。
+  if (!name) {
+    return (
+      <span aria-label={index != null ? `${index}番` : undefined} className={base + chip}>
+        {index ?? '?'}
+      </span>
+    )
+  }
+
   return (
-    <span
-      aria-label={index != null ? `${index}番` : undefined}
-      className={
-        'flex h-7 w-7 select-none items-center justify-center rounded-full text-xs font-semibold tabular-nums ' +
-        chip
-      }
-    >
-      {index ?? '?'}
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        aria-label={index != null ? `${index}番 ${name}` : name}
+        onClick={() => setOpen((v) => !v)}
+        onBlur={() => setOpen(false)}
+        className={base + chip}
+      >
+        {index ?? '?'}
+      </button>
+      {open ? (
+        <span
+          role="tooltip"
+          className="absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-white shadow-lg"
+        >
+          {name}
+        </span>
+      ) : null}
     </span>
   )
 }
@@ -40,6 +68,7 @@ function PlayerChip({
 export function MatchCard({
   match,
   indexByParticipantId,
+  nameByParticipantId,
   highlightParticipantId = null,
   active = false,
   finished = false,
@@ -47,6 +76,8 @@ export function MatchCard({
   match: Match
   /** ParticipantId -> 参加者番号(1始まり)。 */
   indexByParticipantId?: ReadonlyMap<string, number>
+  /** ParticipantId -> 名前(あれば番号タップで表示)。 */
+  nameByParticipantId?: ReadonlyMap<string, string>
   /** この ParticipantId のチップを強調表示する(自分)。 */
   highlightParticipantId?: string | null
   /** このコートが属するセットが進行中。 */
@@ -81,6 +112,7 @@ export function MatchCard({
           <PlayerChip
             key={`${id}-${i}`}
             index={indexByParticipantId?.get(id)}
+            name={nameByParticipantId?.get(id)}
             self={isSelf(id)}
             finished={finished}
           />

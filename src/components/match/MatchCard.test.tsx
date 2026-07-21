@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MatchCard } from './MatchCard'
 import type { Match } from '../../lib/types'
 
@@ -33,10 +33,21 @@ describe('MatchCard', () => {
     expect(screen.queryByText('VS')).not.toBeInTheDocument()
   })
 
-  it('名前(ニックネーム)は表示せず、番号だけで運用する', () => {
+  it('名前が無ければツールチップは出ない(番号のみ運用)', () => {
     render(<MatchCard match={match} indexByParticipantId={indexes} />)
-    // 番号のみ。名前のツールチップは描画されない。
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+  })
+
+  it('名前があれば番号タップでツールチップに名前を表示する', () => {
+    const names = new Map([['p1', 'たろう']])
+    render(
+      <MatchCard match={match} indexByParticipantId={indexes} nameByParticipantId={names} />,
+    )
+    // 初期はツールチップなし。
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+    // 1番(p1)のチップをタップすると名前が出る。
+    fireEvent.click(screen.getByLabelText('1番 たろう'))
+    expect(screen.getByRole('tooltip')).toHaveTextContent('たろう')
   })
 
   it('番号が未指定のチップは ? を表示する', () => {

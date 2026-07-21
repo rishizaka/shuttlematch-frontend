@@ -69,6 +69,10 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     await expect(
       mePage.getByRole('button', { name: /自分の番号を入力しましょう/ }),
     ).toBeHidden()
+
+    // 番号タップでニックネームがツールチップ表示される。
+    await mePage.getByRole('button', { name: /たろう/ }).first().click()
+    await expect(mePage.getByRole('tooltip')).toHaveText('たろう')
     await meCtx.close()
 
     // 遅刻者: 生成後の試合表からも「参加する」で自己参加でき、番号が自動反映される。

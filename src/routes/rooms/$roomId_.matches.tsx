@@ -268,6 +268,13 @@ function MatchesPage() {
   const receptionMode = (room?.participants ?? []).some(
     (p) => p.guestName != null && !/^\d+$/.test(p.guestName.trim()),
   )
+  // ParticipantId -> 名前(実名のみ)。番号タップで名前を出すツールチップに使う。
+  const nameByParticipantId = new Map<string, string>()
+  for (const p of room?.participants ?? []) {
+    if (p.guestName && !/^\d+$/.test(p.guestName.trim())) {
+      nameByParticipantId.set(p.id, p.guestName)
+    }
+  }
 
   const submitJoin = (name: string) => {
     join.mutate(name, {
@@ -703,6 +710,7 @@ function MatchesPage() {
         <MatchScheduleList
           matches={schedule.matches}
           indexByParticipantId={indexByParticipantId}
+          nameByParticipantId={nameByParticipantId}
           highlightParticipantId={myParticipantId}
           activeSetNumber={activeSetNumber}
           startableSetNumber={startableSetNumber}
