@@ -231,14 +231,15 @@ export function useMatches(
     enabled: !!roomId,
     // まだ生成されていない場合は 404 になるため、リトライしない。
     retry: false,
-    // live 時は定期再取得。未生成 (404) のまま叩き続けないよう、取得済みの場合のみ。
-    // ルームが終了済みなら試合表も変化しないので停止する (キャッシュ上の room で判定)。
+    // live 時は定期再取得。ルームが存在して終了済みでなければ常にポーリングする:
+    // 受付中(OPEN)は未生成(404)でも運営者の生成を検知でき、参加者のロビーが生成後に
+    // 自動で試合表へ切り替わる。終了済み(CLOSED)は変化しないので停止する。
+    // ルーム未取得時は、存在しないルームを叩き続けないよう取得済みの場合のみ継続する。
     refetchInterval: options?.live
       ? (query) => {
-          if (!query.state.data) return false;
           const room = qc.getQueryData<Room>(queryKeys.room(roomId ?? ""));
-          if (room?.status === "CLOSED") return false;
-          return LIVE_REFETCH_INTERVAL;
+          if (room) return room.status === "CLOSED" ? false : LIVE_REFETCH_INTERVAL;
+          return query.state.data ? LIVE_REFETCH_INTERVAL : false;
         }
       : undefined,
   });

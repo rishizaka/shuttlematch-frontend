@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import {
   Archive,
   ChevronDown,
@@ -33,6 +33,7 @@ import {
   setSelfParticipant,
   removeSelfParticipant,
   removeRoomId,
+  subscribe,
 } from '../../lib/local-store'
 import { ConfirmModal } from '../../components/ui/ConfirmModal'
 import { roomOgMeta } from '../../lib/og'
@@ -121,8 +122,13 @@ function MatchesPage() {
   // 運営メニューの開閉。参加者リストが長くなりがちなので、既定では畳んでおく。
   const [organizerOpen, setOrganizerOpen] = useState(false)
   const [showSelfModal, setShowSelfModal] = useState(false)
-  // 自己申告で選んだ自分の ParticipantId (localStorage 由来)。
-  const [selfParticipantId, setSelfParticipantId] = useState<string | null>(null)
+  // 自分の ParticipantId (localStorage 由来)。参加(join)や番号設定で store が更新されたら
+  // 即座に反映されるよう、リアクティブに購読する(useCurrentUser と同じ仕組み)。
+  const selfParticipantId = useSyncExternalStore(
+    subscribe,
+    () => getSelfParticipant(roomId)?.participantId ?? null,
+    () => null,
+  )
 
   // LINE 等のアプリ内ブラウザで開かれたら、既定(外部)ブラウザで開き直す。
   // openExternalBrowser=1 を付けて1回だけリダイレクト(付与済み/通常ブラウザでは何もしない)。
@@ -164,14 +170,6 @@ function MatchesPage() {
     }
     return null
   }, [room, user, selfParticipantId])
-
-  // マウント後に localStorage から「自分の番号」設定を読み込む(SSR不一致を避けるため effect 内)。
-  // これは任意の見やすさ設定なので、未設定でもモーダルは自動では出さない
-  // (自分の番号は各自が明示的に設定ボタンから設定する)。
-  useEffect(() => {
-    const stored = getSelfParticipant(roomId)
-    if (stored?.participantId) setSelfParticipantId(stored.participantId)
-  }, [roomId])
 
   // アクティブ(進行中)なセット = 最も新しい開始時刻を持つセット。
   const activeSetNumber = useMemo(() => {
@@ -291,9 +289,8 @@ function MatchesPage() {
             myParticipantId ? indexByParticipantId.get(myParticipantId) ?? null : null
           }
           onSubmit={(participantId) => {
-            // DB には送らず localStorage に保存するだけ(重複可)。
+            // DB には送らず localStorage に保存するだけ(重複可)。store 更新で自動反映される。
             setSelfParticipant(roomId, participantId)
-            setSelfParticipantId(participantId)
             setShowSelfModal(false)
             showToast('自分の番号を設定しました')
           }}
@@ -301,7 +298,6 @@ function MatchesPage() {
             myParticipantId
               ? () => {
                   removeSelfParticipant(roomId)
-                  setSelfParticipantId(null)
                   setShowSelfModal(false)
                   showToast('自分の番号を解除しました')
                 }
