@@ -40,33 +40,41 @@ export function RosterAccordion({
           }
         />
       </button>
-      {open ? (
-        <ul className="grid grid-cols-2 gap-x-4 border-t border-slate-100 px-4 py-3 sm:grid-cols-3">
-          {participants.map((p, i) => {
-            const left = p.status === 'LEFT'
-            const self = p.id === selfParticipantId
-            return (
-              <li key={p.id} className="flex items-center gap-2 py-1 text-sm">
-                <span
-                  className={
-                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums ' +
-                    (self ? 'bg-accent-500 text-brand-900' : 'bg-slate-100 text-slate-600')
-                  }
-                >
-                  {i + 1}
-                </span>
-                <span
-                  className={
-                    'truncate ' + (left ? 'text-slate-400 line-through' : 'text-slate-800')
-                  }
-                >
-                  {p.guestName}
-                </span>
-              </li>
-            )
-          })}
-        </ul>
-      ) : null}
+      {/* 高さ 0fr→1fr のグリッドで開閉を滑らかにアニメーションする(内側は overflow-hidden)。 */}
+      <div
+        className={
+          'grid transition-[grid-template-rows] duration-300 ease-out ' +
+          (open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')
+        }
+      >
+        <div className="overflow-hidden">
+          <ul className="grid grid-cols-2 gap-x-4 border-t border-slate-100 px-4 py-3 sm:grid-cols-3">
+            {participants.map((p, i) => {
+              const left = p.status === 'LEFT'
+              const self = p.id === selfParticipantId
+              return (
+                <li key={p.id} className="flex items-center gap-2 py-1 text-sm">
+                  <span
+                    className={
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums ' +
+                      (self ? 'bg-accent-500 text-brand-900' : 'bg-slate-100 text-slate-600')
+                    }
+                  >
+                    {i + 1}
+                  </span>
+                  <span
+                    className={
+                      'truncate ' + (left ? 'text-slate-400 line-through' : 'text-slate-800')
+                    }
+                  >
+                    {p.guestName}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      </div>
     </section>
   )
 }

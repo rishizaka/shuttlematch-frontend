@@ -10,8 +10,24 @@ import { History, Home, Menu, X } from 'lucide-react'
  * (ページ・APIは残してある。再開時はメニューに項目を戻す)。
  */
 export function Header() {
+  // open = ドロワーを DOM に載せるか、shown = 表示位置(スライドイン後)か。
+  // 閉じるときは shown を false にしてトランジション後に unmount することで、
+  // 開くときだけでなく閉じるときもスライド/フェードのアニメーションを効かせる。
   const [open, setOpen] = useState(false)
-  const close = () => setOpen(false)
+  const [shown, setShown] = useState(false)
+
+  const openMenu = () => setOpen(true)
+  const close = () => setShown(false)
+
+  // マウント直後に off-screen 状態を一度描画してから shown=true にすることで、
+  // 初期状態からのトランジションを確実に発火させる(2フレーム待つ)。
+  useEffect(() => {
+    if (!open) return
+    const id = requestAnimationFrame(() =>
+      requestAnimationFrame(() => setShown(true)),
+    )
+    return () => cancelAnimationFrame(id)
+  }, [open])
 
   // メニュー表示中は背面ページのスクロールをロックする。
   useEffect(() => {
@@ -40,8 +56,8 @@ export function Header() {
           type="button"
           aria-label="メニュー"
           aria-expanded={open}
-          onClick={() => setOpen(true)}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100"
+          onClick={openMenu}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 active:scale-90"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -55,9 +71,21 @@ export function Header() {
                 type="button"
                 aria-label="メニューを閉じる"
                 onClick={close}
-                className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]"
+                className={
+                  'absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-[250ms] ease-out ' +
+                  (shown ? 'opacity-100' : 'opacity-0')
+                }
               />
-              <div className="absolute right-0 top-0 flex h-full w-64 max-w-[80%] flex-col bg-white p-4 shadow-xl">
+              <div
+                // 右ドロワーのスライド。閉じるトランジション完了時に unmount する。
+                onTransitionEnd={(e) => {
+                  if (e.propertyName === 'transform' && !shown) setOpen(false)
+                }}
+                className={
+                  'absolute right-0 top-0 flex h-full w-64 max-w-[80%] flex-col bg-white p-4 shadow-xl transition-transform duration-[250ms] ease-out will-change-transform ' +
+                  (shown ? 'translate-x-0' : 'translate-x-full')
+                }
+              >
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-sm font-bold text-slate-900">メニュー</span>
                   <button

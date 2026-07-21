@@ -538,7 +538,14 @@ function MatchesPage() {
             />
           </button>
 
-          {organizerOpen ? (
+          {/* 高さ 0fr→1fr のグリッドで開閉を滑らかにアニメーションする(内側は overflow-hidden)。 */}
+          <div
+            className={
+              'grid transition-[grid-template-rows] duration-300 ease-out ' +
+              (organizerOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]')
+            }
+          >
+           <div className="overflow-hidden">
             <div className="divide-y divide-slate-100 border-t border-slate-100">
               {/* 自分の番号 (運営者もプレーヤーとして参加する場合の自己申告) */}
               <div className="px-4 py-4 sm:px-5">
@@ -728,7 +735,8 @@ function MatchesPage() {
                 ) : null}
               </div>
             </div>
-          ) : null}
+           </div>
+          </div>
         </section>
       ) : null}
 
