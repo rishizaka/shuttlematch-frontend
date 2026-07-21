@@ -10,24 +10,17 @@ import { History, Home, Menu, X } from 'lucide-react'
  * (ページ・APIは残してある。再開時はメニューに項目を戻す)。
  */
 export function Header() {
-  // open = ドロワーを DOM に載せるか、shown = 表示位置(スライドイン後)か。
-  // 閉じるときは shown を false にしてトランジション後に unmount することで、
-  // 開くときだけでなく閉じるときもスライド/フェードのアニメーションを効かせる。
+  // 状態は open ブール値のみ。ドロワーは常時マウントしておき、開閉は translate/opacity の
+  // トランジションで表現する(閉じているときは inert で操作・フォーカスを無効化)。
+  // こうすることで連打しても状態が競合せず(rAF や onTransitionEnd による中間状態が無い)、
+  // 不可視のまま開きっぱなしになる/スクロールロックが残る、といった不具合を避けられる。
   const [open, setOpen] = useState(false)
-  const [shown, setShown] = useState(false)
+  // SSR/ハイドレーション時に createPortal を実行しないため、マウント後にのみ描画する。
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   const openMenu = () => setOpen(true)
-  const close = () => setShown(false)
-
-  // マウント直後に off-screen 状態を一度描画してから shown=true にすることで、
-  // 初期状態からのトランジションを確実に発火させる(2フレーム待つ)。
-  useEffect(() => {
-    if (!open) return
-    const id = requestAnimationFrame(() =>
-      requestAnimationFrame(() => setShown(true)),
-    )
-    return () => cancelAnimationFrame(id)
-  }, [open])
+  const close = () => setOpen(false)
 
   // メニュー表示中は背面ページのスクロールをロックする。
   useEffect(() => {
@@ -63,27 +56,34 @@ export function Header() {
         </button>
       </div>
 
-      {/* open は クライアント操作でのみ true になるため、SSR で createPortal は実行されない。 */}
-      {open
+      {/* ドロワーは常時マウントし、open で開閉をトランジションする。閉じている間は
+          inert + pointer-events-none で操作・フォーカス・クリックを無効化する。 */}
+      {mounted
         ? createPortal(
-            <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="メニュー">
+            <div
+              // 閉じている間はキーボードフォーカス・クリックを無効化する(React 19 の inert)。
+              inert={!open}
+              className={
+                'fixed inset-0 z-50 ' + (open ? '' : 'pointer-events-none')
+              }
+              role="dialog"
+              aria-modal="true"
+              aria-hidden={!open}
+              aria-label="メニュー"
+            >
               <button
                 type="button"
                 aria-label="メニューを閉じる"
                 onClick={close}
                 className={
                   'absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-[250ms] ease-out ' +
-                  (shown ? 'opacity-100' : 'opacity-0')
+                  (open ? 'opacity-100' : 'opacity-0')
                 }
               />
               <div
-                // 右ドロワーのスライド。閉じるトランジション完了時に unmount する。
-                onTransitionEnd={(e) => {
-                  if (e.propertyName === 'transform' && !shown) setOpen(false)
-                }}
                 className={
                   'absolute right-0 top-0 flex h-full w-64 max-w-[80%] flex-col bg-white p-4 shadow-xl transition-transform duration-[250ms] ease-out will-change-transform ' +
-                  (shown ? 'translate-x-0' : 'translate-x-full')
+                  (open ? 'translate-x-0' : 'translate-x-full')
                 }
               >
                 <div className="mb-2 flex items-center justify-between">
