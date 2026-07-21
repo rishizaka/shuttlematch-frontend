@@ -389,9 +389,6 @@ function MatchesPage() {
               </span>
             ) : null}
           </div>
-          <p className="text-sm text-slate-500">
-            全 {setCount} セット・{schedule.matchCount} 試合
-          </p>
           {/* 自分の番号表示。受付モードは参加時に確定するので名前を併記し「変更」は出さない
               (番号=本人の識別子で、変更は他人へのなりすましになるため)。番号運用は各自の
               自己申告なので「変更する」を出す。 */}
