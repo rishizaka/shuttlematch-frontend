@@ -80,10 +80,12 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     const latePage = await lateCtx.newPage()
     await latePage.goto(`/rooms/${roomId}/matches`)
     await expect(latePage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
-    await latePage.getByRole('button', { name: /参加する/ }).first().click()
+    await latePage.getByRole('button', { name: /新しく参加する/ }).click()
     const joinDialog = latePage.getByRole('dialog', { name: '参加する' })
+    // 自動採番の確認: 「あなたは X番になります」が表示される。
+    await expect(joinDialog.getByText(/あなたは.*番になります/)).toBeVisible()
     await joinDialog.getByPlaceholder('あなたの名前').fill('ちこく')
-    await joinDialog.getByRole('button', { name: '参加する' }).click()
+    await joinDialog.getByRole('button', { name: 'この番号で参加する' }).click()
     await expect(latePage.getByText(/あなた:\s*\d+番/)).toBeVisible({ timeout: 10_000 })
 
     // 参加者(非運営者)には参加者名簿(番号→名前)が見える。運営者側は名簿を出さない。
@@ -102,8 +104,8 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     const claimPage = await claimCtx.newPage()
     await claimPage.goto(`/rooms/${roomId}/matches`)
     await expect(claimPage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
-    await claimPage.getByRole('button', { name: /既にある自分の番号を選ぶ/ }).click()
-    const claimDialog = claimPage.getByRole('dialog', { name: '番号を選んで参加' })
+    await claimPage.getByRole('button', { name: /運営指定の番号で参加/ }).click()
+    const claimDialog = claimPage.getByRole('dialog', { name: '運営指定の番号で参加' })
     await claimDialog.getByRole('combobox').selectOption({ index: 1 })
     await claimDialog.getByPlaceholder('あなたの名前').fill('あとから')
     await claimDialog.getByRole('button', { name: 'この番号で参加' }).click()

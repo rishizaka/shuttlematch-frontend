@@ -360,6 +360,7 @@ function MatchesPage() {
         <JoinModal
           pending={join.isPending}
           error={join.isError ? (join.error as Error).message : null}
+          predictedNumber={(room?.participants.length ?? 0) + 1}
           onSubmit={submitJoin}
           onCancel={() => setShowJoinModal(false)}
         />
@@ -440,7 +441,8 @@ function MatchesPage() {
               </span>
             </button>
 
-            {/* 選択肢2: 既存の「番号だけの枠」に名前を付けて当てはまる(空き枠があるときだけ)。 */}
+            {/* 選択肢2: 運営者が用意した「番号だけの枠」を選び、名前を付けて参加する
+                (運営指定の番号。空き枠があるときだけ表示)。 */}
             {openSlots.length > 0 ? (
               <button
                 type="button"
@@ -452,10 +454,10 @@ function MatchesPage() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold text-slate-800">
-                    既にある自分の番号を選ぶ
+                    運営指定の番号で参加
                   </span>
                   <span className="block text-xs text-slate-500">
-                    番号だけの枠に名前を付けて自分に割り当てます。
+                    運営者が用意した番号を選び、名前を付けて参加します。
                   </span>
                 </span>
                 <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-sm font-semibold text-slate-600">
@@ -463,15 +465,6 @@ function MatchesPage() {
                 </span>
               </button>
             ) : null}
-
-            {/* 別端末で既に参加済みの人は、既存の番号を選んで自分を再識別する(ハイライトのみ)。 */}
-            <button
-              type="button"
-              onClick={() => setShowSelfModal(true)}
-              className="px-1 text-xs font-medium text-brand-600 hover:underline"
-            >
-              別端末で参加済みの方はこちら（自分の番号を選ぶ）
-            </button>
           </div>
         ) : (
           <button

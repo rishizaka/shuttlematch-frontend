@@ -103,6 +103,9 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
             <UserPlus className="h-4 w-4 text-brand-600" />
             名前を入れて参加
           </div>
+          <p className="mb-2 text-xs text-brand-700">
+            参加すると <span className="font-bold">{count + 1}</span> 番になります。
+          </p>
           <div className="flex flex-wrap items-center gap-2">
             <input
               type="text"

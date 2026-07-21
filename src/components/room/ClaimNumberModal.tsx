@@ -42,12 +42,12 @@ export function ClaimNumberModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="番号を選んで参加"
+      aria-label="運営指定の番号で参加"
     >
       <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
-        <h2 className="text-lg font-bold text-slate-900">番号を選んで参加</h2>
+        <h2 className="text-lg font-bold text-slate-900">運営指定の番号で参加</h2>
         <p className="mt-1 text-sm text-slate-500">
-          自分の番号を選び、名前を付けます。
+          運営者が用意した自分の番号を選び、名前を付けます。
         </p>
 
         {openSlots.length === 0 ? (
