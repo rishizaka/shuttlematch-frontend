@@ -359,18 +359,24 @@ function MatchesPage() {
           <p className="text-sm text-slate-500">
             全 {setCount} セット・{schedule.matchCount} 試合
           </p>
-          {/* 参加者は任意で自分の番号を設定でき、設定すると自分の試合が強調される
-              (運営者は運営メニューから設定する)。未設定時は下部の note で目立たせて誘導する。 */}
+          {/* 自分の番号表示。受付モードは参加時に確定するので名前を併記し「変更」は出さない
+              (番号=本人の識別子で、変更は他人へのなりすましになるため)。番号運用は各自の
+              自己申告なので「変更する」を出す。 */}
           {!isOrganizer && !closed && myParticipantId ? (
             <p className="mt-0.5 text-xs text-slate-500">
               あなた: {indexByParticipantId.get(myParticipantId) ?? '?'}番
-              <button
-                type="button"
-                onClick={() => setShowSelfModal(true)}
-                className="ml-1.5 font-medium text-brand-600 hover:underline"
-              >
-                変更する
-              </button>
+              {receptionMode && nameByParticipantId.get(myParticipantId)
+                ? ` ・ ${nameByParticipantId.get(myParticipantId)}`
+                : null}
+              {!receptionMode ? (
+                <button
+                  type="button"
+                  onClick={() => setShowSelfModal(true)}
+                  className="ml-1.5 font-medium text-brand-600 hover:underline"
+                >
+                  変更する
+                </button>
+              ) : null}
             </p>
           ) : null}
         </div>
