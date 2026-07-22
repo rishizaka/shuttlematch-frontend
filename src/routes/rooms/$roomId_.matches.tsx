@@ -308,7 +308,9 @@ function MatchesPage() {
   }
 
   return (
-    <div className="space-y-5">
+    // 最下部の「セットを追加」「ルームを終了」が画面の端に来ると押しにくいので、
+    // 下に余白を確保しておく。
+    <div className="space-y-5 pb-24">
       {announcedSet != null ? (
         <SetStartAnnouncement
           setNumber={announcedSet}
@@ -391,8 +393,9 @@ function MatchesPage() {
           </div>
           {/* 自分の番号表示。受付モードは参加時に確定するので名前を併記し「変更」は出さない
               (番号=本人の識別子で、変更は他人へのなりすましになるため)。番号運用は各自の
-              自己申告なので「変更する」を出す。 */}
-          {!isOrganizer && !closed && myParticipantId ? (
+              自己申告なので「変更する」を出す。
+              運営者もプレーヤーとして出るので、参加者と同じ位置に出す。 */}
+          {!closed && myParticipantId ? (
             <p className="mt-0.5 text-xs text-slate-500">
               あなた: {indexByParticipantId.get(myParticipantId) ?? '?'}番
               {receptionMode && nameByParticipantId.get(myParticipantId)
@@ -412,9 +415,11 @@ function MatchesPage() {
         </div>
       </div>
 
-      {/* 自分がまだ未設定の参加者への誘導。受付モードは「参加する(名前で参加→番号自動)」、
-          番号運用は「自分の番号を入力(既存番号を選ぶ)」を出す。 */}
-      {!isOrganizer && !closed && !myParticipantId ? (
+      {/* 自分がまだ未設定の人への誘導。受付モードは「参加する(名前で参加→番号自動)」、
+          番号運用は「自分の番号を入力(既存番号を選ぶ)」を出す。
+          番号運用では運営者も同じ導線を使う(運営メニューには置かない)。
+          受付モードの参加ボタンは参加者専用(運営者が押すと別人として増えてしまう)。 */}
+      {!closed && !myParticipantId && (!isOrganizer || !receptionMode) ? (
         receptionMode ? (
           <div className="space-y-2">
             {/* 選択肢1: 新しく参加(名前→番号自動採番)。 */}
@@ -541,29 +546,32 @@ function MatchesPage() {
           {/* 中身は瞬時に開閉する(高さアニメは付けない)。開閉の合図はシェブロンの回転のみ。 */}
           {organizerOpen ? (
             <div className="divide-y divide-slate-100 border-t border-slate-100">
-              {/* 自分の番号 (運営者もプレーヤーとして参加する場合の自己申告) */}
-              <div className="px-4 py-4 sm:px-5">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-center gap-2">
-                      <UserRound className="h-4 w-4 text-slate-400" />
-                      <h3 className="text-sm font-semibold text-slate-800">自分の番号</h3>
+              {/* 自分の番号。番号運用ではページ上部(参加者と同じ位置)に出すので、
+                  ここは受付モードのときだけ。受付モードの上部は参加者専用の導線のため。 */}
+              {receptionMode ? (
+                <div className="px-4 py-4 sm:px-5">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center gap-2">
+                        <UserRound className="h-4 w-4 text-slate-400" />
+                        <h3 className="text-sm font-semibold text-slate-800">自分の番号</h3>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        {myParticipantId
+                          ? `${indexByParticipantId.get(myParticipantId) ?? '?'} 番として設定済み。自分の試合が強調表示されます。`
+                          : '未設定です。設定すると自分の試合が強調表示されます。'}
+                      </p>
                     </div>
-                    <p className="text-xs text-slate-500">
-                      {myParticipantId
-                        ? `${indexByParticipantId.get(myParticipantId) ?? '?'} 番として設定済み。自分の試合が強調表示されます。`
-                        : '未設定です。設定すると自分の試合が強調表示されます。'}
-                    </p>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setShowSelfModal(true)}
+                    >
+                      {myParticipantId ? '変更する' : '設定する'}
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setShowSelfModal(true)}
-                  >
-                    {myParticipantId ? '変更する' : '設定する'}
-                  </Button>
                 </div>
-              </div>
+              ) : null}
 
               {/* 参加者の出入り */}
               <div className="px-4 py-4 sm:px-5">
@@ -580,56 +588,7 @@ function MatchesPage() {
                 />
               </div>
 
-              {/* セットを追加 */}
-              <div className="px-4 py-4 sm:px-5">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <ListPlus className="h-4 w-4 text-slate-400" />
-                    <h3 className="text-sm font-semibold text-slate-800">セットを追加</h3>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center overflow-hidden rounded-lg border border-slate-300">
-                      <button
-                        type="button"
-                        aria-label="追加セット数を減らす"
-                        onClick={() => setAddCount((c) => Math.max(1, c - 1))}
-                        className="px-2.5 py-2 text-slate-500 transition hover:bg-slate-50"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <span className="w-8 text-center text-sm font-semibold text-slate-900 tabular-nums">
-                        {addCount}
-                      </span>
-                      <button
-                        type="button"
-                        aria-label="追加セット数を増やす"
-                        onClick={() => setAddCount((c) => Math.min(30, c + 1))}
-                        className="px-2.5 py-2 text-slate-500 transition hover:bg-slate-50"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        addSets.mutate(addCount, {
-                          onSuccess: () => showToast('セットを追加しました'),
-                        })
-                      }
-                      disabled={addSets.isPending}
-                    >
-                      {addSets.isPending ? '追加中…' : '追加'}
-                    </Button>
-                  </div>
-                </div>
-                {addSets.isError ? (
-                  <p className="mt-2 text-sm text-red-600">
-                    {addSets.error instanceof Error
-                      ? addSets.error.message
-                      : 'セットの追加に失敗しました'}
-                  </p>
-                ) : null}
-              </div>
+              {/* セットの追加はページ最下部に置いてあるので、ここには重複して置かない。 */}
 
               {/* 未開始セットの再編成 */}
               <div className="px-4 py-4 sm:px-5">
