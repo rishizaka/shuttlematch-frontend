@@ -28,7 +28,13 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 **本番環境**
 - EC2 インスタンス `shuttlematch-app`（`3.113.92.223`, ap-northeast-1, t3.micro）
 - SSH: `ssh -i ~/.ssh/shuttlematch-key.pem ec2-user@3.113.92.223`（passwordless sudo 可）
-- 公開URL: **http://3.113.92.223:3000**（nginx なし、node が `0.0.0.0:3000` で直接公開。backend は 8080）
+- 公開URL: **https://s-match.net**（および `https://www.s-match.net`）
+  - CloudFront `E2ZAQ39VPHE72R`（`d1yeqpydnk6epr.cloudfront.net`）が TLS を終端し、
+    `/api/*` を backend(8080)、それ以外を frontend(3000) に振り分ける。
+  - DNS は **Cloudflare**（レジストラも Cloudflare）。apex と `www` を CloudFront へ CNAME、
+    **Proxy は DNS only（グレー雲）**。オレンジ雲にすると二重CDNになるので変更しないこと。
+  - 証明書は ACM(us-east-1) の DNS 検証。検証用 CNAME を消すと自動更新に失敗するので残しておく。
+  - オリジン直: `http://3.113.92.223:3000`（nginx なし、node が `0.0.0.0:3000` で直接公開。backend は 8080）
 - systemd: `shuttlematch-frontend.service`（WorkingDir `~/frontend`、`node serve.mjs` → srvx で `dist/server/server.js` を SSR + `dist/client` を静的配信、PORT 3000）
 
 **手順（frontend のコードを変更したとき）**

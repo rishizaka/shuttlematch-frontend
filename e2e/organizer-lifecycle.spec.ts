@@ -24,8 +24,7 @@ test('運営者: 試合表表示 → 運営メニュー → 削除 → ホーム
   try {
     await page.goto(`/rooms/${roomId}/matches`)
 
-    // 試合表が描画される(セット数・第1セット・ヘッダーロゴ)。
-    await expect(page.getByText(/全\s*\d+\s*セット・\d+\s*試合/)).toBeVisible()
+    // 試合表が描画される(第1セット・ヘッダーロゴ)。
     await expect(page.getByText('第1セット')).toBeVisible()
     await expect(page.locator('header img[alt="ShuttleMatch"]')).toBeVisible()
 

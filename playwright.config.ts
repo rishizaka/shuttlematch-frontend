@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 // E2E の対象URL。既定はローカル(vite dev の 3000)。本番スモークは E2E_BASE_URL で差し替える。
 //   ローカル: backend(8080) と `npm run dev`(3000) を起動してから `npm run e2e`
-//   本番    : E2E_BASE_URL=http://3.113.92.223:3000 npm run e2e:prod
+//   本番    : E2E_BASE_URL=https://s-match.net npm run e2e:prod
 const baseURL = process.env.E2E_BASE_URL || 'http://localhost:3000'
 const isLocal = !process.env.E2E_BASE_URL
 
