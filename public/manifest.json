@@ -1,6 +1,6 @@
 {
-  "short_name": "TanStack App",
-  "name": "Create TanStack App Sample",
+  "short_name": "ShuttleMatch",
+  "name": "ShuttleMatch — バドミントンの試合表をかんたん作成・共有",
   "icons": [
     {
       "src": "favicon.ico",
