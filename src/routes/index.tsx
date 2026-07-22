@@ -5,12 +5,9 @@ import { Card, CardBody } from '../components/ui/Card'
 import { ErrorBlock, LoadingBlock } from '../components/ui/Spinner'
 import { RoomCard } from '../components/room/RoomCard'
 import { jstDayRange } from '../lib/format'
-import { ogImageMeta } from '../lib/og'
 import type { Room } from '../lib/types'
 
 export const Route = createFileRoute('/')({
-  // OG 画像はルート共通ではなくページ側 opt-in(試合表には出さないため)。
-  head: () => ({ meta: ogImageMeta() }),
   component: HomePage,
 })
 

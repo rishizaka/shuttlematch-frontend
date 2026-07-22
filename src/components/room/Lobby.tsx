@@ -4,6 +4,7 @@ import type { Room } from '../../lib/types'
 import { useGenerateMatches, useJoinRoom } from '../../hooks/queries'
 import { getSelfParticipant } from '../../lib/local-store'
 import { copyToClipboard } from '../../lib/clipboard'
+import { shareOrigin } from '../../lib/og'
 import { Button } from '../ui/Button'
 import { ErrorBlock } from '../ui/Spinner'
 import { useToast } from '../ui/Toast'
@@ -45,12 +46,10 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
   const count = room.participants.length
   const remaining = Math.max(0, required - count)
 
-  const shareUrl =
-    typeof window === 'undefined'
-      ? ''
-      : room.shareCode
-        ? `${window.location.origin}/r/${room.shareCode}?openExternalBrowser=1`
-        : `${window.location.origin}/rooms/${room.id}/matches?openExternalBrowser=1`
+  const origin = shareOrigin()
+  const shareUrl = room.shareCode
+    ? `${origin}/r/${room.shareCode}?openExternalBrowser=1`
+    : `${origin}/rooms/${room.id}/matches?openExternalBrowser=1`
 
   const shareLink = async () => {
     if (typeof window === 'undefined') return

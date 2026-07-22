@@ -1,21 +1,29 @@
 import type { Room } from './types'
 
 /**
- * OGP の絶対 URL 生成に使うサイトのオリジン。
- * og:image / og:url は絶対 URL が必須のため、本番ビルドでは
- * VITE_SITE_ORIGIN(例: https://xxxx.cloudfront.net)を設定する。
+ * サイトの正規オリジン。og:url の絶対 URL と共有リンクの生成に使う。
+ * 既定は本番ドメイン。別ホストへ向けたいときだけ VITE_SITE_ORIGIN で上書きする。
  */
 export const SITE_ORIGIN: string =
-  (import.meta.env?.VITE_SITE_ORIGIN as string | undefined)?.replace(/\/$/, '') ?? ''
+  (import.meta.env?.VITE_SITE_ORIGIN as string | undefined)?.replace(/\/$/, '') ??
+  'https://s-match.net'
+
+/**
+ * 共有リンクの基点。
+ * 本番は必ず正規ドメインを使う(CloudFront の既定ドメインや EC2 の IP で開いていても、
+ * 配る URL は s-match.net に揃える)。開発中は今開いているオリジンを使う。
+ */
+export function shareOrigin(): string {
+  if (import.meta.env?.DEV && typeof window !== 'undefined') {
+    return window.location.origin
+  }
+  return SITE_ORIGIN
+}
 
 export const SITE_NAME = 'ShuttleMatch'
 export const SITE_DESCRIPTION = 'バドミントンの試合表をかんたん作成・共有'
 
-/**
- * サイト共通の OGP / Twitter カードメタタグ(ルートに置く)。
- * 画像は含めない。ルートに置くと全ページに継承されて子ルートから外せないため、
- * 画像を出したいページが ogImageMeta() を自分の head に足す(opt-in)。
- */
+/** サイト共通の OGP / Twitter カードメタタグ(ルートに置く)。画像は使わない。 */
 export function defaultOgMeta() {
   return [
     { name: 'description', content: SITE_DESCRIPTION },
@@ -23,14 +31,6 @@ export function defaultOgMeta() {
     { property: 'og:type', content: 'website' },
     { property: 'og:title', content: SITE_NAME },
     { property: 'og:description', content: SITE_DESCRIPTION },
-  ]
-}
-
-/** リンクカードに OG 画像を出すページ用(トップ・ルーム詳細など)。 */
-export function ogImageMeta() {
-  return [
-    { property: 'og:image', content: `${SITE_ORIGIN}/og-image.png` },
-    { name: 'twitter:card', content: 'summary_large_image' },
   ]
 }
 

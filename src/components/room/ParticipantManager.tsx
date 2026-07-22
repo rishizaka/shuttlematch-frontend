@@ -11,6 +11,7 @@ import {
   useReplanFutureSets,
 } from '../../hooks/queries'
 import { copyToClipboard } from '../../lib/clipboard'
+import { shareOrigin } from '../../lib/og'
 import { Button } from '../ui/Button'
 import { ConfirmModal } from '../ui/ConfirmModal'
 import { ErrorBlock } from '../ui/Spinner'
@@ -92,12 +93,10 @@ export function ParticipantManager({
   // 試合表の共有リンク。共有コードがあれば短縮URL(/r/{code})を使う。
   // openExternalBrowser=1 は LINE 等のアプリ内ブラウザから
   // 既定(外部)ブラウザで開かせるためのパラメータ。
-  const shareUrl =
-    typeof window === 'undefined'
-      ? ''
-      : shareCode
-        ? `${window.location.origin}/r/${shareCode}?openExternalBrowser=1`
-        : `${window.location.origin}/rooms/${roomId}/matches?openExternalBrowser=1`
+  const origin = shareOrigin()
+  const shareUrl = shareCode
+    ? `${origin}/r/${shareCode}?openExternalBrowser=1`
+    : `${origin}/rooms/${roomId}/matches?openExternalBrowser=1`
 
   const shareLink = async () => {
     if (typeof window === 'undefined') return
