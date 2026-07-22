@@ -23,9 +23,28 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 
 ## デプロイ（本番反映）
 
-> **frontend の CI/CD は未整備。デプロイは以下の手順を手動で行う**（Claude に依頼して実施している）。
-> backend は main push で自動デプロイ済み（`shuttlematch-backend` の `ci.yml` 参照）。同じ方式を
-> frontend にも適用できる（OIDC で SG を一時開放 → dist を rsync/scp → systemctl restart）。
+> **main に push すれば自動デプロイされる**（`.github/workflows/ci.yml`）。以下の手動手順は
+> Actions が使えないときの緊急用。backend も同じ方式（`shuttlematch-backend` の `ci.yml`）。
+
+**CI/CD（GitHub Actions）**
+- `build`: Node22 で `npm ci` → `typecheck` → `vitest` → `build`。main への push と PR で発火。
+  `dist.tgz` と **production の `node_modules.tgz`** を artifact 化。
+- `deploy`: **main への push のときだけ**実行（PR では走らない）。`concurrency` で直列化。
+  - `dist` を差し替え → `systemctl restart` → health check（最大120秒リトライ）
+  - **失敗したら `dist.old` / `serve.mjs.prev` / `node_modules.old` へ自動ロールバック**
+  - 最後に `https://s-match.net/` が 200 を返すか確認。
+- **依存(node_modules)は runner 側で用意する。** EC2 はメモリ 912MB で backend が約半分を
+  使っており、そこで `npm ci` を走らせると backend を OOM で巻き込む。**EC2 上で npm ci しないこと。**
+- node_modules は 200MB 超あるため、`package-lock.json` の sha256 を EC2 と比較し、
+  **変わったときだけ転送**する（通常のデプロイは dist のみで数秒）。
+- **SSH の到達性**: EC2 の 22番は自宅IP(`14.8.61.161/32`)にしか開いていない。runner は
+  GitHub OIDC で IAM ロール `github-actions-shuttlematch-deploy` を AssumeRole し、
+  自分の IP を /32 で SG に一時追加 → 完了後（失敗時も `if: always()`）必ず revoke する。
+  **22番を常時開放しない設計なので、この仕組みを外さないこと。**
+- Secrets: `EC2_HOST` / `EC2_SSH_KEY`（frontend 専用 ed25519 鍵。EC2 の authorized_keys に
+  `github-actions-deploy-frontend@shuttlematch` として登録済み）/ `AWS_ROLE_ARN` / `EC2_SG_ID`。
+- **E2E は CI に入れていない**（本番にルームを作る副作用があるため）。リリース後の確認は
+  手元から `npm run e2e:prod` を実行する。
 
 **本番環境**
 - EC2 インスタンス `shuttlematch-app`（`3.113.92.223`, ap-northeast-1, t3.micro）
