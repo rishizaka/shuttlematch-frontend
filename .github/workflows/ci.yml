@@ -1,0 +1,239 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      # 本番の ~/frontend にそのまま展開できる形にまとめる。
+      - name: Package dist
+        run: tar czf dist.tgz -C dist .
+
+      # 依存は EC2(メモリ912MB)で入れると backend を OOM に巻き込むため runner 側で用意する。
+      # node_modules は 200MB 超あるので、lock が変わったときだけ持っていく。
+      - name: Package production node_modules
+        run: |
+          set -euo pipefail
+          npm ci --omit=dev --no-audit --no-fund
+          tar czf node_modules.tgz node_modules
+          sha256sum package-lock.json | cut -d' ' -f1 > lock.sha256
+          echo "lock sha: $(cat lock.sha256)"
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: |
+            dist.tgz
+            node_modules.tgz
+            lock.sha256
+            package.json
+            package-lock.json
+            serve.mjs
+          if-no-files-found: error
+
+  deploy:
+    name: Deploy to EC2
+    needs: build
+    # main への push のときだけデプロイする(PR では走らせない)。
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # 同時デプロイで dist の差し替えや SG の一時ルールが競合しないよう直列化する。
+    concurrency:
+      group: deploy-frontend-production
+      cancel-in-progress: false
+    permissions:
+      id-token: write # OIDC で AWS ロールを AssumeRole するために必要
+      contents: read
+
+    steps:
+      - name: Download build output
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: artifact
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-northeast-1
+
+      # EC2 の 22番は普段あなたの自宅IPにしか開いていない。
+      # runner の IP を /32 で一時的に許可し、最後に必ず削除する。
+      - name: Open SSH for this runner
+        id: open_ssh
+        env:
+          EC2_SG_ID: ${{ secrets.EC2_SG_ID }}
+        run: |
+          set -euo pipefail
+          RUNNER_IP=$(curl -sf --max-time 15 https://checkip.amazonaws.com | tr -d '[:space:]')
+          test -n "$RUNNER_IP"
+          echo "runner_ip=$RUNNER_IP" >> "$GITHUB_OUTPUT"
+          aws ec2 authorize-security-group-ingress \
+            --group-id "$EC2_SG_ID" \
+            --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=${RUNNER_IP}/32,Description=gha-deploy-fe-run-${GITHUB_RUN_ID}}]"
+          echo "opened 22/tcp for ${RUNNER_IP}/32"
+
+      - name: Set up SSH
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # SG 反映直後は接続できないことがあるのでリトライする。
+          for i in $(seq 1 10); do
+            if ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null && [ -s ~/.ssh/known_hosts ]; then
+              echo "known_hosts registered"
+              exit 0
+            fi
+            echo "ssh-keyscan retry $i"
+            sleep 5
+          done
+          echo "::error::ssh-keyscan failed - EC2 に到達できません"
+          exit 1
+
+      # EC2 側の lock と比べ、依存が変わったときだけ node_modules を送る。
+      - name: Decide whether deps changed
+        id: deps
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          set -euo pipefail
+          NEW=$(cat artifact/lock.sha256)
+          OLD=$(ssh -i ~/.ssh/deploy_key "ec2-user@$EC2_HOST" \
+            'sha256sum ~/frontend/package-lock.json 2>/dev/null | cut -d" " -f1' || true)
+          echo "remote: ${OLD:-none}"
+          echo "local : $NEW"
+          if [ "$NEW" = "$OLD" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "依存に変更なし - dist のみ差し替える"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "依存が変わった - node_modules も差し替える"
+          fi
+
+      - name: Upload to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          DEPS_CHANGED: ${{ steps.deps.outputs.changed }}
+        run: |
+          set -euo pipefail
+          scp -i ~/.ssh/deploy_key artifact/dist.tgz "ec2-user@$EC2_HOST:/tmp/fe-dist.tgz"
+          scp -i ~/.ssh/deploy_key artifact/serve.mjs "ec2-user@$EC2_HOST:/tmp/serve.mjs"
+          if [ "$DEPS_CHANGED" = "true" ]; then
+            scp -i ~/.ssh/deploy_key artifact/node_modules.tgz "ec2-user@$EC2_HOST:/tmp/fe-node_modules.tgz"
+            scp -i ~/.ssh/deploy_key artifact/package.json artifact/package-lock.json "ec2-user@$EC2_HOST:/tmp/"
+          fi
+
+      - name: Deploy and health check
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          DEPS_CHANGED: ${{ steps.deps.outputs.changed }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key "ec2-user@$EC2_HOST" \
+            "DEPS_CHANGED='$DEPS_CHANGED' bash -eu -o pipefail -s" <<'REMOTE'
+            cd ~/frontend
+
+            # ロールバック用に現行を退避してから差し替える。
+            rm -rf dist.old
+            mv dist dist.old
+            mkdir dist
+            tar xzf /tmp/fe-dist.tgz -C dist
+            cp serve.mjs serve.mjs.prev
+            cp /tmp/serve.mjs serve.mjs
+
+            if [ "$DEPS_CHANGED" = "true" ]; then
+              echo "依存を差し替える"
+              rm -rf node_modules.old
+              mv node_modules node_modules.old
+              tar xzf /tmp/fe-node_modules.tgz
+              cp /tmp/package.json /tmp/package-lock.json .
+            fi
+
+            sudo systemctl restart shuttlematch-frontend
+
+            # 起動完了まで待つ。
+            for i in $(seq 1 24); do
+              if curl -sf -o /dev/null http://localhost:3000/; then
+                echo "health OK"
+                systemctl is-active shuttlematch-frontend
+                rm -f /tmp/fe-dist.tgz /tmp/fe-node_modules.tgz /tmp/serve.mjs
+                exit 0
+              fi
+              sleep 5
+            done
+
+            # 起動しなかったら直前の状態に戻す。
+            echo "::error::health check failed - rolling back"
+            sudo systemctl stop shuttlematch-frontend
+            rm -rf dist
+            mv dist.old dist
+            cp serve.mjs.prev serve.mjs
+            if [ "$DEPS_CHANGED" = "true" ] && [ -d node_modules.old ]; then
+              rm -rf node_modules
+              mv node_modules.old node_modules
+            fi
+            sudo systemctl start shuttlematch-frontend
+            sleep 10
+            systemctl is-active shuttlematch-frontend || true
+            exit 1
+          REMOTE
+
+      - name: Verify public endpoint
+        run: |
+          set -euo pipefail
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://s-match.net/)
+          echo "https://s-match.net/ -> HTTP $code"
+          test "$code" = "200"
+
+      # 成否にかかわらず一時ルールを必ず閉じる。
+      - name: Close SSH
+        if: always() && steps.open_ssh.outputs.runner_ip != ''
+        env:
+          EC2_SG_ID: ${{ secrets.EC2_SG_ID }}
+          RUNNER_IP: ${{ steps.open_ssh.outputs.runner_ip }}
+        run: |
+          set -euo pipefail
+          aws ec2 revoke-security-group-ingress \
+            --group-id "$EC2_SG_ID" \
+            --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=${RUNNER_IP}/32}]"
+          echo "closed 22/tcp for ${RUNNER_IP}/32"
+          aws ec2 describe-security-groups --group-ids "$EC2_SG_ID" \
+            --query "SecurityGroups[].IpPermissions[?FromPort==\`22\`].IpRanges[]" --output json
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
