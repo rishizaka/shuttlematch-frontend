@@ -23,7 +23,9 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 
 ## デプロイ（本番反映）
 
-> CI/CD は未整備（`ci.yml` は backend の Build&Test のみ）。**デプロイは手動で、Claude に依頼して実施している**。将来的に CI/CD 化したい。
+> **frontend の CI/CD は未整備。デプロイは以下の手順を手動で行う**（Claude に依頼して実施している）。
+> backend は main push で自動デプロイ済み（`shuttlematch-backend` の `ci.yml` 参照）。同じ方式を
+> frontend にも適用できる（OIDC で SG を一時開放 → dist を rsync/scp → systemctl restart）。
 
 **本番環境**
 - EC2 インスタンス `shuttlematch-app`（`3.113.92.223`, ap-northeast-1, t3.micro）
