@@ -27,7 +27,13 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       { title: 'ShuttleMatch — バドミントンの試合表をかんたん作成・共有' },
       ...defaultOgMeta(),
     ],
-    links: [{ rel: 'stylesheet', href: appCss }],
+    links: [
+      { rel: 'stylesheet', href: appCss },
+      // ロゴのシャトル部分を切り出したアイコン。ico はタブ用(16/32/48)。
+      { rel: 'icon', href: '/favicon.ico', sizes: '48x48 32x32 16x16' },
+      { rel: 'icon', type: 'image/png', href: '/icon.png', sizes: '512x512' },
+      { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+    ],
   }),
   shellComponent: RootDocument,
 })
