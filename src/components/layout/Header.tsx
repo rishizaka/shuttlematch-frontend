@@ -38,10 +38,10 @@ export function Header() {
         <Link to="/" className="flex items-center" onClick={close}>
           <img
             src="/header-logo.png"
-            alt="HaneRoom"
+            alt="ShuttleMatch"
             className="h-8 w-auto"
-            width={1233}
-            height={285}
+            width={437}
+            height={96}
           />
         </Link>
 

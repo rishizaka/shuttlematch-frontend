@@ -1,6 +1,6 @@
 {
-  "short_name": "HaneRoom",
-  "name": "HaneRoom — バドミントンの試合表をかんたん作成・共有",
+  "short_name": "TanStack App",
+  "name": "Create TanStack App Sample",
   "icons": [
     {
       "src": "favicon.ico",
