@@ -20,10 +20,16 @@ async function openOrganizerMenu(page: Page) {
   if ((await menu.getAttribute('aria-expanded')) !== 'true') await menu.click()
 }
 
-// 運営メニューの「セットを追加」でステッパーを count に合わせて追加する。
+// ページ最下部の「セットを追加」を開き、ステッパーを count に合わせて追加する。
+// (運営メニュー内には置いていない。重複を避けて最下部に一本化してある)
 async function addSetsViaUI(page: Page, count: number) {
+  const opener = page.getByRole('button', { name: 'セットを追加' })
+  await opener.scrollIntoViewIfNeeded()
+  await opener.click()
+
   const stepUp = page.getByRole('button', { name: '追加セット数を増やす' })
   const stepDown = page.getByRole('button', { name: '追加セット数を減らす' })
+  await expect(stepUp).toBeVisible()
   // 既定は3。count まで増減する。
   const readCount = async () =>
     Number(await stepUp.locator('xpath=preceding-sibling::span[1]').innerText())
@@ -56,7 +62,6 @@ for (const { n, courts, label } of configs) {
       await expect(page.getByText('第1セット')).toBeVisible()
 
       // UI からセットを +6 追加(初期10 → 16)。
-      await openOrganizerMenu(page)
       await addSetsViaUI(page, 6)
       // 画面にも増えたことが反映される(第16セットが出る)。
       await expect(page.getByText('第16セット')).toBeVisible()
