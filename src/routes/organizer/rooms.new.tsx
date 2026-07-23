@@ -33,8 +33,6 @@ function NewRoomPage() {
   const courts = Number(courtCount)
   const people = Number(participantCount)
   const required = (courts || 1) * 4
-  // 入力人数が required に満たない分はゲスト(番号だけの空き枠)で埋めて始める。
-  const guestFill = mode === 'quick' && people >= 1 ? Math.max(0, required - people) : 0
 
   const titleError = !title.trim() ? 'タイトルを入力してください' : null
   const courtError = !courtCount || courts < 1 ? 'コート数を入力してください' : null
@@ -43,8 +41,8 @@ function NewRoomPage() {
       ? null
       : !participantCount
         ? '参加人数を入力してください'
-        : people < 1
-          ? '参加人数は1人以上にしてください'
+        : people < required
+          ? `コート ${courts || 1} 面には最低 ${required} 人必要です`
           : null
 
   const pending = quickCreate.isPending || createRoom.isPending || issuingGuest
@@ -88,8 +86,7 @@ function NewRoomPage() {
         {
           title: title.trim(),
           courtCount: courts,
-          // 足りない分はゲスト枠で埋める(コート数 × 4 が試合表の最低人数)。
-          participantCount: Math.max(people, required),
+          participantCount: people,
           createdBy: creatorId,
         },
         { onSuccess: (room) => goMatches(room.id) },
@@ -140,18 +137,13 @@ function NewRoomPage() {
                 <Input
                   id="participantCount"
                   type="number"
-                  min={1}
+                  min={required}
                   value={participantCount}
                   onChange={(e) => setParticipantCount(e.target.value)}
-                  placeholder="8"
+                  placeholder="例: 8"
                 />
                 {attempted && peopleError ? (
                   <p className="mt-1 text-sm text-red-600">{peopleError}</p>
-                ) : guestFill > 0 ? (
-                  <p className="mt-1 text-xs text-slate-500">
-                    コート {courts || 1} 面は {required} 人で回します。足りない {guestFill}{' '}
-                    人分はゲスト（空き番号）として用意し、後から参加できます。
-                  </p>
                 ) : null}
               </Field>
             ) : null}
