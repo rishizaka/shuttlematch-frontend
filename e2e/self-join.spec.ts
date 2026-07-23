@@ -27,14 +27,16 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
       await page.getByRole('button', { name: /参加リンクで受付/ }).click()
       await expect(page.getByRole('button', { name: /受付を開始/ })).toBeVisible({ timeout: 500 })
     }).toPass({ timeout: 15_000 })
-    // コート数=2 のまま「受付を開始」
+    // 主催者のニックネームを入力(受付モードは必須)。コート数=2 のまま「受付を開始」。
+    await page.getByLabel('あなたのニックネーム').fill('しゅさい')
     await page.getByRole('button', { name: /受付を開始|作成中/ }).click()
     await page.waitForURL(/\/rooms\/[0-9a-f-]+\/matches/)
     roomId = new URL(page.url()).pathname.split('/')[2]
 
-    // ロビー(受付中)が表示される。
+    // ロビー(受付中)が表示され、主催者が1番として参加済みになっている。
     await expect(page.getByText('受付中')).toBeVisible()
-    await expect(page.getByText(/参加者 \(0\)/)).toBeVisible()
+    await expect(page.getByText(/あなたは参加済みです/)).toBeVisible()
+    await expect(page.getByText(/参加者 \(1\)/)).toBeVisible()
 
     // 8人(2コート分)が別端末から名前で参加。1人(たろう)は端末を開いたままにして、
     // 生成後に「自分の番号が自動反映され、試合表へ自動で切り替わる」かを確認する。
@@ -52,8 +54,8 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
       await ctx.close()
     }
 
-    // 運営者画面の名簿が8人になり、名前が並ぶ(ライブ更新)。
-    await expect(page.getByText(/参加者 \(8\)/)).toBeVisible({ timeout: 10_000 })
+    // 運営者画面の名簿が9人(主催者1 + たろう + 7)になり、名前が並ぶ(ライブ更新)。
+    await expect(page.getByText(/参加者 \(9\)/)).toBeVisible({ timeout: 10_000 })
     await expect(page.getByText('たろう')).toBeVisible()
 
     // 生成ボタンが有効になり、押すと試合表へ。
