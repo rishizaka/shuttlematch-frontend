@@ -168,12 +168,12 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
             type="button"
             className="w-full"
             onClick={doGenerate}
-            disabled={remaining > 0 || generate.isPending}
+            disabled={count < 1 || generate.isPending}
           >
             {generate.isPending
               ? '生成中…'
               : remaining > 0
-                ? `試合表を生成（あと ${remaining} 人）`
+                ? `試合表を生成（${count}人＋ゲスト${remaining}）`
                 : `試合表を生成（${count}人）`}
           </Button>
           {generate.isError ? (
@@ -182,7 +182,9 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
             </div>
           ) : null}
           <p className="mt-2 text-center text-xs text-slate-400">
-            コート {room.courtCount ?? 1} 面には最低 {required} 人必要です。
+            {remaining > 0
+              ? `コート ${room.courtCount ?? 1} 面は ${required} 人で回します。足りない ${remaining} 人分はゲスト（空き番号）として用意し、後から参加できます。`
+              : `コート ${room.courtCount ?? 1} 面・${count} 人で試合表を作ります。`}
           </p>
         </div>
       ) : (
