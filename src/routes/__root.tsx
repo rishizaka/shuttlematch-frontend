@@ -29,10 +29,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     ],
     links: [
       { rel: 'stylesheet', href: appCss },
-      // ロゴのシャトル部分を切り出したアイコン。ico はタブ用(16/32/48)。
+      // タブ用の favicon(16/32/48)だけをグローバルに置く。
+      // 大きい PNG アイコン(icon.png 512 / apple-touch-icon 180)は、LINE 等が
+      // og:image 不在時に「リンクカードのサムネイル」として拾ってしまうため head には出さない
+      // (試合表をリンクで多用するので画像はノイズになる)。favicon.ico は小さすぎてカード画像には使われない。
       { rel: 'icon', href: '/favicon.ico', sizes: '48x48 32x32 16x16' },
-      { rel: 'icon', type: 'image/png', href: '/icon.png', sizes: '512x512' },
-      { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
     ],
   }),
   shellComponent: RootDocument,

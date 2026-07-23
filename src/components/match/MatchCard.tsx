@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Match } from '../../lib/types'
 
 /**
@@ -18,6 +18,25 @@ function PlayerChip({
   finished: boolean
 }) {
   const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLSpanElement>(null)
+
+  // 開いている間は「外側タップ」でも「一定時間後」でも閉じる。
+  // onBlur だけだとモバイルでは他の場所をタップしても閉じず、同じ番号を
+  // もう一度タップしないと消えなかった。
+  useEffect(() => {
+    if (!open) return
+    const closeOnOutside = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    // 開いたその瞬間のタップで閉じないよう、次の tick で登録する。
+    const register = setTimeout(() => document.addEventListener('pointerdown', closeOnOutside), 0)
+    const autoClose = setTimeout(() => setOpen(false), 2500)
+    return () => {
+      clearTimeout(register)
+      clearTimeout(autoClose)
+      document.removeEventListener('pointerdown', closeOnOutside)
+    }
+  }, [open])
 
   // 自分はロゴのゴールドの塗り+濃紺文字で示す。他は白地+枠線でシンプルに番号だけ。
   const chip = self
@@ -38,12 +57,11 @@ function PlayerChip({
   }
 
   return (
-    <span className="relative inline-flex">
+    <span ref={ref} className="relative inline-flex">
       <button
         type="button"
         aria-label={index != null ? `${index}番 ${name}` : name}
         onClick={() => setOpen((v) => !v)}
-        onBlur={() => setOpen(false)}
         className={base + chip}
       >
         {index ?? '?'}
