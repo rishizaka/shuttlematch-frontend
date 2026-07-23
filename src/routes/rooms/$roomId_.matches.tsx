@@ -68,15 +68,13 @@ export const Route = createFileRoute('/rooms/$roomId_/matches')({
       return null
     }
   },
-  // 試合表のリンクカードは画像なし(テキストのみ)。og:image はここでは足さない。
+  // 試合表のリンクカードは画像なし(テキストのみ)。リンクでよく共有するため、
+  // og:image は足さず、twitter:card も設定しない。
+  // (twitter:card=summary を付けると画像枠を要求され、og:image が無いときに
+  //  サイトアイコン(favicon)をサムネイルとして拾われてノイズになる)
   head: ({ loaderData, params }) =>
     loaderData
-      ? {
-          meta: [
-            ...roomOgMeta(loaderData, `/rooms/${params.roomId}/matches`, '試合表'),
-            { name: 'twitter:card', content: 'summary' },
-          ],
-        }
+      ? { meta: roomOgMeta(loaderData, `/rooms/${params.roomId}/matches`, '試合表') }
       : {},
   component: MatchesPage,
 })
