@@ -253,10 +253,17 @@ function MatchesPage() {
     return max
   }, [schedule])
 
+  // 受付中(未生成)のロビーは matches クエリのローディング状態に依存させない。
+  // 依存すると 10 秒ごとのポーリングで isLoading が一瞬 true になり、LoadingBlock を
+  // 挟んでロビーが再マウントし、入力中の名前が消えてしまう(全画面が再読込される感覚)。
+  // room さえ取れていれば status で判定して安定表示する。
+  if (room && room.status !== 'GENERATED' && room.status !== 'CLOSED') {
+    return <Lobby room={room} isOrganizer={isOrganizer} />
+  }
   if (isLoading) return <LoadingBlock />
   if (!schedule) {
-    // 未生成: 受付中(OPEN/PREPARING)ならロビーを表示。終了済み等はエラー。
     if (!room) return <LoadingBlock />
+    // 生成済みだがスケジュール取得待ち(生成直後など)はロビー、終了済みはエラー。
     if (room.status !== 'CLOSED') {
       return <Lobby room={room} isOrganizer={isOrganizer} />
     }

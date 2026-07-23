@@ -2,7 +2,8 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useCreateRoom, useQuickCreateRoom } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
-import { userApi } from '../../lib/api'
+import { roomApi, userApi } from '../../lib/api'
+import { setSelfParticipant } from '../../lib/local-store'
 import { defaultRoomTitle } from '../../lib/format'
 import { Card, CardBody, CardHeader } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -26,6 +27,8 @@ function NewRoomPage() {
   const [title, setTitle] = useState(defaultRoomTitle())
   const [participantCount, setParticipantCount] = useState('')
   const [courtCount, setCourtCount] = useState('2')
+  // 受付モードで主催者が自分を1番として参加させるためのニックネーム。
+  const [organizerName, setOrganizerName] = useState('')
   const [attempted, setAttempted] = useState(false)
   const [issuingGuest, setIssuingGuest] = useState(false)
   const [guestError, setGuestError] = useState<string | null>(null)
@@ -36,6 +39,8 @@ function NewRoomPage() {
 
   const titleError = !title.trim() ? 'タイトルを入力してください' : null
   const courtError = !courtCount || courts < 1 ? 'コート数を入力してください' : null
+  const organizerNameError =
+    mode === 'reception' && !organizerName.trim() ? 'あなたのニックネームを入力してください' : null
   const peopleError =
     mode !== 'quick'
       ? null
@@ -55,7 +60,8 @@ function NewRoomPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setAttempted(true)
-    if (mode === 'quick' ? titleError || courtError || peopleError : courtError) return
+    if (mode === 'quick' ? titleError || courtError || peopleError : courtError || organizerNameError)
+      return
 
     // 未ログインならゲストユーザーを発行し、この端末のユーザーとして保存する。
     let creatorId = user?.id
@@ -92,7 +98,8 @@ function NewRoomPage() {
         { onSuccess: (room) => goMatches(room.id) },
       )
     } else {
-      // 受付モード: コート数だけで OPEN ルームを作成 → 受付ロビー(試合表ページの未生成状態)へ。
+      // 受付モード: コート数だけで OPEN ルームを作成 → 主催者を1番として参加させ、
+      // 受付ロビー(試合表ページの未生成状態)へ。
       createRoom.mutate(
         {
           title: defaultRoomTitle(),
@@ -100,7 +107,19 @@ function NewRoomPage() {
           courtCount: courts,
           createdBy: creatorId,
         },
-        { onSuccess: (room) => goMatches(room.id) },
+        {
+          onSuccess: async (room) => {
+            // 主催者を最初の参加者(1番)として登録し、この端末の自分として保存する。
+            // 参加に失敗しても受付自体は始められるので、ロビーへは必ず進む。
+            try {
+              const res = await roomApi.join(room.id, organizerName.trim())
+              setSelfParticipant(room.id, res.participantId)
+            } catch {
+              /* 主催者の自動参加に失敗してもロビーで手動参加できる */
+            }
+            goMatches(room.id)
+          },
+        },
       )
     }
   }
@@ -145,6 +164,25 @@ function NewRoomPage() {
                 {attempted && peopleError ? (
                   <p className="mt-1 text-sm text-red-600">{peopleError}</p>
                 ) : null}
+              </Field>
+            ) : null}
+
+            {mode === 'reception' ? (
+              <Field label="あなたのニックネーム" htmlFor="organizerName">
+                <Input
+                  id="organizerName"
+                  value={organizerName}
+                  maxLength={30}
+                  onChange={(e) => setOrganizerName(e.target.value)}
+                  placeholder="例: たろう"
+                />
+                {attempted && organizerNameError ? (
+                  <p className="mt-1 text-sm text-red-600">{organizerNameError}</p>
+                ) : (
+                  <p className="mt-1 text-xs text-slate-500">
+                    受付を開始すると、あなたが 1 番として参加します。
+                  </p>
+                )}
               </Field>
             ) : null}
 
