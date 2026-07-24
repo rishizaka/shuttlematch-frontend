@@ -130,7 +130,7 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
 
       {/* 参加者名簿(番号+名前・ライブ)。
           参加中のメンバーは「参加した人(または運営者)」だけに見せる。
-          未参加の人は、自分が参加してから見られる。 */}
+          未参加の人には出さない(参加フォームだけを見せる)。 */}
       {joined || isOrganizer ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
@@ -164,14 +164,7 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
             </ul>
           )}
         </div>
-      ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <Users className="h-4 w-4 text-slate-400" />
-            参加すると、参加中のメンバーが見られます。
-          </div>
-        </div>
-      )}
+      ) : null}
 
       {/* 運営者: 固定ペアを事前設定(初回生成前でも設定できる)。2人以上いるとき。 */}
       {isOrganizer && count >= 2 ? (
