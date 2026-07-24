@@ -57,8 +57,9 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
   }
 
   const submitJoin = () => {
-    if (!name.trim() || join.isPending) return
-    join.mutate(name.trim(), {
+    if (join.isPending) return
+    // 名前は任意。未入力なら「ゲスト」で参加する。
+    join.mutate(name.trim() || 'ゲスト', {
       onSuccess: (result) => {
         setSelfId(result.participantId)
         setName('')
@@ -102,9 +103,6 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
             <UserPlus className="h-4 w-4 text-brand-600" />
             名前を入れて参加
           </div>
-          <p className="mb-2 text-xs text-brand-700">
-            参加すると <span className="font-bold">{count + 1}</span> 番になります。
-          </p>
           <div className="flex flex-wrap items-center gap-2">
             <input
               type="text"
@@ -114,10 +112,10 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
               onKeyDown={(e) => {
                 if (e.key === 'Enter') submitJoin()
               }}
-              placeholder="あなたの名前"
+              placeholder="あなたの名前（任意）"
               className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
             />
-            <Button type="button" onClick={submitJoin} disabled={!name.trim() || join.isPending}>
+            <Button type="button" onClick={submitJoin} disabled={join.isPending}>
               {join.isPending ? '参加中…' : '参加する'}
             </Button>
           </div>

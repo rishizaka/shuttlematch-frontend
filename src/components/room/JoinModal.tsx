@@ -25,7 +25,8 @@ export function JoinModal({
   if (typeof document === 'undefined') return null
 
   const submit = () => {
-    if (name.trim() && !pending) onSubmit(name.trim())
+    // 名前は任意。未入力なら「ゲスト」で参加する。
+    if (!pending) onSubmit(name.trim() || 'ゲスト')
   }
 
   return createPortal(
@@ -38,7 +39,7 @@ export function JoinModal({
       <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
         <h2 className="text-lg font-bold text-slate-900">参加する</h2>
         <p className="mt-1 text-sm text-slate-500">
-          名前を入れて参加します。番号は自動で割り振られます。
+          名前を入れて参加します（任意）。番号は自動で割り振られます。
         </p>
         {predictedNumber != null ? (
           <p className="mt-3 rounded-xl bg-brand-50 px-4 py-3 text-center text-sm text-brand-900">
@@ -54,12 +55,12 @@ export function JoinModal({
           onKeyDown={(e) => {
             if (e.key === 'Enter') submit()
           }}
-          placeholder="あなたの名前"
+          placeholder="あなたの名前（任意）"
           className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
         />
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
         <div className="mt-5 flex items-center gap-2">
-          <Button className="flex-1" onClick={submit} disabled={!name.trim() || pending}>
+          <Button className="flex-1" onClick={submit} disabled={pending}>
             {pending ? '参加中…' : predictedNumber != null ? 'この番号で参加する' : '参加する'}
           </Button>
           <Button variant="ghost" onClick={onCancel} disabled={pending}>
