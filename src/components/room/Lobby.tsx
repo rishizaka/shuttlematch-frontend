@@ -8,6 +8,7 @@ import { shareOrigin } from '../../lib/og'
 import { Button } from '../ui/Button'
 import { ErrorBlock } from '../ui/Spinner'
 import { useToast } from '../ui/Toast'
+import { FixedPairEditor } from './FixedPairEditor'
 
 /** 1試合あたりの人数。生成に必要な最低人数 = 4 × コート数。 */
 const PLAYERS_PER_MATCH = 4
@@ -158,6 +159,15 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
           </ul>
         )}
       </div>
+
+      {/* 運営者: 固定ペアを事前設定(初回生成前でも設定できる)。2人以上いるとき。 */}
+      {isOrganizer && count >= 2 ? (
+        <FixedPairEditor
+          roomId={room.id}
+          participants={room.participants}
+          fixedPairs={room.fixedPairs ?? []}
+        />
+      ) : null}
 
       {/* 運営者: 試合表を生成 */}
       {isOrganizer ? (
