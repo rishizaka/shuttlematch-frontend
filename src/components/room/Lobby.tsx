@@ -128,37 +128,50 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
         </div>
       )}
 
-      {/* 参加者名簿(番号+名前・ライブ) */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
-          <Users className="h-4 w-4 text-slate-400" />
-          参加者 ({count})
+      {/* 参加者名簿(番号+名前・ライブ)。
+          参加中のメンバーは「参加した人(または運営者)」だけに見せる。
+          未参加の人は、自分が参加してから見られる。 */}
+      {joined || isOrganizer ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <Users className="h-4 w-4 text-slate-400" />
+            参加者 ({count})
+          </div>
+          {count === 0 ? (
+            <p className="py-2 text-sm text-slate-500">
+              まだ参加者がいません。リンクを共有しましょう。
+            </p>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {room.participants.map((p) => (
+                <li key={p.id} className="flex items-center gap-3 py-2 text-sm">
+                  <span
+                    className={
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums ' +
+                      (p.id === selfId
+                        ? 'bg-accent-500 text-brand-900'
+                        : 'bg-slate-100 text-slate-600')
+                    }
+                  >
+                    {numberOf.get(p.id)}
+                  </span>
+                  <span className="truncate text-slate-800">{p.guestName}</span>
+                  {p.id === selfId ? (
+                    <span className="ml-auto text-xs font-medium text-brand-600">あなた</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-        {count === 0 ? (
-          <p className="py-2 text-sm text-slate-500">まだ参加者がいません。リンクを共有しましょう。</p>
-        ) : (
-          <ul className="divide-y divide-slate-100">
-            {room.participants.map((p) => (
-              <li key={p.id} className="flex items-center gap-3 py-2 text-sm">
-                <span
-                  className={
-                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums ' +
-                    (p.id === selfId
-                      ? 'bg-accent-500 text-brand-900'
-                      : 'bg-slate-100 text-slate-600')
-                  }
-                >
-                  {numberOf.get(p.id)}
-                </span>
-                <span className="truncate text-slate-800">{p.guestName}</span>
-                {p.id === selfId ? (
-                  <span className="ml-auto text-xs font-medium text-brand-600">あなた</span>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      ) : (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="flex items-center gap-2 text-sm text-slate-500">
+            <Users className="h-4 w-4 text-slate-400" />
+            参加すると、参加中のメンバーが見られます。
+          </div>
+        </div>
+      )}
 
       {/* 運営者: 固定ペアを事前設定(初回生成前でも設定できる)。2人以上いるとき。 */}
       {isOrganizer && count >= 2 ? (
