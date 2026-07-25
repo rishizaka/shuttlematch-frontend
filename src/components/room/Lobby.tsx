@@ -15,6 +15,7 @@ import { ErrorBlock } from '../ui/Spinner'
 import { useToast } from '../ui/Toast'
 import { FixedPairEditor } from './FixedPairEditor'
 import { RenameModal } from './RenameModal'
+import { VISITOR_PLACEHOLDER } from '../../lib/guests'
 
 /** 1試合あたりの人数。生成に必要な最低人数 = 4 × コート数。 */
 const PLAYERS_PER_MATCH = 4
@@ -80,11 +81,12 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
   }
 
   // 運営者による代理追加。名前は任意。未入力なら「遅刻者・ビジター」を既定名にする。
+  // この既定名の枠は、後から本人が「番号を指定」で自分の番号として当てはめられる。
   // 番号は参加順で自動採番。
   const submitAddGuest = () => {
     if (addGuest.isPending) return
     addGuest.mutate(
-      { guestName: guestName.trim() || '遅刻者・ビジター' },
+      { guestName: guestName.trim() || VISITOR_PLACEHOLDER },
       {
         onSuccess: () => {
           setGuestName('')

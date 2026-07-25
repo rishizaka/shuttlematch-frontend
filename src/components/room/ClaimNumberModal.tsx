@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Participant } from '../../lib/types'
+import { isClaimableSlot, VISITOR_PLACEHOLDER } from '../../lib/guests'
 import { Button } from '../ui/Button'
 
 /**
@@ -26,11 +27,11 @@ export function ClaimNumberModal({
 
   if (typeof document === 'undefined') return null
 
-  // 番号(並び順)と、名前なし(数字だけ)の枠だけを候補にする。
+  // 番号(並び順)と、空き枠(番号だけ or 運営者が用意した「遅刻者・ビジター」)を候補にする。
   const numberOf = new Map<string, number>()
   participants.forEach((p, i) => numberOf.set(p.id, i + 1))
   const openSlots = participants.filter(
-    (p) => p.status === 'ACTIVE' && (!p.guestName || /^\d+$/.test(p.guestName.trim())),
+    (p) => p.status === 'ACTIVE' && isClaimableSlot(p.guestName),
   )
 
   const submit = () => {
@@ -68,6 +69,7 @@ export function ClaimNumberModal({
                 {openSlots.map((p) => (
                   <option key={p.id} value={p.id}>
                     {numberOf.get(p.id)}番
+                    {p.guestName?.trim() === VISITOR_PLACEHOLDER ? '（遅刻者・ビジター）' : ''}
                   </option>
                 ))}
               </select>

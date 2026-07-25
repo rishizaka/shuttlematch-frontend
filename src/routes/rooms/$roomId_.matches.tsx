@@ -41,6 +41,7 @@ import {
 } from '../../lib/local-store'
 import { ConfirmModal } from '../../components/ui/ConfirmModal'
 import { roomOgMeta } from '../../lib/og'
+import { isClaimableSlot } from '../../lib/guests'
 import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
@@ -299,9 +300,10 @@ function MatchesPage() {
     })
   }
 
-  // 名前なし(番号だけ)の在席枠。遅刻者が「既存の番号に名前を付けて当てはまる」対象。
+  // 遅刻者が「既存の番号に名前を付けて当てはまる」対象の在席枠。
+  // 番号だけの枠に加え、運営者が用意した「遅刻者・ビジター」の予約枠も対象にする。
   const openSlots = (room?.participants ?? []).filter(
-    (p) => p.status === 'ACTIVE' && (!p.guestName || /^\d+$/.test(p.guestName.trim())),
+    (p) => p.status === 'ACTIVE' && isClaimableSlot(p.guestName),
   )
 
   const submitClaim = (participantId: string, name: string) => {
