@@ -82,7 +82,7 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     const latePage = await lateCtx.newPage()
     await latePage.goto(`/rooms/${roomId}/matches`)
     await expect(latePage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
-    await latePage.getByRole('button', { name: /新しく参加する/ }).click()
+    await latePage.getByRole('button', { name: /新しく参加/ }).click()
     const joinDialog = latePage.getByRole('dialog', { name: '参加する' })
     // 自動採番の確認: 「あなたは X番になります」が表示される。
     await expect(joinDialog.getByText(/あなたは.*番になります/)).toBeVisible()
@@ -106,7 +106,7 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     const claimPage = await claimCtx.newPage()
     await claimPage.goto(`/rooms/${roomId}/matches`)
     await expect(claimPage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
-    await claimPage.getByRole('button', { name: /運営指定の番号で参加/ }).click()
+    await claimPage.getByRole('button', { name: /番号を指定/ }).click()
     const claimDialog = claimPage.getByRole('dialog', { name: '運営指定の番号で参加' })
     await claimDialog.getByRole('combobox').selectOption({ index: 1 })
     await claimDialog.getByPlaceholder('あなたの名前').fill('あとから')
