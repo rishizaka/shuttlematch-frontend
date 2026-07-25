@@ -34,7 +34,8 @@ export function ClaimNumberModal({
   )
 
   const submit = () => {
-    if (participantId && name.trim() && !pending) onSubmit(participantId, name.trim())
+    // 名前は任意。未入力なら「ゲスト」で割り当てる。番号の選択だけ必須。
+    if (participantId && !pending) onSubmit(participantId, name.trim() || 'ゲスト')
   }
 
   return createPortal(
@@ -72,7 +73,7 @@ export function ClaimNumberModal({
               </select>
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              名前
+              名前（任意）
               <input
                 type="text"
                 value={name}
@@ -81,7 +82,7 @@ export function ClaimNumberModal({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') submit()
                 }}
-                placeholder="あなたの名前"
+                placeholder="あなたの名前（任意）"
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               />
             </label>
@@ -94,7 +95,7 @@ export function ClaimNumberModal({
             <Button
               className="flex-1"
               onClick={submit}
-              disabled={!participantId || !name.trim() || pending}
+              disabled={!participantId || pending}
             >
               {pending ? '設定中…' : 'この番号で参加'}
             </Button>
