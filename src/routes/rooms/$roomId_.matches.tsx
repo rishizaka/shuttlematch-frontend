@@ -459,48 +459,44 @@ function MatchesPage() {
           受付モードの参加ボタンは参加者専用(運営者が押すと別人として増えてしまう)。 */}
       {!closed && !myParticipantId && (!isOrganizer || !receptionMode) ? (
         receptionMode ? (
-          <div className="space-y-2">
+          // 新規参加と番号指定参加を横並びにする。ほぼ必ず入力するので縦幅は取ってよい。
+          // 空き枠が無いときは新規参加だけを全幅で出す。
+          <div className={openSlots.length > 0 ? 'grid grid-cols-2 gap-2' : ''}>
             {/* 選択肢1: 新しく参加(名前→番号自動採番)。 */}
             <button
               type="button"
               onClick={() => setShowJoinModal(true)}
-              className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
+              className="flex h-full flex-col items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left transition hover:bg-amber-100"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
                 <UserPlus className="h-4.5 w-4.5" />
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-amber-900">新しく参加する</span>
-                <span className="block text-xs text-amber-700">
-                  名前を入れると番号が自動で割り振られます。
-                </span>
+              <span className="block text-sm font-semibold text-amber-900">新しく参加</span>
+              <span className="block text-xs text-amber-700">
+                名前を入れると番号が自動で割り振られます。
               </span>
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
+              <span className="mt-auto inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
                 <Plus className="h-4 w-4" />
                 参加
               </span>
             </button>
 
-            {/* 選択肢2: 運営者が用意した「番号だけの枠」を選び、名前を付けて参加する
+            {/* 選択肢2: 運営者が用意した「番号だけの枠」を選んで参加する
                 (運営指定の番号。空き枠があるときだけ表示)。 */}
             {openSlots.length > 0 ? (
               <button
                 type="button"
                 onClick={() => setShowClaimModal(true)}
-                className="flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm transition hover:bg-slate-50"
+                className="flex h-full flex-col items-start gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:bg-slate-50"
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
                   <UserRound className="h-4.5 w-4.5" />
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-slate-800">
-                    運営指定の番号で参加
-                  </span>
-                  <span className="block text-xs text-slate-500">
-                    運営者が用意した番号を選び、名前を付けて参加します。
-                  </span>
+                <span className="block text-sm font-semibold text-slate-800">番号を指定</span>
+                <span className="block text-xs text-slate-500">
+                  運営が用意した番号を選んで参加します。
                 </span>
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-sm font-semibold text-slate-600">
+                <span className="mt-auto inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-sm font-semibold text-slate-600">
                   番号を選ぶ
                 </span>
               </button>
