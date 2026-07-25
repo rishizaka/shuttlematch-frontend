@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Share2, UserPlus, Users } from 'lucide-react'
 import type { Room } from '../../lib/types'
-import { useGenerateMatches, useJoinRoom, useRenameParticipant } from '../../hooks/queries'
+import {
+  useAddParticipant,
+  useGenerateMatches,
+  useJoinRoom,
+  useRenameParticipant,
+} from '../../hooks/queries'
 import { getSelfParticipant } from '../../lib/local-store'
 import { copyToClipboard } from '../../lib/clipboard'
 import { shareOrigin } from '../../lib/og'
@@ -23,10 +28,12 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
   const join = useJoinRoom(room.id)
   const generate = useGenerateMatches(room.id)
   const rename = useRenameParticipant(room.id)
+  const addGuest = useAddParticipant(room.id)
   const { showToast } = useToast()
 
   const [selfId, setSelfId] = useState<string | null>(null)
   const [name, setName] = useState('')
+  const [guestName, setGuestName] = useState('')
   const [showRename, setShowRename] = useState(false)
 
   // マウント後に「自分の参加者ID」を localStorage から読む(参加済みか判定)。
@@ -70,6 +77,20 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
         showToast(`${result.number}番で参加しました`)
       },
     })
+  }
+
+  // 運営者による代理追加。名前は任意(未入力ならゲスト)。番号は参加順で自動採番。
+  const submitAddGuest = () => {
+    if (addGuest.isPending) return
+    addGuest.mutate(
+      { guestName: guestName.trim() || 'ゲスト' },
+      {
+        onSuccess: () => {
+          setGuestName('')
+          showToast('追加しました')
+        },
+      },
+    )
   }
 
   const doGenerate = () => {
@@ -178,6 +199,46 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
               ))}
             </ul>
           )}
+        </div>
+      ) : null}
+
+      {/* 運営者: 遅刻者・ビジターゲストの代理追加。
+          あらかじめ分かっている遅刻者や、スマホがない人を運営者が代わりに追加する。 */}
+      {isOrganizer ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <UserPlus className="h-4 w-4 text-slate-400" />
+            遅刻者・ビジターゲストの追加
+          </div>
+          <p className="mb-2 text-xs text-slate-400">
+            あらかじめ分かっている遅刻者や、スマホがない人を代わりに追加します。
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              value={guestName}
+              maxLength={30}
+              onChange={(e) => setGuestName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') submitAddGuest()
+              }}
+              placeholder="名前（任意）"
+              className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={submitAddGuest}
+              disabled={addGuest.isPending}
+            >
+              {addGuest.isPending ? '追加中…' : '追加'}
+            </Button>
+          </div>
+          {addGuest.isError ? (
+            <div className="mt-2">
+              <ErrorBlock message={(addGuest.error as Error).message} />
+            </div>
+          ) : null}
         </div>
       ) : null}
 
