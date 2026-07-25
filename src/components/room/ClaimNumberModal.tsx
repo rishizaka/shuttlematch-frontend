@@ -1,13 +1,17 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Participant } from '../../lib/types'
-import { isClaimableSlot, VISITOR_PLACEHOLDER } from '../../lib/guests'
+import { FREE_SLOT, isClaimableSlot, VISITOR_PLACEHOLDER } from '../../lib/guests'
 import { Button } from '../ui/Button'
 
 /**
- * 既存の「番号だけの枠(名前なし)」を選んで、自分の名前を付けて自分に割り当てるモーダル。
- * 運営者が先に番号だけのゲストを用意しておき、後から本人が当てはまる運用に使う。
- * 実名がすでに入っている番号は上書きを避けるため選べない(候補に出さない)。
+ * 番号を選んで自分に割り当てるモーダル。
+ * <ul>
+ * <li>空き枠(番号だけ / 遅刻者・ビジター / フリー)を選ぶと、名前を付けて名簿に入る(rename)。</li>
+ * <li>すでに名前がある番号も選べる。この場合は名簿には触れず、この端末の
+ *     「自分の番号」として紐付けるだけ(重複可)。間違えて設定しても選び直すだけで
+ *     直せるように、番号の指定は排他にしない。</li>
+ * </ul>
  */
 export function ClaimNumberModal({
   participants,
@@ -19,7 +23,8 @@ export function ClaimNumberModal({
   participants: Participant[]
   pending: boolean
   error?: string | null
-  onSubmit: (participantId: string, name: string) => void
+  /** name が null のときは名簿を変更せず、この端末の番号の紐付けだけ行う。 */
+  onSubmit: (participantId: string, name: string | null) => void
   onCancel: () => void
 }) {
   const [participantId, setParticipantId] = useState('')
@@ -27,16 +32,27 @@ export function ClaimNumberModal({
 
   if (typeof document === 'undefined') return null
 
-  // 番号(並び順)と、空き枠(番号だけ or 運営者が用意した「遅刻者・ビジター」)を候補にする。
+  // 番号(並び順)。在席していれば実名入りの番号も候補にする(名簿は上書きしない)。
   const numberOf = new Map<string, number>()
   participants.forEach((p, i) => numberOf.set(p.id, i + 1))
-  const openSlots = participants.filter(
-    (p) => p.status === 'ACTIVE' && isClaimableSlot(p.guestName),
-  )
+  const slots = participants.filter((p) => p.status === 'ACTIVE')
+
+  const selected = slots.find((p) => p.id === participantId)
+  // 空き枠なら名前を付けて名簿に入る。実名入りなら端末の紐付けのみ。
+  const claimable = selected ? isClaimableSlot(selected.guestName) : true
+
+  const slotLabel = (p: Participant): string => {
+    const t = p.guestName?.trim() ?? ''
+    if (t === VISITOR_PLACEHOLDER) return '（遅刻者・ビジター）'
+    if (t === FREE_SLOT) return '（フリー）'
+    if (!t || /^\d+$/.test(t)) return '（空き）'
+    return `（${t}）`
+  }
 
   const submit = () => {
-    // 名前は任意。未入力なら「ゲスト」で割り当てる。番号の選択だけ必須。
-    if (participantId && !pending) onSubmit(participantId, name.trim() || 'ゲスト')
+    if (!participantId || pending) return
+    // 空き枠: 名前は任意(未入力なら「ゲスト」)。実名入り: 名簿は変えない(null)。
+    onSubmit(participantId, claimable ? name.trim() || 'ゲスト' : null)
   }
 
   return createPortal(
@@ -49,12 +65,12 @@ export function ClaimNumberModal({
       <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
         <h2 className="text-lg font-bold text-slate-900">運営指定の番号で参加</h2>
         <p className="mt-1 text-sm text-slate-500">
-          運営者が用意した自分の番号を選び、名前を付けます。
+          自分の番号を選びます。空き枠なら名前も付けられます。
         </p>
 
-        {openSlots.length === 0 ? (
+        {slots.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500">
-            選べる空き番号がありません。「新しく参加」をお使いください。
+            選べる番号がありません。「新しく参加」をお使いください。
           </p>
         ) : (
           <div className="mt-4 space-y-3">
@@ -66,44 +82,46 @@ export function ClaimNumberModal({
                 className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-2 text-base"
               >
                 <option value="">選択</option>
-                {openSlots.map((p) => (
+                {slots.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {numberOf.get(p.id)}番
-                    {p.guestName?.trim() === VISITOR_PLACEHOLDER ? '（遅刻者・ビジター）' : ''}
+                    {numberOf.get(p.id)}番{slotLabel(p)}
                   </option>
                 ))}
               </select>
             </label>
-            <label className="block text-sm font-medium text-slate-700">
-              名前（任意）
-              <input
-                type="text"
-                value={name}
-                maxLength={30}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') submit()
-                }}
-                placeholder="あなたの名前（任意）"
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-              />
-            </label>
+            {claimable ? (
+              <label className="block text-sm font-medium text-slate-700">
+                名前（任意）
+                <input
+                  type="text"
+                  value={name}
+                  maxLength={30}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') submit()
+                  }}
+                  placeholder="あなたの名前（任意）"
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                />
+              </label>
+            ) : (
+              <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                この番号には「{selected?.guestName?.trim()}」さんの名前が付いています。
+                名簿はそのまま、この端末でこの番号を「自分」として扱います。
+              </p>
+            )}
           </div>
         )}
 
         {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
         <div className="mt-5 flex items-center gap-2">
-          {openSlots.length > 0 ? (
-            <Button
-              className="flex-1"
-              onClick={submit}
-              disabled={!participantId || pending}
-            >
-              {pending ? '設定中…' : 'この番号で参加'}
+          {slots.length > 0 ? (
+            <Button className="flex-1" onClick={submit} disabled={!participantId || pending}>
+              {pending ? '設定中…' : claimable ? 'この番号で参加' : 'この番号を自分にする'}
             </Button>
           ) : null}
           <Button variant="ghost" onClick={onCancel} disabled={pending}>
-            {openSlots.length > 0 ? 'キャンセル' : '閉じる'}
+            {slots.length > 0 ? 'キャンセル' : '閉じる'}
           </Button>
         </div>
       </div>

@@ -12,12 +12,13 @@ export const VISITOR_PLACEHOLDER = '遅刻者・ビジター'
 export const FREE_SLOT = 'フリー'
 
 /**
- * 「番号を指定」で本人が当てはめられる空き枠か。
- * 番号だけ(名前なし)の枠か、運営者が用意した「遅刻者・ビジター」の予約枠を対象にする。
- * (実名で参加済みの枠や「ゲスト」名で参加済みの本人枠は上書きさせない)
+ * 「番号を指定」で名前を付けて(rename して)よい空き枠か。
+ * 番号だけ(名前なし)の枠、運営者が用意した「遅刻者・ビジター」の予約枠、
+ * 運営者が紐付けを解いた「フリー」枠を対象にする。
+ * 実名で参加済みの枠は名簿を上書きしない(選ぶこと自体はでき、端末の紐付けだけ行う)。
  */
 export function isClaimableSlot(guestName: string | null | undefined): boolean {
   if (!guestName) return true
   const t = guestName.trim()
-  return /^\d+$/.test(t) || t === VISITOR_PLACEHOLDER
+  return /^\d+$/.test(t) || t === VISITOR_PLACEHOLDER || t === FREE_SLOT
 }

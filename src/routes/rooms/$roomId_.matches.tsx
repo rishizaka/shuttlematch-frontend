@@ -33,6 +33,7 @@ import {
 import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { roomApi } from '../../lib/api'
 import {
+  addRoomId,
   getSelfParticipant,
   setSelfParticipant,
   removeSelfParticipant,
@@ -41,7 +42,6 @@ import {
 } from '../../lib/local-store'
 import { ConfirmModal } from '../../components/ui/ConfirmModal'
 import { roomOgMeta } from '../../lib/og'
-import { isClaimableSlot } from '../../lib/guests'
 import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
@@ -300,13 +300,16 @@ function MatchesPage() {
     })
   }
 
-  // 遅刻者が「既存の番号に名前を付けて当てはまる」対象の在席枠。
-  // 番号だけの枠に加え、運営者が用意した「遅刻者・ビジター」の予約枠も対象にする。
-  const openSlots = (room?.participants ?? []).filter(
-    (p) => p.status === 'ACTIVE' && isClaimableSlot(p.guestName),
-  )
-
-  const submitClaim = (participantId: string, name: string) => {
+  const submitClaim = (participantId: string, name: string | null) => {
+    // 実名入りの番号を選んだ場合(name=null)は名簿に触れず、端末の紐付けだけ行う。
+    // 番号の指定は排他にしない(重複可)。間違えても選び直すだけで直せるようにする。
+    if (name === null) {
+      setSelfParticipant(roomId, participantId)
+      addRoomId(roomId)
+      setShowClaimModal(false)
+      showToast('自分の番号を設定しました')
+      return
+    }
     claim.mutate(
       { participantId, name },
       {
@@ -471,8 +474,7 @@ function MatchesPage() {
       {!closed && !myParticipantId && (!isOrganizer || !receptionMode) ? (
         receptionMode ? (
           // 新規参加と番号指定参加を横並びにする。ほぼ必ず入力するので縦幅は取ってよい。
-          // 空き枠が無いときは新規参加だけを全幅で出す。
-          <div className={openSlots.length > 0 ? 'grid grid-cols-2 gap-2' : ''}>
+          <div className="grid grid-cols-2 gap-2">
             {/* 選択肢1: 新しく参加(名前→番号自動採番)。 */}
             <button
               type="button"
@@ -492,9 +494,9 @@ function MatchesPage() {
               </span>
             </button>
 
-            {/* 選択肢2: 運営者が用意した「番号だけの枠」を選んで参加する
-                (運営指定の番号。空き枠があるときだけ表示)。 */}
-            {openSlots.length > 0 ? (
+            {/* 選択肢2: 番号を指定して参加する。空き枠なら名前を付けて名簿に入り、
+                実名入りの番号なら名簿はそのままで端末の紐付けだけ行う(重複可)。 */}
+            {(room?.participants.length ?? 0) > 0 ? (
               <button
                 type="button"
                 onClick={() => setShowClaimModal(true)}
@@ -505,7 +507,7 @@ function MatchesPage() {
                 </span>
                 <span className="block text-sm font-semibold text-slate-800">番号を指定</span>
                 <span className="block text-xs text-slate-500">
-                  運営が用意した番号を選んで参加します。
+                  自分の番号が決まっている人はこちら。
                 </span>
                 <span className="mt-auto inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-sm font-semibold text-slate-600">
                   番号を選ぶ

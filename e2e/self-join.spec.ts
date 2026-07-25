@@ -108,11 +108,37 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     await expect(claimPage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
     await claimPage.getByRole('button', { name: /番号を指定/ }).click()
     const claimDialog = claimPage.getByRole('dialog', { name: '運営指定の番号で参加' })
-    await claimDialog.getByRole('combobox').selectOption({ index: 1 })
+    // 候補には実名入りの番号も並ぶので、「空き」の枠を選ぶ。
+    const openOption = claimDialog.locator('option', { hasText: '空き' }).first()
+    await claimDialog
+      .getByRole('combobox')
+      .selectOption((await openOption.getAttribute('value'))!)
     await claimDialog.getByPlaceholder('あなたの名前').fill('あとから')
     await claimDialog.getByRole('button', { name: 'この番号で参加' }).click()
     await expect(claimPage.getByText(/あなた:\s*\d+番/)).toBeVisible({ timeout: 10_000 })
     await claimCtx.close()
+
+    // 実名入りの番号も指定できる(名簿は変えず端末の紐付けのみ・重複可)。
+    // 間違えて設定しても選び直すだけで直せるように、番号の指定は排他にしない。
+    const dupCtx = await browser.newContext()
+    const dupPage = await dupCtx.newPage()
+    await dupPage.goto(`/rooms/${roomId}/matches`)
+    await expect(dupPage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
+    await dupPage.getByRole('button', { name: /番号を指定/ }).click()
+    const dupDialog = dupPage.getByRole('dialog', { name: '運営指定の番号で参加' })
+    const namedOption = dupDialog.locator('option', { hasText: 'あとから' }).first()
+    await dupDialog
+      .getByRole('combobox')
+      .selectOption((await namedOption.getAttribute('value'))!)
+    // 実名枠では名前入力は出ず、名簿を変えない旨の説明が出る。
+    await expect(dupDialog.getByText(/名簿はそのまま/)).toBeVisible()
+    await dupDialog.getByRole('button', { name: 'この番号を自分にする' }).click()
+    await expect(dupPage.getByText(/あなた:\s*\d+番/)).toBeVisible({ timeout: 10_000 })
+    // 名簿の名前は上書きされていない(「あとから」のまま)。
+    const dupRoster = dupPage.getByRole('button', { name: /参加者名簿/ })
+    await dupRoster.click()
+    await expect(dupPage.getByText('あとから')).toBeVisible()
+    await dupCtx.close()
 
     // 生成後、APIで最低限(試合が生成されている)を確認。
     const sched = await (await request.get(`${API_BASE}/api/v1/rooms/${roomId}/matches`)).json()
