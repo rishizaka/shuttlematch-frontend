@@ -20,6 +20,7 @@ import {
   queryKeys,
   useAddSets,
   useClaimNumber,
+  useRenameParticipant,
   useCloseRoom,
   useDeleteRoom,
   useJoinRoom,
@@ -50,6 +51,7 @@ import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { RosterAccordion } from '../../components/room/RosterAccordion'
 import { SelfNumberModal } from '../../components/room/SelfNumberModal'
+import { RenameModal } from '../../components/room/RenameModal'
 import { MatchScheduleList } from '../../components/match/MatchScheduleList'
 import { SetStartAnnouncement } from '../../components/match/SetStartAnnouncement'
 
@@ -117,6 +119,7 @@ function MatchesPage() {
   const deleteRoom = useDeleteRoom(roomId)
   const join = useJoinRoom(roomId)
   const claim = useClaimNumber(roomId)
+  const rename = useRenameParticipant(roomId)
   const navigate = useNavigate()
   const [addCount, setAddCount] = useState(3)
   const [confirmingClose, setConfirmingClose] = useState(false)
@@ -127,6 +130,7 @@ function MatchesPage() {
   // 運営メニューの開閉。参加者リストが長くなりがちなので、既定では畳んでおく。
   const [organizerOpen, setOrganizerOpen] = useState(false)
   const [showSelfModal, setShowSelfModal] = useState(false)
+  const [showRenameModal, setShowRenameModal] = useState(false)
   // 受付モードの自己参加(名前で参加)モーダルの開閉。
   const [showJoinModal, setShowJoinModal] = useState(false)
   // 既存の番号(番号だけの枠)に名前を付けて当てはまるモーダルの開閉。
@@ -363,6 +367,26 @@ function MatchesPage() {
         />
       ) : null}
 
+      {showRenameModal && myParticipantId ? (
+        <RenameModal
+          currentName={nameByParticipantId.get(myParticipantId)}
+          pending={rename.isPending}
+          error={rename.isError ? (rename.error as Error).message : null}
+          onSubmit={(newName) =>
+            rename.mutate(
+              { participantId: myParticipantId, name: newName },
+              {
+                onSuccess: () => {
+                  setShowRenameModal(false)
+                  showToast('名前を変更しました')
+                },
+              },
+            )
+          }
+          onCancel={() => setShowRenameModal(false)}
+        />
+      ) : null}
+
       {showJoinModal ? (
         <JoinModal
           pending={join.isPending}
@@ -406,7 +430,16 @@ function MatchesPage() {
               {receptionMode && nameByParticipantId.get(myParticipantId)
                 ? ` ・ ${nameByParticipantId.get(myParticipantId)}`
                 : null}
-              {!receptionMode ? (
+              {/* 受付モードは自分のニックネームを変更、番号運用は自分の番号を変更。 */}
+              {receptionMode ? (
+                <button
+                  type="button"
+                  onClick={() => setShowRenameModal(true)}
+                  className="ml-1.5 font-medium text-brand-600 hover:underline"
+                >
+                  名前を変更
+                </button>
+              ) : (
                 <button
                   type="button"
                   onClick={() => setShowSelfModal(true)}
@@ -414,7 +447,7 @@ function MatchesPage() {
                 >
                   変更する
                 </button>
-              ) : null}
+              )}
             </p>
           ) : null}
         </div>

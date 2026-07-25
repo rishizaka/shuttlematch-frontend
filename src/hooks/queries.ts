@@ -150,6 +150,18 @@ export function useClaimNumber(roomId: string) {
   });
 }
 
+/** 自分のニックネームを変更する(受付モード)。room キャッシュを更新する。 */
+export function useRenameParticipant(roomId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { participantId: string; name: string }) =>
+      roomApi.renameParticipant(roomId, input.participantId, input.name),
+    onSuccess: (room) => {
+      qc.setQueryData(queryKeys.room(roomId), room);
+    },
+  });
+}
+
 /** かんたん作成。番号参加者+試合表まで作成し、識別子を localStore に保存する。 */
 export function useQuickCreateRoom() {
   return useMutation({

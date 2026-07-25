@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Share2, UserPlus, Users } from 'lucide-react'
 import type { Room } from '../../lib/types'
-import { useGenerateMatches, useJoinRoom } from '../../hooks/queries'
+import { useGenerateMatches, useJoinRoom, useRenameParticipant } from '../../hooks/queries'
 import { getSelfParticipant } from '../../lib/local-store'
 import { copyToClipboard } from '../../lib/clipboard'
 import { shareOrigin } from '../../lib/og'
@@ -9,6 +9,7 @@ import { Button } from '../ui/Button'
 import { ErrorBlock } from '../ui/Spinner'
 import { useToast } from '../ui/Toast'
 import { FixedPairEditor } from './FixedPairEditor'
+import { RenameModal } from './RenameModal'
 
 /** 1試合あたりの人数。生成に必要な最低人数 = 4 × コート数。 */
 const PLAYERS_PER_MATCH = 4
@@ -21,10 +22,12 @@ const PLAYERS_PER_MATCH = 4
 export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean }) {
   const join = useJoinRoom(room.id)
   const generate = useGenerateMatches(room.id)
+  const rename = useRenameParticipant(room.id)
   const { showToast } = useToast()
 
   const [selfId, setSelfId] = useState<string | null>(null)
   const [name, setName] = useState('')
+  const [showRename, setShowRename] = useState(false)
 
   // マウント後に「自分の参加者ID」を localStorage から読む(参加済みか判定)。
   useEffect(() => {
@@ -93,10 +96,22 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
       {/* 自分の参加状態 */}
       {joined ? (
         <div className="rounded-2xl border border-brand-200 bg-brand-50/60 p-4">
-          <p className="text-sm text-slate-600">あなたは参加済みです</p>
-          <p className="mt-0.5 text-lg font-bold text-brand-900">
-            {myNumber}番 ・ {me?.guestName}
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <p className="text-sm text-slate-600">あなたは参加済みです</p>
+              <p className="mt-0.5 text-lg font-bold text-brand-900">
+                {myNumber}番 ・ {me?.guestName}
+              </p>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setShowRename(true)}
+            >
+              名前を変更
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -206,6 +221,26 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
           運営者が試合表を作成するまでお待ちください。
         </p>
       )}
+
+      {showRename && selfId ? (
+        <RenameModal
+          currentName={me?.guestName ?? undefined}
+          pending={rename.isPending}
+          error={rename.isError ? (rename.error as Error).message : null}
+          onSubmit={(newName) =>
+            rename.mutate(
+              { participantId: selfId, name: newName },
+              {
+                onSuccess: () => {
+                  setShowRename(false)
+                  showToast('名前を変更しました')
+                },
+              },
+            )
+          }
+          onCancel={() => setShowRename(false)}
+        />
+      ) : null}
     </div>
   )
 }
