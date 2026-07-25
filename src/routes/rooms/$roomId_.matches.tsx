@@ -432,15 +432,24 @@ function MatchesPage() {
               {receptionMode && nameByParticipantId.get(myParticipantId)
                 ? ` ・ ${nameByParticipantId.get(myParticipantId)}`
                 : null}
-              {/* 受付モードは自分のニックネームを変更、番号運用は自分の番号を変更。 */}
+              {/* 受付モードは自分のニックネーム変更＋番号の訂正、番号運用は番号の変更。 */}
               {receptionMode ? (
-                <button
-                  type="button"
-                  onClick={() => setShowRenameModal(true)}
-                  className="ml-1.5 font-medium text-brand-600 hover:underline"
-                >
-                  名前を変更
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setShowRenameModal(true)}
+                    className="ml-1.5 font-medium text-brand-600 hover:underline"
+                  >
+                    名前を変更
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowSelfModal(true)}
+                    className="ml-1.5 font-medium text-brand-600 hover:underline"
+                  >
+                    番号を訂正
+                  </button>
+                </>
               ) : (
                 <button
                   type="button"
@@ -503,6 +512,15 @@ function MatchesPage() {
                 </span>
               </button>
             ) : null}
+            {/* すでに参加している(番号がある)人は、自分の番号を選ぶだけでハイライトできる。
+                任意の番号を選べる(重複可)。col-span で全幅にする。 */}
+            <button
+              type="button"
+              onClick={() => setShowSelfModal(true)}
+              className="col-span-full text-xs font-medium text-brand-600 hover:underline"
+            >
+              すでに参加している人は「自分の番号を選ぶ」
+            </button>
           </div>
         ) : (
           <button

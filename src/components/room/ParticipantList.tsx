@@ -1,5 +1,6 @@
-import { LogOut, RotateCcw, Trash2 } from 'lucide-react'
+import { LogOut, RotateCcw, Trash2, Unlink } from 'lucide-react'
 import type { Participant } from '../../lib/types'
+import { FREE_SLOT } from '../../lib/guests'
 import { Badge } from '../ui/Badge'
 
 export function ParticipantList({
@@ -8,6 +9,7 @@ export function ParticipantList({
   removingId,
   onMarkLeft,
   onReactivate,
+  onMakeFree,
   updatingId,
 }: {
   participants: Participant[]
@@ -18,6 +20,8 @@ export function ParticipantList({
   onMarkLeft?: (participant: Participant) => void
   /** 指定すると早退者に復帰ボタンを表示する (オーガナイザー用)。 */
   onReactivate?: (participant: Participant) => void
+  /** 指定すると在席者に「フリーにする」(番号とユーザーの紐付け解除)を表示する。 */
+  onMakeFree?: (participant: Participant) => void
   updatingId?: string | null
 }) {
   if (participants.length === 0) {
@@ -59,6 +63,19 @@ export function ParticipantList({
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   復帰
+                </button>
+              ) : null}
+              {/* フリーにする: 番号とユーザーの紐付けを解き、誰でも入れる枠として残す。
+                  既にフリーの枠には出さない。 */}
+              {onMakeFree && !left && p.guestName?.trim() !== FREE_SLOT ? (
+                <button
+                  type="button"
+                  onClick={() => onMakeFree(p)}
+                  disabled={updatingId === p.id}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition hover:text-slate-800 disabled:opacity-40"
+                >
+                  <Unlink className="h-3.5 w-3.5" />
+                  フリー
                 </button>
               ) : null}
               {onMarkLeft && !left ? (

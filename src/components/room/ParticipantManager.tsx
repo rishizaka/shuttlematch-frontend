@@ -6,10 +6,12 @@ import {
   useMarkParticipantLeft,
   useReactivateParticipant,
   useRemoveParticipant,
+  useRenameParticipant,
   useReplanFutureSets,
 } from '../../hooks/queries'
 import { FixedPairEditor } from './FixedPairEditor'
 import { copyToClipboard } from '../../lib/clipboard'
+import { FREE_SLOT } from '../../lib/guests'
 import { shareOrigin } from '../../lib/og'
 import { Button } from '../ui/Button'
 import { ConfirmModal } from '../ui/ConfirmModal'
@@ -42,6 +44,7 @@ export function ParticipantManager({
   const remove = useRemoveParticipant(roomId)
   const markLeft = useMarkParticipantLeft(roomId)
   const reactivate = useReactivateParticipant(roomId)
+  const rename = useRenameParticipant(roomId)
   const replan = useReplanFutureSets(roomId)
   const { showToast } = useToast()
   // ゲスト追加・早退・復帰の後に「未開始セットを再編成しますか？」と確認するモーダルの開閉。
@@ -106,12 +109,20 @@ export function ParticipantManager({
         onReactivate={
           generated ? (p) => reactivate.mutate(p.id, { onSuccess: askReplan }) : undefined
         }
+        onMakeFree={(p) =>
+          rename.mutate(
+            { participantId: p.id, name: FREE_SLOT },
+            { onSuccess: () => showToast('フリー枠にしました') },
+          )
+        }
         updatingId={
           markLeft.isPending
             ? (markLeft.variables as string)
             : reactivate.isPending
               ? (reactivate.variables as string)
-              : null
+              : rename.isPending
+                ? (rename.variables as { participantId: string }).participantId
+                : null
         }
       />
 
