@@ -79,11 +79,12 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
     })
   }
 
-  // 運営者による代理追加。名前は任意(未入力ならゲスト)。番号は参加順で自動採番。
+  // 運営者による代理追加。名前は任意。未入力なら「遅刻者・ビジター」を既定名にする。
+  // 番号は参加順で自動採番。
   const submitAddGuest = () => {
     if (addGuest.isPending) return
     addGuest.mutate(
-      { guestName: guestName.trim() || 'ゲスト' },
+      { guestName: guestName.trim() || '遅刻者・ビジター' },
       {
         onSuccess: () => {
           setGuestName('')
