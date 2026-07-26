@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from '@tanstack/react-router'
-import { Gamepad2, History, Home, Info, Menu, X } from 'lucide-react'
+import { Gamepad2, History, Home, Info, Megaphone, Menu, X } from 'lucide-react'
 
 /**
  * サイト共通ヘッダー。ロゴとハンバーガーメニューのみ。
@@ -121,6 +121,14 @@ export function Header() {
                   >
                     <Gamepad2 className="h-4 w-4 text-slate-400" />
                     ミニゲーム
+                  </Link>
+                  <Link
+                    to="/releases"
+                    onClick={close}
+                    className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <Megaphone className="h-4 w-4 text-slate-400" />
+                    リリースノート
                   </Link>
                   <Link
                     to="/about"

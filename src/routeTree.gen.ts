@@ -10,12 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ReleasesRouteImport } from './routes/releases'
 import { Route as PastRouteImport } from './routes/past'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoomsRoomIdRouteImport } from './routes/rooms/$roomId'
+import { Route as ReleaseIdRouteImport } from './routes/release.$id'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as JoinRoomIdRouteImport } from './routes/join.$roomId'
 import { Route as GameRainRouteImport } from './routes/game_.rain'
@@ -27,6 +29,11 @@ import { Route as RoomsRoomIdMatchesPrintRouteImport } from './routes/rooms/$roo
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReleasesRoute = ReleasesRouteImport.update({
+  id: '/releases',
+  path: '/releases',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PastRoute = PastRouteImport.update({
@@ -57,6 +64,11 @@ const IndexRoute = IndexRouteImport.update({
 const RoomsRoomIdRoute = RoomsRoomIdRouteImport.update({
   id: '/rooms/$roomId',
   path: '/rooms/$roomId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReleaseIdRoute = ReleaseIdRouteImport.update({
+  id: '/release/$id',
+  path: '/release/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RCodeRoute = RCodeRouteImport.update({
@@ -101,11 +113,13 @@ export interface FileRoutesByFullPath {
   '/game': typeof GameRoute
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
+  '/releases': typeof ReleasesRoute
   '/signup': typeof SignupRoute
   '/game/flap': typeof GameFlapRoute
   '/game/rain': typeof GameRainRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
+  '/release/$id': typeof ReleaseIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
@@ -117,11 +131,13 @@ export interface FileRoutesByTo {
   '/game': typeof GameRoute
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
+  '/releases': typeof ReleasesRoute
   '/signup': typeof SignupRoute
   '/game/flap': typeof GameFlapRoute
   '/game/rain': typeof GameRainRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
+  '/release/$id': typeof ReleaseIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
@@ -134,11 +150,13 @@ export interface FileRoutesById {
   '/game': typeof GameRoute
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
+  '/releases': typeof ReleasesRoute
   '/signup': typeof SignupRoute
   '/game_/flap': typeof GameFlapRoute
   '/game_/rain': typeof GameRainRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
+  '/release/$id': typeof ReleaseIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId_/matches': typeof RoomsRoomIdMatchesRoute
@@ -152,11 +170,13 @@ export interface FileRouteTypes {
     | '/game'
     | '/login'
     | '/past'
+    | '/releases'
     | '/signup'
     | '/game/flap'
     | '/game/rain'
     | '/join/$roomId'
     | '/r/$code'
+    | '/release/$id'
     | '/rooms/$roomId'
     | '/organizer/rooms/new'
     | '/rooms/$roomId/matches'
@@ -168,11 +188,13 @@ export interface FileRouteTypes {
     | '/game'
     | '/login'
     | '/past'
+    | '/releases'
     | '/signup'
     | '/game/flap'
     | '/game/rain'
     | '/join/$roomId'
     | '/r/$code'
+    | '/release/$id'
     | '/rooms/$roomId'
     | '/organizer/rooms/new'
     | '/rooms/$roomId/matches'
@@ -184,11 +206,13 @@ export interface FileRouteTypes {
     | '/game'
     | '/login'
     | '/past'
+    | '/releases'
     | '/signup'
     | '/game_/flap'
     | '/game_/rain'
     | '/join/$roomId'
     | '/r/$code'
+    | '/release/$id'
     | '/rooms/$roomId'
     | '/organizer/rooms/new'
     | '/rooms/$roomId_/matches'
@@ -201,11 +225,13 @@ export interface RootRouteChildren {
   GameRoute: typeof GameRoute
   LoginRoute: typeof LoginRoute
   PastRoute: typeof PastRoute
+  ReleasesRoute: typeof ReleasesRoute
   SignupRoute: typeof SignupRoute
   GameFlapRoute: typeof GameFlapRoute
   GameRainRoute: typeof GameRainRoute
   JoinRoomIdRoute: typeof JoinRoomIdRoute
   RCodeRoute: typeof RCodeRoute
+  ReleaseIdRoute: typeof ReleaseIdRoute
   RoomsRoomIdRoute: typeof RoomsRoomIdRoute
   OrganizerRoomsNewRoute: typeof OrganizerRoomsNewRoute
   RoomsRoomIdMatchesRoute: typeof RoomsRoomIdMatchesRoute
@@ -219,6 +245,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/releases': {
+      id: '/releases'
+      path: '/releases'
+      fullPath: '/releases'
+      preLoaderRoute: typeof ReleasesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/past': {
@@ -261,6 +294,13 @@ declare module '@tanstack/react-router' {
       path: '/rooms/$roomId'
       fullPath: '/rooms/$roomId'
       preLoaderRoute: typeof RoomsRoomIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/release/$id': {
+      id: '/release/$id'
+      path: '/release/$id'
+      fullPath: '/release/$id'
+      preLoaderRoute: typeof ReleaseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$code': {
@@ -321,11 +361,13 @@ const rootRouteChildren: RootRouteChildren = {
   GameRoute: GameRoute,
   LoginRoute: LoginRoute,
   PastRoute: PastRoute,
+  ReleasesRoute: ReleasesRoute,
   SignupRoute: SignupRoute,
   GameFlapRoute: GameFlapRoute,
   GameRainRoute: GameRainRoute,
   JoinRoomIdRoute: JoinRoomIdRoute,
   RCodeRoute: RCodeRoute,
+  ReleaseIdRoute: ReleaseIdRoute,
   RoomsRoomIdRoute: RoomsRoomIdRoute,
   OrganizerRoomsNewRoute: OrganizerRoomsNewRoute,
   RoomsRoomIdMatchesRoute: RoomsRoomIdMatchesRoute,
