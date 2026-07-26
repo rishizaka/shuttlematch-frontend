@@ -1,0 +1,1086 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>試合表生成アルゴリズムのしくみ | ShuttleMatch</title>
+<meta name="description" content="ShuttleMatch がバドミントン練習会の試合表をどう作っているかを、組み合わせ最適化の基礎（貪欲法・コスト関数・山登り法・マルチリスタート）からゼロで学べる解説ページ。ブラウザ上で動くデモ付き。">
+<style>
+  :root {
+    --brand-50:#eef2f8; --brand-100:#d4e0ef; --brand-200:#a9c0dd; --brand-300:#7196c3;
+    --brand-400:#3d68a2; --brand-500:#1d4685; --brand-600:#123a70; --brand-700:#0b2c58;
+    --brand-800:#002050; --brand-900:#001433;
+
+    --bg:#ffffff; --bg-soft:#f6f8fb; --surface:#ffffff;
+    --ink:#1a2333; --ink-2:#46536b; --ink-3:#8291a9;
+    --line:#dde4ee; --line-strong:#c3cede;
+    --accent:var(--brand-500); --accent-soft:var(--brand-50);
+    --link:var(--brand-400);
+    --code-bg:#0e1726; --code-ink:#dbe5f4;
+    --good:#0f766e; --warn:#b45309;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0b1220; --bg-soft:#101a2c; --surface:#111c30;
+      --ink:#e6ecf6; --ink-2:#aebacd; --ink-3:#71809a;
+      --line:#243146; --line-strong:#31415c;
+      --accent:var(--brand-300); --accent-soft:#15223a;
+      --link:#8fb0d9;
+      --code-bg:#0a111f; --code-ink:#d3deee;
+      --good:#34d399; --warn:#fbbf24;
+    }
+  }
+
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+      "Yu Gothic UI", "Noto Sans JP", Meiryo, sans-serif;
+    font-size:16px; line-height:1.9;
+    -webkit-font-smoothing:antialiased;
+  }
+  main { max-width:780px; margin:0 auto; padding:0 20px 96px; }
+
+  /* ---------- header ---------- */
+  .site-head {
+    border-bottom:1px solid var(--line); background:var(--bg-soft);
+  }
+  .site-head-inner {
+    max-width:780px; margin:0 auto; padding:14px 20px;
+    display:flex; align-items:center; gap:16px; font-size:13.5px;
+  }
+  .site-head a { color:var(--ink-2); text-decoration:none; }
+  .site-head a:hover { color:var(--accent); }
+  .site-head .brand { font-weight:700; letter-spacing:.14em; color:var(--accent); }
+  .site-head .sep { color:var(--line-strong); }
+
+  .hero { padding:56px 0 8px; }
+  .hero .eyebrow {
+    font-size:12.5px; font-weight:700; letter-spacing:.22em; color:var(--accent); margin:0 0 14px;
+  }
+  h1 { font-size:clamp(26px, 5vw, 36px); line-height:1.45; margin:0 0 18px; letter-spacing:.01em; }
+  .lede { color:var(--ink-2); font-size:16.5px; margin:0; }
+
+  /* ---------- TOC ---------- */
+  nav.toc {
+    margin:40px 0 8px; padding:22px 26px; background:var(--bg-soft);
+    border:1px solid var(--line); border-radius:14px;
+  }
+  nav.toc p { margin:0 0 10px; font-size:12.5px; font-weight:700; letter-spacing:.18em; color:var(--ink-3); }
+  nav.toc ol { margin:0; padding-left:1.4em; font-size:14.5px; column-gap:2em; }
+  @media (min-width:640px) { nav.toc ol { columns:2; } }
+  nav.toc li { margin:4px 0; break-inside:avoid; }
+  nav.toc a { color:var(--ink-2); text-decoration:none; }
+  nav.toc a:hover { color:var(--accent); text-decoration:underline; }
+
+  /* ---------- typography ---------- */
+  section { margin-top:72px; }
+  h2 {
+    font-size:clamp(21px, 3.6vw, 26px); line-height:1.5; margin:0 0 8px;
+    padding-top:8px; letter-spacing:.01em;
+  }
+  h2 .no {
+    display:inline-block; margin-right:10px; color:var(--accent);
+    font-variant-numeric:tabular-nums; font-weight:800;
+  }
+  h3 { font-size:18px; margin:40px 0 6px; }
+  p { margin:14px 0; }
+  a { color:var(--link); }
+  strong { font-weight:700; }
+  ul, ol { padding-left:1.5em; }
+  li { margin:6px 0; }
+  .muted { color:var(--ink-3); font-size:14px; }
+
+  /* ---------- boxes ---------- */
+  .box {
+    margin:26px 0; padding:18px 22px; border-radius:12px;
+    border:1px solid var(--line); background:var(--bg-soft); font-size:15px;
+  }
+  .box .box-title {
+    display:block; font-size:12.5px; font-weight:800; letter-spacing:.16em;
+    margin-bottom:8px; color:var(--accent);
+  }
+  .box.term { border-left:4px solid var(--accent); }
+  .box.why  { border-left:4px solid var(--good); }
+  .box.why .box-title { color:var(--good); }
+  .box.trap { border-left:4px solid var(--warn); }
+  .box.trap .box-title { color:var(--warn); }
+  .box p:first-of-type { margin-top:0; }
+  .box p:last-child { margin-bottom:0; }
+
+  /* ---------- code ---------- */
+  pre {
+    margin:20px 0; padding:18px 20px; border-radius:12px; overflow-x:auto;
+    background:var(--code-bg); color:var(--code-ink);
+    font-size:13.2px; line-height:1.75;
+  }
+  code, pre {
+    font-family:"SF Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Noto Sans Mono", monospace;
+  }
+  p code, li code, td code {
+    background:var(--accent-soft); color:var(--accent);
+    padding:1.5px 6px; border-radius:6px; font-size:.86em;
+  }
+  pre .cm { color:#7c8ba3; }
+  pre .kw { color:#8fb0d9; }
+  pre .em { color:#f3c98b; }
+
+  /* ---------- tables & figures ---------- */
+  .tablewrap { overflow-x:auto; margin:20px 0; }
+  table.doc { border-collapse:collapse; font-size:14px; min-width:480px; }
+  table.doc th, table.doc td { border:1px solid var(--line); padding:8px 12px; text-align:left; vertical-align:top; }
+  table.doc th { background:var(--bg-soft); font-weight:700; white-space:nowrap; }
+  table.doc td.num { text-align:right; font-variant-numeric:tabular-nums; }
+
+  figure { margin:26px 0; }
+  figcaption { font-size:13px; color:var(--ink-3); margin-top:10px; text-align:center; }
+
+  /* pipeline diagram */
+  .pipeline { display:flex; flex-direction:column; gap:0; margin:26px 0; }
+  .pl-step {
+    border:1px solid var(--line); background:var(--surface); border-radius:12px;
+    padding:14px 18px; display:flex; gap:14px; align-items:baseline;
+  }
+  .pl-step .n {
+    flex:none; width:28px; height:28px; border-radius:50%; background:var(--accent);
+    color:#fff; font-weight:800; font-size:14px; display:inline-flex;
+    align-items:center; justify-content:center; transform:translateY(5px);
+  }
+  .pl-step .t { font-weight:700; }
+  .pl-step .d { color:var(--ink-2); font-size:14px; }
+  .pl-arrow { text-align:center; color:var(--ink-3); font-size:15px; line-height:1.4; padding:2px 0; }
+  .pl-loop {
+    border:1px dashed var(--line-strong); border-radius:14px; padding:12px 14px 14px; margin:2px 0;
+  }
+  .pl-loop > .lbl {
+    font-size:12px; font-weight:700; letter-spacing:.14em; color:var(--ink-3); margin:0 0 8px 4px;
+  }
+  .pl-loop .pl-step { background:var(--bg-soft); }
+
+  /* SVG landscape */
+  .fig-svg { width:100%; height:auto; display:block; }
+  .fig-svg text { font-size: 12.5px; fill: var(--ink-2); }
+  .fig-svg .curve { stroke:var(--accent); fill:none; stroke-width:2.5; }
+  .fig-svg .grid { stroke:var(--line); stroke-width:1; }
+  .fig-svg .ballA { fill:var(--warn); }
+  .fig-svg .ballB { fill:var(--good); }
+
+  /* ---------- demo ---------- */
+  .demo {
+    margin:30px 0; border:1px solid var(--line-strong); border-radius:16px;
+    background:var(--bg-soft); padding:24px;
+  }
+  .demo h3 { margin-top:0; }
+  .demo .controls {
+    display:flex; flex-wrap:wrap; gap:16px 24px; align-items:flex-end; margin:14px 0 4px;
+  }
+  .demo .ctrl { display:flex; flex-direction:column; gap:4px; font-size:13px; color:var(--ink-2); }
+  .demo .ctrl .lbl { white-space:nowrap; }
+  .demo .ctrl output { font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .demo input[type=range] { width:150px; accent-color:var(--accent); }
+  .demo button.run {
+    border:0; border-radius:10px; background:var(--accent); color:#fff;
+    font-size:14.5px; font-weight:700; padding:10px 22px; cursor:pointer;
+  }
+  .demo button.run:hover { filter:brightness(1.12); }
+  .demo .tabs { display:flex; gap:8px; margin:20px 0 0; }
+  .demo .tabs button {
+    border:1px solid var(--line-strong); background:var(--surface); color:var(--ink-2);
+    border-radius:999px; font-size:13px; padding:6px 14px; cursor:pointer;
+  }
+  .demo .tabs button[aria-pressed="true"] {
+    background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700;
+  }
+  .stats { display:flex; flex-wrap:wrap; gap:12px; margin:18px 0 4px; }
+  .stat {
+    flex:1 1 140px; background:var(--surface); border:1px solid var(--line);
+    border-radius:12px; padding:12px 16px;
+  }
+  .stat .k { font-size:12px; color:var(--ink-3); letter-spacing:.06em; }
+  .stat .v { font-size:24px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.3; }
+  .stat .sub { font-size:12px; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+  .stat .v .better { color:var(--good); font-size:13px; font-weight:700; margin-left:6px; white-space:nowrap; }
+
+  .demo h4 { margin:26px 0 8px; font-size:15px; }
+  .gridwrap { overflow-x:auto; }
+  table.sched { border-collapse:collapse; font-size:13px; min-width:420px; }
+  table.sched th, table.sched td { border:1px solid var(--line); padding:6px 10px; text-align:center; white-space:nowrap; }
+  table.sched th { background:var(--surface); }
+  table.sched td.rest { color:var(--ink-3); font-size:12px; }
+  table.sched td .pr { font-variant-numeric:tabular-nums; }
+  table.sched td .vs { color:var(--ink-3); padding:0 4px; font-size:11px; }
+
+  table.heat { border-collapse:separate; border-spacing:2px; }
+  table.heat th { font-size:11px; color:var(--ink-3); font-weight:600; padding:2px 4px; font-variant-numeric:tabular-nums; }
+  table.heat td {
+    width:26px; height:26px; min-width:26px; text-align:center; font-size:11.5px;
+    font-variant-numeric:tabular-nums; border-radius:5px;
+  }
+  table.heat td.diag { background:transparent; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+  .chip {
+    background:var(--surface); border:1px solid var(--line); border-radius:999px;
+    font-size:12px; padding:3px 10px; color:var(--ink-2); font-variant-numeric:tabular-nums;
+  }
+
+  /* glossary */
+  dl.gloss dt { font-weight:700; margin-top:18px; }
+  dl.gloss dd { margin:4px 0 0 0; color:var(--ink-2); font-size:15px; }
+
+  footer.site-foot {
+    margin-top:88px; padding-top:28px; border-top:1px solid var(--line);
+    font-size:13px; color:var(--ink-3); display:flex; flex-wrap:wrap; gap:8px 20px;
+  }
+  footer.site-foot a { color:var(--ink-2); }
+</style>
+</head>
+<body>
+
+<div class="site-head">
+  <div class="site-head-inner">
+    <a class="brand" href="/">SHUTTLEMATCH</a>
+    <span class="sep">/</span>
+    <a href="/about">ShuttleMatch について</a>
+    <span class="sep">/</span>
+    <span>アルゴリズム解説</span>
+  </div>
+</div>
+
+<main>
+
+<div class="hero">
+  <p class="eyebrow">HOW IT WORKS</p>
+  <h1>試合表はどう作られているか<br>— ゼロから学ぶ組み合わせ最適化</h1>
+  <p class="lede">
+    ShuttleMatch が毎回の練習会で「公平で、よく混ざる」試合表を吐き出す裏側には、
+    <strong>組み合わせ最適化</strong>と呼ばれる分野の定番テクニックが詰まっています。
+    このページは、その中身を予備知識ゼロから追える解説です。読み終わる頃には、
+    貪欲法・コスト関数・山登り法・マルチリスタートという道具が一通り手に入ります。
+    最後にはブラウザ上で動くデモもあります。
+  </p>
+</div>
+
+<nav class="toc" aria-label="目次">
+  <p>目次</p>
+  <ol>
+    <li><a href="#problem">解きたい問題</a></li>
+    <li><a href="#explosion">全部試すのは無理 — 組み合わせ爆発</a></li>
+    <li><a href="#greedy">戦略: 1セットずつ決める（貪欲法）</a></li>
+    <li><a href="#fairness">誰が出るか — 公平な輪番</a></li>
+    <li><a href="#cost">「混ざり」を数値にする — コスト関数</a></li>
+    <li><a href="#selection">顔ぶれの選抜にもコストを使う</a></li>
+    <li><a href="#hillclimb">コート割り — 山登り法</a></li>
+    <li><a href="#restart">全体を何回も作って選ぶ</a></li>
+    <li><a href="#edge">現実の練習会に効く特殊ルール</a></li>
+    <li><a href="#demo">動かして確かめる（デモ）</a></li>
+    <li><a href="#glossary">用語集とその先へ</a></li>
+  </ol>
+</nav>
+
+<!-- ================================================================ -->
+<section id="problem">
+  <h2><span class="no">1</span>解きたい問題</h2>
+  <p>
+    バドミントンの練習会を思い浮かべてください。体育館にコートが <strong>C 面</strong>、
+    参加者が <strong>N 人</strong>。ダブルスなので 1 コートには同時に 4 人が入ります。
+    これを <strong>S セット</strong>（セット = 全コートが同時に 1 試合ずつ行う回）繰り返します。
+  </p>
+  <p>
+    「試合表を作る」とは、各セットについて
+    <strong>①誰が出て誰が休むか</strong>、<strong>②出る人をどのコートにどう振り分けるか</strong>
+    を S セットぶん決めることです。ただの割り振りなら簡単ですが、現場には守りたい条件があります。
+  </p>
+  <ul>
+    <li><strong>公平性</strong> — 出場回数の差は誰と誰を比べても最大 1。たくさん休む人を作らない。</li>
+    <li><strong>連続休みゼロ・連続出場の抑制</strong> — 2 セット連続で休まされたら不満だし、
+        逆に出ずっぱりは身体に悪い。</li>
+    <li><strong>よく混ざる</strong> — 「またこの 4 人か…」を避けたい。なるべく多くの人と
+        同じコートに入れて、特定の顔ぶれへの偏りをなくしたい。</li>
+    <li><strong>固定ペア</strong> — 「この 2 人は常に同じチームで」という指定を守る。</li>
+    <li><strong>当日の変化に追従</strong> — 遅刻・早退・「もう 1 セットだけ」に、
+        それまでの実績を引き継いだまま対応する。</li>
+  </ul>
+
+  <div class="box term">
+    <span class="box-title">用語 — 同コート共起</span>
+    <p>
+      2 人が同じコートの試合に入ることを、このページでは「<strong>共起</strong>」と呼びます。
+      味方だったか敵だったかは<strong>区別しません</strong>。バドミントンの現場では試合ごとに
+      コート内でペアを組み替えて（ジャンケンで決めたりして）遊ぶことが多く、体験として意味を持つのは
+      「誰と同じコートに入ったか」だからです。この割り切りは後で探索をぐっと簡単にしてくれます。
+    </p>
+  </div>
+
+  <p>
+    実はこの問題、数学の世界では <strong>ソーシャルゴルファー問題（Social Golfer Problem）</strong>
+    という有名な難問の親戚です。「ゴルファー 32 人を毎週 4 人ずつの組に分け、
+    同じ人と 2 度同じ組にならないように何週続けられるか」——単純に見えて、
+    厳密な最適解を求めるのは計算量的に非常に困難なことが知られています。
+    ShuttleMatch はそこに「出場回数の公平性」「休みの連続禁止」まで重なった変種を、
+    <strong>スマホの操作から一瞬で返ってくる速さ</strong>で解かなければなりません。
+  </p>
+</section>
+
+<!-- ================================================================ -->
+<section id="explosion">
+  <h2><span class="no">2</span>全部試すのは無理 — 組み合わせ爆発</h2>
+  <p>
+    素朴な作戦は「全パターンを列挙して一番よいものを選ぶ」です。どれくらいの数になるか、
+    <strong>13 人・2 コート</strong>という現実的な規模で数えてみましょう。
+  </p>
+  <p>1 セットあたり:</p>
+  <ul>
+    <li>13 人から出場する 8 人を選ぶ … <code>C(13,8) = 1,287</code> 通り</li>
+    <li>8 人を 4 人ずつ 2 つのコートに分ける … <code>C(8,4) / 2 = 35</code> 通り
+        <span class="muted">（共起に敵味方の区別がないので、コート内のペア分けは数えない）</span></li>
+  </ul>
+  <p>
+    かけ合わせると 1 セットで <strong>45,045 通り</strong>。セットは独立に選べるので、
+    10 セットの試合表は約 <strong>45,045<sup>10</sup> ≒ 3 × 10<sup>46</sup> 通り</strong>。
+    宇宙の星の数（10<sup>24</sup> 個くらいと言われます）を全部数えても、まったく足りません。
+    1 秒に 10 億通り調べられたとしても 10<sup>30</sup> 年かかります。
+  </p>
+  <div class="box term">
+    <span class="box-title">用語 — 組み合わせ爆発</span>
+    <p>
+      要素数が少し増えるだけで場合の数が爆発的に増える現象。
+      この規模になると「全列挙して最良を選ぶ」（総当たり・brute force）は原理的に不可能で、
+      <strong>賢く「十分よい解」を素早く見つける方法 = ヒューリスティック</strong>が必要になります。
+      ここから先はぜんぶ、そのための道具の話です。
+    </p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section id="greedy">
+  <h2><span class="no">3</span>戦略: 1セットずつ決める（貪欲法）</h2>
+  <p>
+    最初の道具は<strong>貪欲法（greedy algorithm）</strong>です。
+    「10 セット全体を一度に最適化する」のはあきらめて、
+    <strong>第 1 セットから順に、その時点でいちばん良さそうな決定を積み重ねる</strong>方針に切り替えます。
+    決めた結果（誰が何回出たか、誰と誰が共起したか）を記録しながら次のセットへ進むことで、
+    各セットの判断は直前までの歴史を踏まえたものになります。
+  </p>
+  <p>ShuttleMatch の 1 セットの決定は、次のパイプラインです。</p>
+
+  <div class="pipeline">
+    <div class="pl-loop">
+      <p class="lbl">セットごとに繰り返し（貪欲法）</p>
+      <div class="pl-step"><span class="n">1</span>
+        <span><span class="t">出場者の選抜</span><br>
+        <span class="d">出場回数が少ない順に 4×C 人。同数なら連続出場が少ない順。同順位はシャッフルでランダムに。</span></span>
+      </div>
+      <div class="pl-arrow">↓ 候補を複数作り、共起コストが最小の顔ぶれを採用</div>
+      <div class="pl-step"><span class="n">2</span>
+        <span><span class="t">コート割り</span><br>
+        <span class="d">選ばれた 4×C 人をコートへ配置。山登り法で「過去に同コートになった重み」を最小化。</span></span>
+      </div>
+      <div class="pl-arrow">↓ 決めた組み合わせを共起履歴・出場回数に記録して次のセットへ</div>
+    </div>
+    <div class="pl-arrow">↓ これを S セットぶん終えたら…</div>
+    <div class="pl-step"><span class="n">3</span>
+      <span><span class="t">試合表まるごとやり直し × 4 回</span><br>
+      <span class="d">全体を複数回生成し、いちばん混ざった 1 つだけを採用（マルチリスタート）。</span></span>
+    </div>
+  </div>
+
+  <p>
+    貪欲法の弱点は「各ステップでは最良でも、全体では最良にならない」ことです。
+    序盤の引きに全体が引きずられる——この弱点をどう補うかが
+    <a href="#restart">8 章</a>のマルチリスタートにつながります。まずは各ステップを見ていきましょう。
+  </p>
+</section>
+
+<!-- ================================================================ -->
+<section id="fairness">
+  <h2><span class="no">4</span>誰が出るか — 公平な輪番</h2>
+  <p>
+    出場者の選抜は、<strong>並べ替えて上から取る</strong>だけの素直な仕組みです。
+    全員を次の優先順位でソートし、先頭から 4×C 人を出場、残りを休みにします。
+  </p>
+  <ol>
+    <li><strong>出場回数が少ない順</strong>（最優先。公平性そのもの）</li>
+    <li><strong>連続出場が少ない順</strong>（同数なら、出ずっぱりの人を休ませる）</li>
+    <li>それでも同順位なら<strong>ランダム</strong></li>
+  </ol>
+
+  <h3>ソートするだけで「差は最大1」が保証される</h3>
+  <p>
+    出場回数の差が 2 になるには、「k+2 回出た人が出場し、k 回の人が休む」瞬間が必要です。
+    しかし選抜は常に回数の少ない順なので、k 回の人を差し置いて k+2 回の人が選ばれることはありえません。
+    つまり<strong>このソート順を守るかぎり、差が 2 以上に開くことは構造的に起きない</strong>のです。
+    複雑な調整コードではなく、選び方そのものに公平性を埋め込んでいるのがポイントです。
+  </p>
+
+  <h3>第2キーが「連続休み」も同時に消す</h3>
+  <p>
+    第 2 キーの「連続出場が少ない順」は身体ケア（出ずっぱり防止）のためのものですが、
+    副作用としてもう 1 つの問題も解決します。直前のセットで休んだ人は連続出場カウントが
+    0 にリセットされるため、同じ出場回数の中では<strong>自動的に最優先</strong>になります。
+    つまり「2 セット連続で休み」は、枠がある限り起きません。1 つのソートキーが
+    2 つの要件（出ずっぱり防止・連続休み防止)を同時に満たす、うまい設計です。
+  </p>
+
+  <div class="box trap">
+    <span class="box-title">実装の落とし穴 — 「公平なランダム」は意外と難しい</span>
+    <p>
+      同順位のタイブレークには <strong>Fisher–Yates シャッフル</strong>を使っています。
+      「配列の末尾から順に、まだ確定していない位置とランダムに交換する」古典アルゴリズムで、
+      全順列が正確に等確率で出ます。よくある「各要素を配列全体のランダムな位置と交換する」
+      素朴な実装は、一見それっぽく動きますが<strong>順列の出方に偏りが生まれる</strong>ことが
+      証明できます（n 要素で n<sup>n</sup> 通りの乱数列を n! 通りの順列に割り当てるため、
+      割り切れずに必ずムラが出る）。「ランダムっぽい」と「一様にランダム」は別物です。
+    </p>
+  </div>
+
+  <pre><span class="cm">// 選抜の擬似コード（ソートの前にシャッフルしておくと、同順位の並びがランダムになる）</span>
+候補 = 全参加者をシャッフル
+候補.sort(<span class="kw">by</span> 出場回数 <span class="kw">asc</span>, <span class="kw">then</span> 連続出場 <span class="kw">asc</span>)
+出場 = 候補[0 .. 4×C]
+休み = 残り</pre>
+</section>
+
+<!-- ================================================================ -->
+<section id="cost">
+  <h2><span class="no">5</span>「混ざり」を数値にする — コスト関数</h2>
+  <p>
+    ここからが本丸です。「よく混ざった試合表」を機械に選ばせるには、
+    「混ざり具合」を<strong>数値で比較できる形</strong>にしなければなりません。
+    最適化の世界ではこの数値を<strong>コスト関数</strong>（または目的関数）と呼び、
+    <strong>小さいほど良い</strong>と定めて、コストを下げる方向に解を探します。
+    コスト関数の設計がそのままアルゴリズムの「価値観」になります。
+  </p>
+
+  <h3>材料: 共起カウント</h3>
+  <p>
+    まず、全ペア（2 人組）について「これまで何回同じコートに入ったか」を数えた表
+    <code>coCount</code> を持ちます。1 試合はコートに 4 人なので、1 試合確定するたびに
+    4 人から 2 人を選ぶ <strong>6 ペア</strong>の共起カウントをそれぞれ +1 します。
+    これは数学的には「参加者を頂点、共起回数を辺の重みとした<strong>無向グラフ</strong>」です。
+  </p>
+
+  <h3>重み付け: 再会は指数的に高くつく</h3>
+  <p>
+    共起 c 回のペアをもう一度同じコートに入れるときのコストを、ShuttleMatch は次のように定めています。
+  </p>
+  <div class="tablewrap"><table class="doc">
+    <tr><th>これまでの共起 c</th><td class="num">0 回</td><td class="num">1 回</td><td class="num">2 回</td><td class="num">3 回</td><td class="num">4 回</td></tr>
+    <tr><th>コスト 4<sup>c</sup> − 1（c=0 は −2）</th><td class="num"><strong>−2</strong></td><td class="num">3</td><td class="num">15</td><td class="num">63</td><td class="num">255</td></tr>
+  </table></div>
+  <ul>
+    <li><strong>初顔合わせはマイナス（報酬）</strong> — まだ共起していない 2 人を同席させると
+        コストが下がる。未共起ペアの解消を積極的に狙いに行く。</li>
+    <li><strong>再会は 4<sup>c</sup> で急騰する凸コスト</strong> — 「5 回目の再会」は
+        「2 回目の再会」よりはるかに高い。</li>
+  </ul>
+
+  <div class="box why">
+    <span class="box-title">なぜ線形（c に比例）ではだめか</span>
+    <p>
+      コストを単純に「共起回数の合計」にすると、
+      <strong>A・B ペアが 2 回ずつ共起</strong>（合計 4）と
+      <strong>A ペアだけが 4 回共起</strong>（合計 4）が同点になり、
+      少数のペアへの偏りを見逃します。凸コストなら前者は 15+15=30、後者は 255 で、
+      偏った方が圧倒的に高くつく。つまり凸コストの最小化は、実質的に
+      <strong>「最大共起回数の最小化」＝全体を均等に混ぜること</strong>に向かいます。
+      「同じ合計なら、均等に散らばっているほうが安い」——これが凸関数を使う理由で、
+      最適化設計の定番テクニックです。
+    </p>
+  </div>
+
+  <p>
+    あるコート割りの良し悪しは、<strong>各コートの 4 人が作る 6 ペアすべてのコストの合計</strong>
+    で測ります。これで「この組み合わせとあの組み合わせ、どちらが混ざるか」を
+    数値ひとつで比較できるようになりました。あとは<strong>この数値を小さくする配置を探す</strong>だけです。
+  </p>
+</section>
+
+<!-- ================================================================ -->
+<section id="selection">
+  <h2><span class="no">6</span>顔ぶれの選抜にもコストを使う</h2>
+  <p>
+    4 章の輪番ソートには同順位のタイブレークにランダム性があるため、
+    実行するたびに少しずつ違う顔ぶれが出てきます。ShuttleMatch はこれを逆手に取り、
+    選抜を最大 60 回試して<strong>「公平性はまったく同じだが顔ぶれが異なる」候補を最大 16 通り</strong>集め、
+    その中から共起コストが最小のものを採用します。公平性のルールを 1 ミリも緩めずに、
+    ランダム性の揺らぎ分だけを混ざり改善に使うわけです。
+  </p>
+  <p>候補の評価は 2 段構えです。</p>
+  <ol>
+    <li><strong>主: 選ばれた全員の総当たりコスト</strong> — 出場者 4×C 人のすべてのペアについて
+        コストを合計する。まだコート割りは考えない。</li>
+    <li><strong>従: 実際にコート割りしたときのコスト</strong> — 主評価が同点の候補だけ、
+        軽くコート割りまで試して比較する。</li>
+  </ol>
+
+  <div class="box why">
+    <span class="box-title">なぜ「コート割り後」ではなく「総当たり」を主にするのか</span>
+    <p>
+      一見、実際のコート割り後のコストで比べる方が正確に思えます。しかし、
+      共起済みの 2 人がいても「今回は別コートに分ければコスト 0」と評価されてしまうのが罠です。
+      同じ顔ぶれの共選抜を繰り返せば、別コートに逃がし続けることはいずれ不可能になり、
+      同コートを強いられます。<strong>選抜の段階で「過去に会っていない人同士」を集めておく方が、
+      長期的には混ざる</strong>——目先の配置より、選択肢の豊かさを優先する判断です。
+      貪欲法の近視眼を、評価関数の設計でひとつ先まで見通させています。
+    </p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section id="hillclimb">
+  <h2><span class="no">7</span>コート割り — 山登り法</h2>
+  <p>
+    出場者が決まったら、次は<strong>誰をどのコートに入れるか</strong>です。
+    2 コート 8 人でも 35 通り、3 コート 12 人なら 5,775 通り。ここで 2 つ目の大道具、
+    <strong>局所探索（local search）</strong>の登場です。
+  </p>
+  <p>手順はこうです。</p>
+  <ol>
+    <li><strong>ランダムな配置から始める</strong>（初期解）。</li>
+    <li>配置に「小さな変更」を加えてみる — ①ペアごとコートを入れ替える、
+        ②別コートの選手 2 人を入れ替える。この「小さな変更で移れる配置の集合」を<strong>近傍</strong>と呼ぶ。</li>
+    <li>変更後のコストを計算し、<strong>下がるなら採用、下がらないなら元に戻す</strong>。</li>
+    <li>どの変更を試してもコストが下がらなくなるまで 2〜3 を繰り返す。</li>
+  </ol>
+  <p>
+    「改善する変更だけを受け入れる」この素朴な戦略を<strong>山登り法（hill climbing）</strong>と呼びます
+    （コストの谷を下るので「谷下り」ですが、慣習でこう呼びます）。
+  </p>
+
+  <h3>山登り法の宿命 — 局所最適</h3>
+  <figure>
+    <svg class="fig-svg" viewBox="0 0 640 240" role="img" aria-label="コスト地形の模式図。浅い谷（局所最適）にとどまる解と、深い谷（大域最適)に到達した解">
+      <line class="grid" x1="40" y1="200" x2="610" y2="200"/>
+      <line class="grid" x1="40" y1="200" x2="40" y2="20"/>
+      <path class="curve" d="M 50 60 C 110 30, 150 120, 200 128 C 250 136, 270 70, 320 62 C 370 54, 400 180, 460 186 C 520 192, 560 90, 600 70"/>
+      <circle class="ballA" cx="200" cy="121" r="7"/>
+      <text x="200" y="100" text-anchor="middle">浅い谷で停止（局所最適）</text>
+      <circle class="ballB" cx="460" cy="179" r="7"/>
+      <text x="460" y="222" text-anchor="middle">深い谷（大域最適）</text>
+      <text x="52" y="34">コスト（低いほど良い）</text>
+      <text x="600" y="222" text-anchor="end">配置</text>
+    </svg>
+    <figcaption>
+      山登り法はスタート地点の近くの谷に落ちて止まる。どの谷に落ちるかは初期解しだい。
+    </figcaption>
+  </figure>
+  <p>
+    山登り法は「近傍のどこへ動いても悪化する」地点——<strong>局所最適</strong>——で止まります。
+    そこが全体の最良（大域最適）とは限りません。ShuttleMatch の対策はシンプルで、
+    <strong>ランダムな初期解を最大 24 個</strong>用意してそれぞれ山登りさせ、
+    たどり着いた谷の中で最も深いものを採用します（<strong>マルチスタート山登り法</strong>）。
+    初期解が違えば落ちる谷も違う、なら谷をたくさん見ればよい、という発想です。
+    単発のランダム試行を 24 回するより、それぞれを局所最適まで磨き込むほうが
+    探索空間をはるかに確実にカバーできます。
+  </p>
+
+  <div class="box trap">
+    <span class="box-title">実装の落とし穴 — 正規化される値オブジェクトの「巻き戻し」</span>
+    <p>
+      山登り法は「変更 → だめなら戻す」を大量に繰り返すため、<strong>戻す操作の正確さ</strong>が命です。
+      ShuttleMatch の <code>Pair</code>（ペアを表す値オブジェクト）は、生成時に 2 人を
+      昇順に並べ替えて正規化します。すると「スロット 0 番の選手とスロット 1 番の選手を交換し、
+      失敗したら同じスロット番号で戻す」式の実装は破綻します——交換した瞬間に中身の並びが
+      変わってしまい、<strong>同じスロット番号がもう同じ選手を指していない</strong>からです。
+      正解は位置ではなく<strong>参加者 ID を指定して交換・巻き戻しする</strong>こと。
+      「不変条件を持つオブジェクトを可逆に操作するときは、内部表現に依存しない」——
+      実際にこのコードベースで踏んだ教訓です。
+    </p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section id="restart">
+  <h2><span class="no">8</span>全体を何回も作って選ぶ — マルチリスタート</h2>
+  <p>
+    3 章で予告した貪欲法の弱点に戻ります。各セットで最善を尽くしても、
+    序盤の割り振りの「引き」がその後の選択肢を狭め、最終的な仕上がりを左右します。
+    そこで ShuttleMatch は<strong>試合表全体の生成を 4 回繰り返し、
+    出来上がりを比べて最良の 1 つだけを採用</strong>します。
+  </p>
+  <p>
+    「出来上がりの良さ」は 3 つの指標の<strong>辞書式比較</strong>
+    （1 位の指標で決着がつかなければ 2 位で比べる、辞書の並び順と同じ比較法）で決めます。
+  </p>
+  <div class="tablewrap"><table class="doc">
+    <tr><th>優先度</th><th>指標</th><th>意味</th></tr>
+    <tr><td class="num">1</td><td><strong>最大共起回数</strong>が小さい</td><td>最悪のペアの「またか」度。ワーストケースをまず抑える。</td></tr>
+    <tr><td class="num">2</td><td><strong>未共起ペア数</strong>が少ない</td><td>一度も同コートになれなかった 2 人組の数。カバレッジ。</td></tr>
+    <tr><td class="num">3</td><td><strong>共起回数の 2 乗和</strong>が小さい</td><td>コート数とセット数が同じなら共起の総数は一定。総数一定のもとで 2 乗和が小さい = ばらつきが小さい（統計でいう分散の最小化と同じ）。</td></tr>
+  </table></div>
+  <p>
+    ここまでの構造を整理すると、<strong>3 層のランダム化 × 選別</strong>になっています。
+    ①選抜候補を最大 16 通り作って選ぶ、②コート割りの初期解を最大 24 個作って選ぶ、
+    ③試合表全体を 4 回作って選ぶ。それぞれの層が「ランダムに散らして、コストで刈り取る」
+    という同じパターンの繰り返しであることに気づくと、全体が一気に見通せます。
+  </p>
+  <div class="box term">
+    <span class="box-title">補足 — 速さとの折り合い</span>
+    <p>
+      探索量を増やせば品質は上がりますが、生成は当日の受付でスマホから叩かれる操作です。
+      コートが 5 面以上ある大規模会場では 1 回の生成が重くなるため、候補数・初期解数・
+      リスタート数をそれぞれ半分に落とします。大人数×多コートは組み合わせの自由度が
+      もともと高く、探索を絞っても品質がほぼ落ちないことが分かっているためです。
+      <strong>「どこまで探索するか」は品質と応答速度のトレードオフ</strong>——
+      ヒューリスティック設計の最後は必ずこの調整になります。
+    </p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section id="edge">
+  <h2><span class="no">9</span>現実の練習会に効く特殊ルール</h2>
+  <p>基本形は以上です。ここからは、現場のコーナーケースを扱うための追加ルールたちです。</p>
+
+  <h3>休みが多すぎると起きる「2グループ固定」問題</h3>
+  <p>
+    2 コート（出場 8 人）に 16 人が集まったとします。「連続休み禁止」を厳密に守ると、
+    <strong>前のセットで休んだ 8 人が今回は全員出場</strong>するしかなく、
+    出場グループが A・B の 2 つに完全に固定されて<strong>永遠に混ざらなくなります</strong>。
+    善意のルールが組み合わせの自由度を奪い、より大事な目的（混ざり）を壊す例です。
+  </p>
+  <p>
+    そこで「休み人数 ≧ 出場人数」の構成に限り<strong>混ぜモード</strong>に切り替えます。
+    連続休みを 1 回まで許容し（2 連続休み以上になる選抜には巨大なペナルティを付けて実質禁止）、
+    生まれた自由度を共起の最小化に注ぎ込みます。さらにこのモードではコストを凸ではなく
+    <strong>線形</strong>にします。休みが多い構成では同じ顔ぶれ再会の上限を圧縮するより、
+    <strong>未共起ペアを減らす（カバレッジ）方が体験に効く</strong>からです。
+    コスト関数の形を状況で使い分ける——5 章の設計判断がここでも生きています。
+  </p>
+
+  <h3>休みメンバーの「組」の反復回避</h3>
+  <p>
+    出場回数が公平でも、「休み組の顔ぶれ」が毎回同じだと、休憩所で常に同じ 2〜3 人が
+    顔を合わせることになります（意図しないカップリング）。直近の休みグループの構成を
+    覚えておき、同じ組の反復になりそうなときは、公平性と連続休み禁止を壊さない範囲で
+    出場者と休み者を入れ替えて崩します。
+  </p>
+
+  <h3>固定ペアは「2人で1つのユニット」</h3>
+  <p>
+    固定ペアは選抜・休憩・配置のすべてで <strong>2 人まとめて 1 ユニット</strong>として扱います。
+    常に一緒に出場・休憩し、コート割りでも同じチームに置かれ、山登り法のスワップ対象からも
+    外れます（崩れないように）。固定ペアばかり選ばれて出場枠が 1 だけ余る、といった
+    端数の調整も専用の処理で吸収します。
+  </p>
+
+  <h3>セット追加・再編成 — 状態を引き継ぐ</h3>
+  <p>
+    「もう 1 セットだけ」（セット追加）や、遅刻・早退での組み直し（再編成）では、
+    <strong>開始済みの試合は歴史として一切変更せず</strong>、そこから出場回数・連続出場・
+    共起履歴・休みグループ履歴をすべて集計し直して初期状態に流し込みます。
+    アルゴリズム本体は最初の生成とまったく同じものが動きます。
+    「途中から作る」を「初期状態が違うだけの同じ問題」に還元する——
+    状態設計がきれいだと拡張がタダ同然になる好例です。
+  </p>
+  <div class="box why">
+    <span class="box-title">なぜ途中参加者を優遇しないのか</span>
+    <p>
+      途中参加者の出場回数を素直に 0 から数えると、輪番ソートの最優先になり、
+      追いつくまで毎セット出場し続けてしまいます（本人は嬉しいかもしれませんが、
+      最初からいた人の出番が減ります）。そこで途中参加者は
+      <strong>「既存メンバーの最小出場回数」にシード</strong>して、列の途中に横入りさせます。
+      公平性の基準を「累計」ではなく「これからの機会」に置く、という運用判断です。
+    </p>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<section id="demo">
+  <h2><span class="no">10</span>動かして確かめる（デモ）</h2>
+  <p>
+    ここまでの仕組みを簡略化して JavaScript で再実装したデモです（乱数を使うので毎回結果が変わります）。
+    同じ公平な輪番を使いながら、<strong>コート割りをランダムに決めた場合</strong>と
+    <strong>共起コスト＋山登り法＋マルチリスタートで最適化した場合</strong>を同条件で生成し、
+    混ざり具合を比較できます。ヒートマップの色が濃いマスは「そのペアが何度も同コートになった」印。
+    最適化ありでは色が薄く均一に広がる（＝よく混ざる）ことを確かめてみてください。
+  </p>
+
+  <div class="demo" id="demo-root">
+    <h3>簡易シミュレーター</h3>
+    <div class="controls">
+      <label class="ctrl"><span class="lbl">参加者 <output id="out-n">13</output> 人</span>
+        <input type="range" id="in-n" min="8" max="24" value="13">
+      </label>
+      <label class="ctrl"><span class="lbl">コート <output id="out-c">2</output> 面</span>
+        <input type="range" id="in-c" min="1" max="4" value="2">
+      </label>
+      <label class="ctrl"><span class="lbl">セット <output id="out-s">10</output> 回</span>
+        <input type="range" id="in-s" min="4" max="20" value="10">
+      </label>
+      <button class="run" id="btn-run">試合表を生成</button>
+    </div>
+    <p class="muted" id="demo-note"></p>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="tabs" role="tablist" aria-label="表示する試合表">
+      <button id="tab-opt" aria-pressed="true">最適化あり</button>
+      <button id="tab-rnd" aria-pressed="false">ランダム配置（比較用）</button>
+    </div>
+
+    <h4>共起ヒートマップ <span class="muted">— i 行 j 列 = 参加者 i と j が同コートになった回数</span></h4>
+    <div class="gridwrap" id="heat"></div>
+
+    <h4>出場回数</h4>
+    <div class="chips" id="plays"></div>
+
+    <h4>試合表 <span class="muted">— 数字は参加者番号。「・」がチーム、「vs」がコート内の対戦</span></h4>
+    <div class="gridwrap" id="sched"></div>
+  </div>
+
+  <p class="muted">
+    デモは学習用の簡略版です（固定ペア・休み組反復回避・セット追加などは省略）。
+    本物の実装は backend の <code>MatchingDomainService.java</code> にあり、
+    構造はこのページで説明したとおりです。
+  </p>
+</section>
+
+<!-- ================================================================ -->
+<section id="glossary">
+  <h2><span class="no">11</span>用語集とその先へ</h2>
+  <dl class="gloss">
+    <dt>組み合わせ最適化</dt>
+    <dd>有限だが膨大な選択肢の中から、目的関数を最良にする組み合わせを探す問題の総称。時間割・配送ルート・シフト表など、世の中の「割り振り」の多くがこれ。</dd>
+    <dt>ヒューリスティック</dt>
+    <dd>厳密な最適解の保証は捨てて、実用的な時間で十分よい解を見つける方法。組み合わせ爆発する問題への現実解。</dd>
+    <dt>貪欲法（greedy）</dt>
+    <dd>各ステップでその時点の最善を選び続ける戦略。速いが、全体最適の保証はない。</dd>
+    <dt>コスト関数（目的関数）</dt>
+    <dd>解の良し悪しを 1 つの数値にする関数。この設計がアルゴリズムの価値観を決める。凸な重み付けで「偏り」に高い値段を付けるのが今回の要点。</dd>
+    <dt>局所探索・山登り法</dt>
+    <dd>解に小さな変更（近傍への移動）を加え、改善するときだけ受け入れる探索。局所最適で停止する。</dd>
+    <dt>マルチスタート / マルチリスタート</dt>
+    <dd>初期解を変えて探索を何度も走らせ、最良の結果を採用することで局所最適の罠を緩和する方法。</dd>
+    <dt>辞書式比較</dt>
+    <dd>複数の指標を優先順位つきで比べる方法。上位指標で差がつけば下位は見ない。</dd>
+    <dt>Fisher–Yates シャッフル</dt>
+    <dd>全順列を等確率で生成する正しいシャッフル。素朴な自作シャッフルには偏りが出る。</dd>
+    <dt>ソーシャルゴルファー問題</dt>
+    <dd>「毎週グループ分けを変えて、同じ相手との再会を避け続けられるか」という組合せ論の難問。この試合表問題の近縁種。</dd>
+  </dl>
+
+  <h3>さらに学ぶなら</h3>
+  <p>
+    山登り法の発展形として、悪化する移動も確率的に受け入れて局所最適を脱出する
+    <strong>焼きなまし法（simulated annealing）</strong>、最近訪れた解を出入り禁止にして
+    探索を前へ進める<strong>タブーサーチ</strong>、解の集団を交配・淘汰させる
+    <strong>遺伝的アルゴリズム</strong>などがあります。どれも
+    「ランダムに散らして、コストで刈り取る」という本ページの骨格の延長線上にあるので、
+    ここまで読めた人なら入っていけるはずです。
+    題材としては「ソーシャルゴルファー問題」「Kirkman の女学生問題」を調べると、
+    この試合表問題の数学的なルーツに触れられます。
+  </p>
+</section>
+
+<footer class="site-foot">
+  <a href="/about">← ShuttleMatch について</a>
+  <a href="/">ルーム一覧へ</a>
+  <span>ShuttleMatch — 試合表生成アルゴリズム解説</span>
+</footer>
+
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- アルゴリズム（本文の簡略版実装。変数名は本文の用語に合わせている） ----------
+
+  const FIRST_MEET_BONUS = 2;
+  const REST_CAP_PENALTY = 1e15;
+  const MAX_CONSECUTIVE_REST = 2;
+
+  function pairCost(c, convex) {
+    if (c === 0) return -FIRST_MEET_BONUS;
+    return convex ? Math.pow(4, Math.min(c, 20)) - 1 : c;
+  }
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+  }
+
+  // コート割りのコスト: 各コート4人の6ペアぶんの pairCost 合計
+  function arrangementCost(arr, courts, co, convex) {
+    let cost = 0;
+    for (let ct = 0; ct < courts; ct++) {
+      const base = ct * 4;
+      for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) {
+        cost += pairCost(co[arr[base + i]][arr[base + j]], convex);
+      }
+    }
+    return cost;
+  }
+
+  // 山登り法: 別コートの2人のスワップで改善が止まるまで下る
+  function hillClimb(arr, courts, co, convex) {
+    let cost = arrangementCost(arr, courts, co, convex);
+    let improved = true;
+    while (improved) {
+      improved = false;
+      for (let i = 0; i < arr.length; i++) for (let j = i + 1; j < arr.length; j++) {
+        if ((i >> 2) === (j >> 2)) continue; // 同一コート内の入替はコスト不変
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+        const c2 = arrangementCost(arr, courts, co, convex);
+        if (c2 < cost) { cost = c2; improved = true; }
+        else [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+    return cost;
+  }
+
+  // マルチスタート山登り法
+  function bestArrangement(selected, courts, co, starts, convex) {
+    let best = null, bestCost = Infinity;
+    for (let t = 0; t < starts; t++) {
+      const arr = selected.slice();
+      shuffle(arr);
+      const cost = hillClimb(arr, courts, co, convex);
+      if (cost < bestCost) { bestCost = cost; best = arr; }
+    }
+    return { arr: best, cost: bestCost };
+  }
+
+  // 選ばれた全員の総当たり共起コスト(選抜の主評価)
+  function selectionCost(sel, co, convex) {
+    let cost = 0;
+    for (let i = 0; i < sel.length; i++) for (let j = i + 1; j < sel.length; j++) {
+      cost += pairCost(co[sel[i]][sel[j]], convex);
+    }
+    return cost;
+  }
+
+  // 公平な輪番で1候補選ぶ。mixing 時は出場回数のみ、通常は(出場回数, 連続出場)。
+  function pickOne(n, required, play, consec, mixing) {
+    const arr = Array.from({ length: n }, (_, i) => i);
+    shuffle(arr);
+    arr.sort(mixing
+      ? (a, b) => play[a] - play[b]
+      : (a, b) => play[a] - play[b] || consec[a] - consec[b]);
+    return arr.slice(0, required);
+  }
+
+  // 顔ぶれ候補を集めて共起コスト最小のものを選ぶ(6章)。optimize=false なら輪番のみ。
+  function pickPlayers(n, required, courts, st, optimize) {
+    const mixing = n >= 2 * required;
+    if (!optimize) return pickOne(n, required, st.play, st.consec, false);
+
+    const cands = new Map();
+    for (let t = 0; t < 40 && cands.size < 12; t++) {
+      const sel = pickOne(n, required, st.play, st.consec, mixing);
+      cands.set(sel.slice().sort((a, b) => a - b).join(','), sel);
+    }
+    const convex = !mixing;
+    let best = null, bestP = Infinity, bestS = Infinity;
+    for (const sel of cands.values()) {
+      let primary = selectionCost(sel, st.co, convex);
+      if (mixing) {
+        const inSel = new Set(sel);
+        for (let p = 0; p < n; p++) {
+          if (!inSel.has(p) && st.rests[p] >= MAX_CONSECUTIVE_REST) primary += REST_CAP_PENALTY;
+        }
+      }
+      if (primary > bestP) continue;
+      const secondary = bestArrangement(sel, courts, st.co, 3, convex).cost;
+      if (primary < bestP || secondary < bestS) { bestP = primary; bestS = secondary; best = sel; }
+    }
+    return best;
+  }
+
+  // 試合表を1本生成する(3章のパイプライン)。optimize=false が比較用のランダム配置。
+  function buildSchedule(n, courts, sets, optimize) {
+    const required = 4 * courts;
+    const mixing = n >= 2 * required;
+    const st = {
+      play: new Array(n).fill(0),
+      consec: new Array(n).fill(0),
+      rests: new Array(n).fill(0),
+      co: Array.from({ length: n }, () => new Array(n).fill(0)),
+    };
+    const schedule = [];
+    for (let s = 0; s < sets; s++) {
+      const sel = pickPlayers(n, required, courts, st, optimize);
+      let arr;
+      if (optimize) {
+        arr = bestArrangement(sel, courts, st.co, 8, !mixing).arr;
+      } else {
+        arr = sel.slice();
+        shuffle(arr);
+      }
+      // 共起履歴と出場状態を更新して次のセットへ
+      const playing = new Set(arr);
+      for (let ct = 0; ct < courts; ct++) {
+        const four = arr.slice(ct * 4, ct * 4 + 4);
+        for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) {
+          st.co[four[i]][four[j]]++; st.co[four[j]][four[i]]++;
+        }
+      }
+      for (let p = 0; p < n; p++) {
+        if (playing.has(p)) { st.play[p]++; st.consec[p]++; st.rests[p] = 0; }
+        else { st.consec[p] = 0; st.rests[p]++; }
+      }
+      schedule.push({ courts: Array.from({ length: courts }, (_, ct) => arr.slice(ct * 4, ct * 4 + 4)),
+                      rest: Array.from({ length: n }, (_, p) => p).filter(p => !playing.has(p)) });
+    }
+    return { schedule, co: st.co, play: st.play };
+  }
+
+  // 出来上がりの品質: {最大共起, 未共起ペア数, 2乗和} (8章の辞書式比較)
+  function quality(n, co) {
+    let maxCo = 0, neverMet = 0, sumSq = 0;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const c = co[i][j];
+      maxCo = Math.max(maxCo, c);
+      if (c === 0) neverMet++;
+      sumSq += c * c;
+    }
+    return [maxCo, neverMet, sumSq];
+  }
+
+  function lexLess(a, b) {
+    for (let i = 0; i < a.length; i++) { if (a[i] !== b[i]) return a[i] < b[i]; }
+    return false;
+  }
+
+  // マルチリスタート: 全体を restarts 回生成し、品質の辞書式比較で最良を採用
+  function generate(n, courts, sets, optimize) {
+    const restarts = optimize ? 4 : 1;
+    let best = null, bestQ = null;
+    for (let r = 0; r < restarts; r++) {
+      const cand = buildSchedule(n, courts, sets, optimize);
+      const q = quality(n, cand.co);
+      if (!best || lexLess(q, bestQ)) { best = cand; bestQ = q; }
+    }
+    return { ...best, q: bestQ };
+  }
+
+  // ---------- UI ----------
+
+  const $ = (id) => document.getElementById(id);
+  const heatLight = ['#f1f5f9', '#d4e0ef', '#a9c0dd', '#7196c3', '#3d68a2', '#1d4685', '#0b2c58'];
+  const heatDark  = ['#18243a', '#123a70', '#1d4685', '#3d68a2', '#7196c3', '#a9c0dd', '#d4e0ef'];
+  const darkMode = () => window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  let result = null; // { opt, rnd }
+  let view = 'opt';
+
+  function fmt(x) { return x.toLocaleString('ja-JP'); }
+
+  function stdev(n, co, sets, courts) {
+    const pairs = n * (n - 1) / 2;
+    const total = sets * courts * 6;           // 共起の総増分は一定(8章)
+    const mean = total / pairs;
+    let ss = 0;
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) ss += (co[i][j] - mean) ** 2;
+    return Math.sqrt(ss / pairs);
+  }
+
+  function renderStats(n, sets, courts) {
+    const qo = result.opt.q, qr = result.rnd.q;
+    const so = stdev(n, result.opt.co, sets, courts), sr = stdev(n, result.rnd.co, sets, courts);
+    const pairs = n * (n - 1) / 2;
+    const rows = [
+      { k: '最大共起回数', o: qo[0], r: qr[0], better: qo[0] < qr[0] },
+      { k: '未共起ペア', o: qo[1] + ' / ' + pairs, r: qr[1] + ' / ' + pairs, better: qo[1] < qr[1] },
+      { k: '共起のばらつき(標準偏差)', o: so.toFixed(2), r: sr.toFixed(2), better: so < sr - 1e-9 },
+      { k: '出場回数の差', o: Math.max(...result.opt.play) - Math.min(...result.opt.play),
+        r: Math.max(...result.rnd.play) - Math.min(...result.rnd.play), better: false },
+    ];
+    $('stats').innerHTML = rows.map(x => `
+      <div class="stat">
+        <div class="k">${x.k}</div>
+        <div class="v">${fmt2(x.o)}${x.better ? '<span class="better">▼改善</span>' : ''}</div>
+        <div class="sub">ランダム配置: ${fmt2(x.r)}</div>
+      </div>`).join('');
+    function fmt2(v) { return typeof v === 'number' ? fmt(v) : v; }
+  }
+
+  function renderHeat(n, co) {
+    const ramp = darkMode() ? heatDark : heatLight;
+    const maxC = Math.max(1, ...co.flat());
+    let html = '<table class="heat"><tr><th></th>';
+    for (let j = 0; j < n; j++) html += `<th scope="col">${j + 1}</th>`;
+    html += '</tr>';
+    for (let i = 0; i < n; i++) {
+      html += `<tr><th scope="row">${i + 1}</th>`;
+      for (let j = 0; j < n; j++) {
+        if (i === j) { html += '<td class="diag"></td>'; continue; }
+        const c = co[i][j];
+        const idx = c === 0 ? 0 : Math.min(ramp.length - 1, 1 + Math.floor((c - 1) / Math.max(1, maxC - 1) * (ramp.length - 2)));
+        const bg = ramp[idx];
+        const light = darkMode() ? idx >= 4 : idx <= 2;   // 明るいセルか(文字色の切替)
+        const ink = light ? (darkMode() ? '#0b1220' : '#46536b') : (darkMode() ? '#e6ecf6' : '#ffffff');
+        html += `<td style="background:${bg};color:${ink}" title="参加者${i + 1} × 参加者${j + 1}: ${c}回">${c || ''}</td>`;
+      }
+      html += '</tr>';
+    }
+    $('heat').innerHTML = html + '</table>';
+  }
+
+  function renderPlays(play) {
+    $('plays').innerHTML = play.map((c, p) => `<span class="chip">${p + 1}: ${c}回</span>`).join('');
+  }
+
+  function renderSched(data, courts) {
+    let html = '<table class="sched"><tr><th>セット</th>';
+    for (let c = 1; c <= courts; c++) html += `<th>コート${c}</th>`;
+    html += '<th>休み</th></tr>';
+    data.schedule.forEach((set, i) => {
+      html += `<tr><th>${i + 1}</th>`;
+      for (const four of set.courts) {
+        html += `<td><span class="pr">${four[0] + 1}・${four[1] + 1}</span><span class="vs">vs</span><span class="pr">${four[2] + 1}・${four[3] + 1}</span></td>`;
+      }
+      html += `<td class="rest">${set.rest.map(p => p + 1).join(', ') || '—'}</td></tr>`;
+    });
+    $('sched').innerHTML = html + '</table>';
+  }
+
+  function renderAll() {
+    if (!result) return;
+    const n = +$('in-n').value, courts = +$('in-c').value, sets = +$('in-s').value;
+    const data = view === 'opt' ? result.opt : result.rnd;
+    renderStats(n, sets, courts);
+    renderHeat(n, data.co);
+    renderPlays(data.play);
+    renderSched(data, courts);
+    $('tab-opt').setAttribute('aria-pressed', view === 'opt');
+    $('tab-rnd').setAttribute('aria-pressed', view === 'rnd');
+  }
+
+  function clampCourts() {
+    const n = +$('in-n').value;
+    const maxCourts = Math.max(1, Math.floor(n / 4));
+    const inC = $('in-c');
+    if (+inC.value > maxCourts) inC.value = maxCourts;
+    $('out-n').textContent = n;
+    $('out-c').textContent = inC.value;
+    $('out-s').textContent = $('in-s').value;
+    const required = 4 * +inC.value;
+    $('demo-note').textContent = n >= 2 * required
+      ? '休み人数 ≧ 出場人数なので混ぜモード(9章)が発動する構成です。'
+      : (n === required ? '全員出場の構成です(休みなし)。' : '');
+  }
+
+  function run() {
+    clampCourts();
+    const n = +$('in-n').value, courts = +$('in-c').value, sets = +$('in-s').value;
+    result = { opt: generate(n, courts, sets, true), rnd: generate(n, courts, sets, false) };
+    renderAll();
+  }
+
+  ['in-n', 'in-c', 'in-s'].forEach(id => $(id).addEventListener('input', clampCourts));
+  $('btn-run').addEventListener('click', run);
+  $('tab-opt').addEventListener('click', () => { view = 'opt'; renderAll(); });
+  $('tab-rnd').addEventListener('click', () => { view = 'rnd'; renderAll(); });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderAll);
+
+  clampCourts();
+  run();
+})();
+</script>
+</body>
+</html>

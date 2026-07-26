@@ -194,6 +194,13 @@ function AboutPage() {
                 <p className="mt-3 text-sm text-slate-400">
                   後ろで跳ねている15個の玉が、その様子です。
                 </p>
+                {/* 静的解説ページ(public/about/algorithm.html)なので Link ではなく a で遷移する */}
+                <a
+                  href="/about/algorithm"
+                  className="mt-5 inline-block text-sm font-semibold text-brand-300 underline-offset-4 hover:underline"
+                >
+                  アルゴリズムの中身をゼロから学ぶ →
+                </a>
               </Glass>
             </Reveal>
           </div>
