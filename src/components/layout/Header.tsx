@@ -122,6 +122,7 @@ export function Header() {
                     <Gamepad2 className="h-4 w-4 text-slate-400" />
                     ミニゲーム
                   </Link>
+                  <div className="my-2 border-t border-slate-100" />
                   <Link
                     to="/releases"
                     onClick={close}
@@ -130,7 +131,6 @@ export function Header() {
                     <Megaphone className="h-4 w-4 text-slate-400" />
                     リリースノート
                   </Link>
-                  <div className="my-2 border-t border-slate-100" />
                   <Link
                     to="/about"
                     onClick={close}
