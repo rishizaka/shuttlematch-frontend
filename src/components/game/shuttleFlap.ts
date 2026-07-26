@@ -7,30 +7,29 @@
  * - 描画はすべて canvas。React の再レンダリングはスコア更新等のコールバック経由のみ
  *
  * 10点ごとにレベルアップ: ステージテーマ(背景・ネットの配色)がクロスフェードで切り替わり、
- * スピードが一段速く・すき間が一段狭くなる。レベル4からはネットが上下に揺れ始める。
+ * スピードが一段速く・すき間が一段狭くなる。レベル3からはネットが上下に揺れ始める。
  *
  * 座標系は論理幅 360 固定で、高さはキャンバスのアスペクト比から導出する。
  * デバイスピクセル比は setTransform で吸収する。
  */
+import {
+  createThemeMixer,
+  css,
+  cssA,
+  drawGymBackground,
+  drawLevelBanner,
+  drawShuttleSprite,
+  themeForLevel,
+} from './shared'
+import type {
+  GamePhase,
+  MiniGameCallbacks,
+  MiniGameHandle,
+  MiniGameOptions,
+  Theme,
+} from './shared'
 
-export type GamePhase = 'ready' | 'playing' | 'over'
-
-export interface ShuttleFlapCallbacks {
-  onPhaseChange?: (phase: GamePhase) => void
-  onScore?: (score: number) => void
-  onGameOver?: (score: number) => void
-}
-
-export interface ShuttleFlapOptions {
-  /** デバッグ用: このスコアから開始する(レベル・テーマ確認用。通常は 0)。 */
-  startScore?: number
-}
-
-export interface ShuttleFlapHandle {
-  /** 結果画面から「もう一回」。ready 状態に戻す。 */
-  restart: () => void
-  dispose: () => void
-}
+export type { GamePhase, MiniGameHandle as ShuttleFlapHandle }
 
 /** 10点ごとにレベルアップ(スコア0〜9がレベル1)。 */
 export const levelOf = (score: number) => Math.floor(score / 10) + 1
@@ -48,103 +47,12 @@ const MAX_SPEED = 285
 const GAP_START = 188
 const GAP_MIN = 142
 
-// ---- ステージテーマ(レベルごとに循環) ---------------------------------
-
-type RGB = readonly [number, number, number]
-
-interface Theme {
-  name: string
-  wallTop: RGB
-  wallBottom: RGB
-  window: RGB
-  windowAlpha: number
-  floorTop: RGB
-  floorBottom: RGB
-  net: RGB
-  netGrid: RGB
-  netPole: RGB
-}
-
-const THEMES: Theme[] = [
-  {
-    name: '昼の体育館',
-    wallTop: [234, 243, 249],
-    wallBottom: [211, 228, 239],
-    window: [255, 255, 255],
-    windowAlpha: 0.55,
-    floorTop: [227, 183, 110],
-    floorBottom: [201, 152, 80],
-    net: [29, 70, 133],
-    netGrid: [169, 192, 221],
-    netPole: [11, 44, 88],
-  },
-  {
-    name: '夕焼け',
-    wallTop: [255, 227, 194],
-    wallBottom: [255, 158, 122],
-    window: [255, 247, 230],
-    windowAlpha: 0.6,
-    floorTop: [207, 147, 80],
-    floorBottom: [168, 112, 58],
-    net: [138, 47, 79],
-    netGrid: [232, 169, 187],
-    netPole: [87, 29, 51],
-  },
-  {
-    name: 'ナイター',
-    wallTop: [22, 33, 62],
-    wallBottom: [11, 19, 48],
-    window: [255, 217, 122],
-    windowAlpha: 0.5,
-    floorTop: [122, 90, 51],
-    floorBottom: [90, 63, 34],
-    net: [20, 125, 138],
-    netGrid: [159, 219, 224],
-    netPole: [10, 61, 68],
-  },
-  {
-    name: 'ネオン',
-    wallTop: [42, 15, 69],
-    wallBottom: [18, 7, 31],
-    window: [255, 122, 217],
-    windowAlpha: 0.4,
-    floorTop: [74, 47, 107],
-    floorBottom: [51, 32, 74],
-    net: [192, 38, 211],
-    netGrid: [240, 171, 252],
-    netPole: [112, 26, 117],
-  },
-  {
-    name: '夜明け',
-    wallTop: [207, 232, 255],
-    wallBottom: [255, 217, 232],
-    window: [255, 255, 255],
-    windowAlpha: 0.5,
-    floorTop: [227, 183, 110],
-    floorBottom: [201, 152, 80],
-    net: [61, 104, 162],
-    netGrid: [169, 192, 221],
-    netPole: [11, 44, 88],
-  },
-]
-
-const themeForLevel = (level: number) => THEMES[(level - 1) % THEMES.length]
-
-const mixRGB = (a: RGB, b: RGB, t: number): RGB => [
-  Math.round(a[0] + (b[0] - a[0]) * t),
-  Math.round(a[1] + (b[1] - a[1]) * t),
-  Math.round(a[2] + (b[2] - a[2]) * t),
-]
-const css = (c: RGB) => `rgb(${c[0]},${c[1]},${c[2]})`
-const cssA = (c: RGB, a: number) => `rgba(${c[0]},${c[1]},${c[2]},${a})`
-const easeInOut = (t: number) => t * t * (3 - 2 * t)
-
 interface Net {
   x: number
   baseGapY: number // すき間の上端(揺れの中心)
   gapY: number
   gapH: number
-  amp: number // 上下の揺れ幅(レベル4未満は 0)
+  amp: number // 上下の揺れ幅(レベル3未満は 0)
   phase: number
   passed: boolean
 }
@@ -164,9 +72,9 @@ interface Particle {
 
 export function createShuttleFlapGame(
   canvas: HTMLCanvasElement,
-  cb: ShuttleFlapCallbacks = {},
-  opts: ShuttleFlapOptions = {},
-): ShuttleFlapHandle {
+  cb: MiniGameCallbacks = {},
+  opts: MiniGameOptions = {},
+): MiniGameHandle {
   const ctx = canvas.getContext('2d')
   if (!ctx) return { restart: () => {}, dispose: () => {} }
 
@@ -189,33 +97,7 @@ export function createShuttleFlapGame(
   let last = 0
   let disposed = false
 
-  // テーマはクロスフェードで切り替える
-  let themeFrom: Theme = themeForLevel(1)
-  let themeTo: Theme = themeForLevel(1)
-  let themeT = 1
-
-  const resolveTheme = (): Theme => {
-    if (themeT >= 1) return themeTo
-    const t = easeInOut(themeT)
-    return {
-      name: themeTo.name,
-      wallTop: mixRGB(themeFrom.wallTop, themeTo.wallTop, t),
-      wallBottom: mixRGB(themeFrom.wallBottom, themeTo.wallBottom, t),
-      window: mixRGB(themeFrom.window, themeTo.window, t),
-      windowAlpha: themeFrom.windowAlpha + (themeTo.windowAlpha - themeFrom.windowAlpha) * t,
-      floorTop: mixRGB(themeFrom.floorTop, themeTo.floorTop, t),
-      floorBottom: mixRGB(themeFrom.floorBottom, themeTo.floorBottom, t),
-      net: mixRGB(themeFrom.net, themeTo.net, t),
-      netGrid: mixRGB(themeFrom.netGrid, themeTo.netGrid, t),
-      netPole: mixRGB(themeFrom.netPole, themeTo.netPole, t),
-    }
-  }
-
-  const transitionTheme = (lv: number) => {
-    themeFrom = resolveTheme()
-    themeTo = themeForLevel(lv)
-    themeT = 0
-  }
+  const theme = createThemeMixer(1)
 
   const setPhase = (p: GamePhase) => {
     phase = p
@@ -234,7 +116,7 @@ export function createShuttleFlapGame(
     shuttleY = Math.min(shuttleY, LH - FLOOR_H - SHUTTLE_R)
   }
 
-  const toReady = () => {
+  const toReady = (instantTheme = false) => {
     score = startScore
     level = levelOf(score)
     nets = []
@@ -242,7 +124,7 @@ export function createShuttleFlapGame(
     shuttleY = LH * 0.42
     shuttleVy = 0
     levelUpAt = -10
-    transitionTheme(level)
+    theme.set(level, instantTheme)
     if (startScore > 0) cb.onScore?.(score)
     setPhase('ready')
   }
@@ -333,7 +215,7 @@ export function createShuttleFlapGame(
 
   const update = (dt: number) => {
     elapsed += dt
-    themeT = Math.min(themeT + dt / 0.9, 1)
+    theme.update(dt)
 
     if (phase === 'playing') {
       scrollX += speed() * dt
@@ -361,7 +243,7 @@ export function createShuttleFlapGame(
           if (lv !== level) {
             level = lv
             levelUpAt = elapsed
-            transitionTheme(lv)
+            theme.set(lv)
           }
         }
       }
@@ -404,54 +286,6 @@ export function createShuttleFlapGame(
   }
 
   // ---- draw ------------------------------------------------------------
-
-  const drawBackground = (th: Theme) => {
-    // 体育館の壁
-    const wall = ctx.createLinearGradient(0, 0, 0, LH)
-    wall.addColorStop(0, css(th.wallTop))
-    wall.addColorStop(1, css(th.wallBottom))
-    ctx.fillStyle = wall
-    ctx.fillRect(0, 0, LW, LH)
-
-    // 高窓(ゆっくりパララックス)。夜のテーマでは灯りに見える
-    ctx.fillStyle = cssA(th.window, th.windowAlpha)
-    const winW = 74
-    const period = 190
-    const off = (scrollX * 0.25) % period
-    for (let x = -off; x < LW + winW; x += period) {
-      ctx.beginPath()
-      ctx.roundRect(x, LH * 0.1, winW, 58, 6)
-      ctx.fill()
-    }
-
-    // 壁の腰板ライン
-    ctx.fillStyle = cssA(th.netPole, 0.12)
-    ctx.fillRect(0, LH - FLOOR_H - 66, LW, 66)
-
-    // 床(体育館の木目)
-    const floorY = LH - FLOOR_H
-    const floor = ctx.createLinearGradient(0, floorY, 0, LH)
-    floor.addColorStop(0, css(th.floorTop))
-    floor.addColorStop(1, css(th.floorBottom))
-    ctx.fillStyle = floor
-    ctx.fillRect(0, floorY, LW, FLOOR_H)
-
-    // コートライン
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, floorY, LW, 4)
-
-    // 床板の継ぎ目(スクロール)
-    ctx.strokeStyle = 'rgba(30,20,8,0.25)'
-    ctx.lineWidth = 1.5
-    const seam = 92
-    const seamOff = scrollX % seam
-    for (let x = -seamOff; x < LW; x += seam) {
-      ctx.beginPath()
-      ctx.moveTo(x, floorY + 6)
-      ctx.lineTo(x - 14, LH)
-      ctx.stroke()
-    }
-  }
 
   const drawNetColumn = (
     th: Theme,
@@ -514,47 +348,7 @@ export function createShuttleFlapGame(
     ctx.save()
     ctx.translate(SHUTTLE_X, shuttleY)
     ctx.rotate(angle)
-
-    // 羽根(スカート): コルクの後ろに広がる台形
-    ctx.beginPath()
-    ctx.moveTo(2, -4)
-    ctx.lineTo(-20, -12)
-    ctx.lineTo(-20, 12)
-    ctx.lineTo(2, 4)
-    ctx.closePath()
-    ctx.fillStyle = '#ffffff'
-    ctx.fill()
-    ctx.strokeStyle = '#c5cfdd'
-    ctx.lineWidth = 1.5
-    ctx.stroke()
-    // 羽根の筋
-    ctx.strokeStyle = '#d9e1eb'
-    ctx.lineWidth = 1
-    for (const dy of [-6, 0, 6]) {
-      ctx.beginPath()
-      ctx.moveTo(1, dy * 0.45)
-      ctx.lineTo(-19, dy * 1.6)
-      ctx.stroke()
-    }
-    // 後端の縁
-    ctx.beginPath()
-    ctx.moveTo(-20, -12)
-    ctx.lineTo(-20, 12)
-    ctx.strokeStyle = '#aebccf'
-    ctx.lineWidth = 2
-    ctx.stroke()
-
-    // 赤帯 + コルク
-    ctx.fillStyle = '#e05252'
-    ctx.fillRect(2, -5.5, 4, 11)
-    ctx.beginPath()
-    ctx.arc(9, 0, 6.5, 0, Math.PI * 2)
-    ctx.fillStyle = '#f5e3c8'
-    ctx.fill()
-    ctx.strokeStyle = '#d9bd91'
-    ctx.lineWidth = 1.5
-    ctx.stroke()
-
+    drawShuttleSprite(ctx)
     ctx.restore()
   }
 
@@ -598,28 +392,9 @@ export function createShuttleFlapGame(
         ctx.fillText(`LV.${level}`, LW / 2, 100)
       }
 
-      // レベルアップバナー
-      const sinceLv = elapsed - levelUpAt
-      if (sinceLv >= 0 && sinceLv < 1.4) {
-        const p = sinceLv / 1.4
-        const pop = 1 + 0.35 * Math.exp(-6 * p)
-        ctx.save()
-        ctx.globalAlpha = p < 0.75 ? 1 : (1 - p) / 0.25
-        ctx.translate(LW / 2, LH * 0.32)
-        ctx.scale(pop, pop)
-        ctx.font = '800 36px system-ui, sans-serif'
-        ctx.lineWidth = 7
-        ctx.strokeStyle = 'rgba(0,20,51,0.6)'
-        ctx.fillStyle = '#ffffff'
-        ctx.strokeText(`LEVEL ${level}`, 0, 0)
-        ctx.fillText(`LEVEL ${level}`, 0, 0)
-        ctx.font = '700 14px system-ui, sans-serif'
-        ctx.lineWidth = 4
-        const sub = level >= 3 ? `${themeForLevel(level).name} — ネットが揺れる!` : themeForLevel(level).name
-        ctx.strokeText(sub, 0, 24)
-        ctx.fillText(sub, 0, 24)
-        ctx.restore()
-      }
+      const sub =
+        level >= 3 ? `${themeForLevel(level).name} — ネットが揺れる!` : themeForLevel(level).name
+      drawLevelBanner(ctx, LW, LH, level, elapsed - levelUpAt, sub)
     } else {
       // ready 画面
       const bounce = Math.sin(elapsed * 3.2) * 4
@@ -635,9 +410,9 @@ export function createShuttleFlapGame(
   }
 
   const draw = () => {
-    const th = resolveTheme()
+    const th = theme.current()
     ctx.setTransform(scale, 0, 0, scale, 0, 0)
-    drawBackground(th)
+    drawGymBackground(ctx, th, LW, LH, FLOOR_H, scrollX)
     drawNets(th)
     drawParticles()
     drawShuttle()
@@ -672,8 +447,7 @@ export function createShuttleFlapGame(
   window.addEventListener('keydown', onKeyDown)
 
   resize()
-  toReady()
-  themeT = 1 // 初期表示はフェードなしで即テーマ適用
+  toReady(true) // 初期表示はフェードなしで即テーマ適用
   last = performance.now()
   raf = requestAnimationFrame(loop)
 
