@@ -248,10 +248,11 @@ export function createShuttleFlapGame(
   }
 
   // レベルが上がるごとに一段速く・狭く。レベル内でも1点ごとにわずかに加速する。
-  const speed = () => Math.min(BASE_SPEED + score * 1.2 + (level - 1) * 14, MAX_SPEED)
-  const gapH = () => Math.max(GAP_START - (level - 1) * 11, GAP_MIN)
-  // レベル4からネットが上下に揺れ始め、以降じわじわ大きくなる
-  const oscAmp = () => (level >= 4 ? Math.min(10 + (level - 4) * 4, 26) : 0)
+  // 序盤が優しすぎたため難易度は1レベル前倒し(レベル1が旧レベル2相当)。
+  const speed = () => Math.min(BASE_SPEED + score * 1.2 + level * 14, MAX_SPEED)
+  const gapH = () => Math.max(GAP_START - level * 11, GAP_MIN)
+  // レベル3からネットが上下に揺れ始め、以降じわじわ大きくなる
+  const oscAmp = () => (level >= 3 ? Math.min(10 + (level - 3) * 4, 26) : 0)
 
   const spawnNet = (x: number) => {
     const g = gapH()
@@ -614,7 +615,7 @@ export function createShuttleFlapGame(
         ctx.fillText(`LEVEL ${level}`, 0, 0)
         ctx.font = '700 14px system-ui, sans-serif'
         ctx.lineWidth = 4
-        const sub = level >= 4 ? `${themeForLevel(level).name} — ネットが揺れる!` : themeForLevel(level).name
+        const sub = level >= 3 ? `${themeForLevel(level).name} — ネットが揺れる!` : themeForLevel(level).name
         ctx.strokeText(sub, 0, 24)
         ctx.fillText(sub, 0, 24)
         ctx.restore()
