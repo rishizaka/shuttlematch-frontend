@@ -18,6 +18,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoomsRoomIdRouteImport } from './routes/rooms/$roomId'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as JoinRoomIdRouteImport } from './routes/join.$roomId'
+import { Route as GameRainRouteImport } from './routes/game_.rain'
+import { Route as GameFlapRouteImport } from './routes/game_.flap'
 import { Route as RoomsRoomIdMatchesRouteImport } from './routes/rooms/$roomId_.matches'
 import { Route as OrganizerRoomsNewRouteImport } from './routes/organizer/rooms.new'
 import { Route as RoomsRoomIdMatchesPrintRouteImport } from './routes/rooms/$roomId_.matches_.print'
@@ -67,6 +69,16 @@ const JoinRoomIdRoute = JoinRoomIdRouteImport.update({
   path: '/join/$roomId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GameRainRoute = GameRainRouteImport.update({
+  id: '/game_/rain',
+  path: '/game/rain',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GameFlapRoute = GameFlapRouteImport.update({
+  id: '/game_/flap',
+  path: '/game/flap',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoomsRoomIdMatchesRoute = RoomsRoomIdMatchesRouteImport.update({
   id: '/rooms/$roomId_/matches',
   path: '/rooms/$roomId/matches',
@@ -90,6 +102,8 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
   '/signup': typeof SignupRoute
+  '/game/flap': typeof GameFlapRoute
+  '/game/rain': typeof GameRainRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
@@ -104,6 +118,8 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
   '/signup': typeof SignupRoute
+  '/game/flap': typeof GameFlapRoute
+  '/game/rain': typeof GameRainRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
@@ -119,6 +135,8 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
   '/signup': typeof SignupRoute
+  '/game_/flap': typeof GameFlapRoute
+  '/game_/rain': typeof GameRainRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
@@ -135,6 +153,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/past'
     | '/signup'
+    | '/game/flap'
+    | '/game/rain'
     | '/join/$roomId'
     | '/r/$code'
     | '/rooms/$roomId'
@@ -149,6 +169,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/past'
     | '/signup'
+    | '/game/flap'
+    | '/game/rain'
     | '/join/$roomId'
     | '/r/$code'
     | '/rooms/$roomId'
@@ -163,6 +185,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/past'
     | '/signup'
+    | '/game_/flap'
+    | '/game_/rain'
     | '/join/$roomId'
     | '/r/$code'
     | '/rooms/$roomId'
@@ -178,6 +202,8 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PastRoute: typeof PastRoute
   SignupRoute: typeof SignupRoute
+  GameFlapRoute: typeof GameFlapRoute
+  GameRainRoute: typeof GameRainRoute
   JoinRoomIdRoute: typeof JoinRoomIdRoute
   RCodeRoute: typeof RCodeRoute
   RoomsRoomIdRoute: typeof RoomsRoomIdRoute
@@ -251,6 +277,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinRoomIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/game_/rain': {
+      id: '/game_/rain'
+      path: '/game/rain'
+      fullPath: '/game/rain'
+      preLoaderRoute: typeof GameRainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/game_/flap': {
+      id: '/game_/flap'
+      path: '/game/flap'
+      fullPath: '/game/flap'
+      preLoaderRoute: typeof GameFlapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rooms/$roomId_/matches': {
       id: '/rooms/$roomId_/matches'
       path: '/rooms/$roomId/matches'
@@ -282,6 +322,8 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PastRoute: PastRoute,
   SignupRoute: SignupRoute,
+  GameFlapRoute: GameFlapRoute,
+  GameRainRoute: GameRainRoute,
   JoinRoomIdRoute: JoinRoomIdRoute,
   RCodeRoute: RCodeRoute,
   RoomsRoomIdRoute: RoomsRoomIdRoute,
