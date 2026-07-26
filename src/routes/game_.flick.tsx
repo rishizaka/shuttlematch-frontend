@@ -1,38 +1,38 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, RotateCcw, Share2, Trophy } from 'lucide-react'
-import { coinLevelOf, createCoinDropGame } from '../components/game/coinDrop'
+import { createCoinFlickGame, flickLevelOf } from '../components/game/coinFlick'
 import { AdSlot } from '../components/game/AdSlot'
 import { useToast } from '../components/ui/Toast'
 import type { GamePhase, MiniGameHandle } from '../components/game/shared'
 
-export const Route = createFileRoute('/game_/coin')({
+export const Route = createFileRoute('/game_/flick')({
   head: () => ({
     meta: [
-      { title: '10円ゲーム — 待ち時間のミニゲーム | ShuttleMatch' },
+      { title: '10円はじき — 待ち時間のミニゲーム | ShuttleMatch' },
       {
         name: 'description',
         content:
-          '駄菓子屋の名機を片手で。10円玉をジャンプで操って穴を飛び越え、下まで転がせば10円ゲット。試合の待ち時間にどうぞ。',
+          '駄菓子屋のエレメカ風。長押しチャージで10円玉をはじいて、釘の間を抜けて当たりポケットを狙うミニゲーム。試合の待ち時間にどうぞ。',
       },
     ],
   }),
-  component: CoinPage,
+  component: FlickPage,
 })
 
-const BEST_KEY = 'shuttlematch:coin-drop:best'
+const BEST_KEY = 'shuttlematch:coin-flick:best'
 
 /** スコアに応じた称号。リトライ意欲を出すための小さなご褒美。 */
 function rankOf(score: number): { emoji: string; label: string } {
-  if (score >= 150) return { emoji: '🏆', label: '伝説のコロコロ名人!' }
-  if (score >= 100) return { emoji: '🥇', label: '10円長者' }
-  if (score >= 60) return { emoji: '🥈', label: '駄菓子屋の常連' }
-  if (score >= 30) return { emoji: '🥉', label: 'コツをつかんだ' }
-  if (score >= 10) return { emoji: '🪙', label: 'はじめての10円' }
-  return { emoji: '🐣', label: 'まずは1枚(10円)!' }
+  if (score >= 250) return { emoji: '🏆', label: 'エレメカの神!' }
+  if (score >= 150) return { emoji: '🥇', label: '景品総取り' }
+  if (score >= 100) return { emoji: '🥈', label: '駄菓子屋の常連' }
+  if (score >= 50) return { emoji: '🥉', label: '一発当てた' }
+  if (score >= 10) return { emoji: '🪙', label: 'まずは一勝' }
+  return { emoji: '🐣', label: 'まずは10円!' }
 }
 
-function CoinPage() {
+function FlickPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<MiniGameHandle | null>(null)
   const { showToast } = useToast()
@@ -67,11 +67,11 @@ function CoinPage() {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    // 開発時のみ ?s=40 のように途中スコアから開始できる(レベル・テーマ確認用)
+    // 開発時のみ ?s=60 のように途中スコアから開始できる(レベル・テーマ確認用)
     const startScore = import.meta.env.DEV
       ? Number(new URLSearchParams(window.location.search).get('s')) || 0
       : 0
-    const game = createCoinDropGame(
+    const game = createCoinFlickGame(
       canvas,
       {
         onPhaseChange: (p) => {
@@ -91,12 +91,12 @@ function CoinPage() {
   }, [handleGameOver])
 
   const share = async () => {
-    const lv = coinLevelOf(score)
+    const lv = flickLevelOf(score)
     const text =
       lv >= 2
-        ? `10円ゲームで ${score}円ためた！(レベル${lv})🪙 きみは超えられる？`
-        : `10円ゲームで ${score}円ためた！🪙 きみは超えられる？`
-    const url = 'https://s-match.net/game/coin'
+        ? `10円はじきで ${score}円かせいだ！(レベル${lv})🪙 きみは超えられる？`
+        : `10円はじきで ${score}円かせいだ！🪙 きみは超えられる？`
+    const url = 'https://s-match.net/game/flick'
     if (navigator.share) {
       try {
         await navigator.share({ text, url })
@@ -122,8 +122,8 @@ function CoinPage() {
             <ChevronLeft className="h-3.5 w-3.5" />
             ミニゲーム一覧
           </Link>
-          <h1 className="text-xl font-bold text-slate-900">10円ゲーム</h1>
-          <p className="text-xs text-slate-500">タップでジャンプ。何円ためられる？</p>
+          <h1 className="text-xl font-bold text-slate-900">10円はじき</h1>
+          <p className="text-xs text-slate-500">長押しでチャージ、離して発射。</p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-amber-50 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
           <Trophy className="h-4 w-4" />
@@ -144,9 +144,9 @@ function CoinPage() {
               <p className="text-3xl">{rank.emoji}</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">{rank.label}</p>
               <p className="mt-2 text-4xl font-black text-slate-900">{score}円</p>
-              {coinLevelOf(score) >= 2 ? (
+              {flickLevelOf(score) >= 2 ? (
                 <p className="mt-0.5 text-xs font-semibold text-brand-500">
-                  レベル {coinLevelOf(score)} 到達
+                  レベル {flickLevelOf(score)} 到達
                 </p>
               ) : null}
               {isNewBest ? (
@@ -182,9 +182,9 @@ function CoinPage() {
       <AdSlot />
 
       <p className="text-center text-[11px] leading-relaxed text-slate-400">
-        タップ(またはスペースキー)でジャンプ。赤い縁の穴はハズレ、落ちたらおしまい。
+        長押しでチャージ(ゲージは往復)、離すと発射。弱すぎると「もどり」で1枚損。
         <br />
-        棚を1段降りるごとに +1円、下の「あたり」まで転がせば1盤面で10円。20円ごとにレベルアップします。
+        持ち玉3枚スタート、10円で+1枚・30円で+2枚・50円で+3枚。50円ごとにレベルアップし、レベル2からポケットが動きます。
       </p>
     </div>
   )

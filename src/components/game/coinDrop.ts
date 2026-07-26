@@ -6,14 +6,15 @@
  * クリアするたびに盤面が組み変わり、転がりが速く・穴が増えていく。
  *
  * アレンジ要素:
- * - 20円ごとにレベルアップして、ステージテーマ(他のミニゲームと共通)が切り替わる
- *   (難易度・テーマとも1レベル前倒しで夕焼けスタート)
+ * - ステージテーマ(他のミニゲームと共通)は盤面ごとに切り替わる。1面目が昼で、
+ *   1面クリア後(11円の面)から夕焼け → ナイター → …と進む
+ * - 難易度は20円ごとにレベルアップ(1レベル前倒しのチューニング)
  * - レベル2からは穴が左右にスライドし始める
  * - 10円玉は転がりに合わせて「10」の刻印が回転する
  *
  * 操作はタップ(またはスペース)でジャンプするだけの1ボタン。
  */
-import { createThemeMixer, css, cssA, drawGymBackground, drawLevelBanner, themeForLevel } from './shared'
+import { createThemeMixer, css, cssA, drawGymBackground, drawLevelBanner } from './shared'
 import type { GamePhase, MiniGameCallbacks, MiniGameHandle, MiniGameOptions, Theme } from './shared'
 
 /** 20円ごとにレベルアップ(0〜19円がレベル1)。 */
@@ -118,10 +119,9 @@ export function createCoinDropGame(
   }
 
   // ---- 難易度 ----------------------------------------------------------
-  // 動体視力に自信のある層向けに、1レベル前倒し(レベル1=旧レベル2の夕焼け相当)。
-  // テーマも1つずらして夕焼けスタートにする。
+  // 動体視力に自信のある層向けに、難易度は1レベル前倒し(レベル1=旧レベル2相当)。
+  // テーマは通常どおり昼スタート。
 
-  const stageOf = (lv: number) => lv + 1
   const rollSpeed = () => Math.min(130 + level * 16 + boardsCleared * 6, 250)
   const holeWidth = () => Math.min(34 + (level + 1) * 2, 50)
   const holesPerShelf = (i: number) => (i === 0 ? 1 : Math.min(2 + (level >= 3 ? 1 : 0), 3))
@@ -159,21 +159,23 @@ export function createCoinDropGame(
     maxDepth = 0
   }
 
-  const newBoard = () => {
+  const newBoard = (instantTheme = false) => {
     shelves = Array.from({ length: SHELF_COUNT }, (_, i) => buildShelf(i))
+    // ステージテーマは盤面ごとに進める。1面目が昼、1面クリア後(11円の面)から夕焼け。
+    theme.set(boardsCleared + 1, instantTheme)
     spawnCoin()
   }
 
   const toReady = (instantTheme = false) => {
     score = startScore
     level = coinLevelOf(score)
-    boardsCleared = 0
+    // デバッグ開始(?s=)でも見た目が合うよう、1面=10円として消化済みの面数を推定する
+    boardsCleared = Math.floor(startScore / 10)
     floats = []
     particles = []
     clearingT = 0
     levelUpAt = -10
-    theme.set(stageOf(level), instantTheme)
-    newBoard()
+    newBoard(instantTheme)
     if (startScore > 0) cb.onScore?.(score)
     setPhase('ready')
   }
@@ -185,7 +187,6 @@ export function createCoinDropGame(
     if (lv !== level) {
       level = lv
       levelUpAt = elapsed
-      theme.set(stageOf(lv))
     }
   }
 
@@ -465,10 +466,8 @@ export function createCoinDropGame(
         ctx.strokeText(`LV.${level}`, LW / 2, 92)
         ctx.fillText(`LV.${level}`, LW / 2, 92)
       }
-      const sub =
-        level >= 2
-          ? `${themeForLevel(stageOf(level)).name} — 穴が動く!`
-          : themeForLevel(stageOf(level)).name
+      // テーマ名は盤面ごとに変わるのでバナーには出さず、難易度の変化だけを伝える
+      const sub = level === 2 ? '穴が動きだす!' : level === 3 ? '穴が増える!' : 'スピードアップ!'
       drawLevelBanner(ctx, LW, LH, level, elapsed - levelUpAt, sub)
     } else {
       const bounce = Math.sin(elapsed * 3.2) * 4

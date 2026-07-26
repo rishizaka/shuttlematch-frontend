@@ -36,4 +36,12 @@ export const GAMES: GameEntry[] = [
     description: '駄菓子屋の名機。穴を飛び越え、下まで転がして10円ゲット',
     bestKey: 'shuttlematch:coin-drop:best',
   },
+  {
+    to: '/game/flick',
+    icon: '🎯',
+    iconBg: 'from-emerald-100 to-teal-100',
+    name: '10円はじき',
+    description: 'エレメカ風。長押しチャージではじいて、当たりポケットを狙え',
+    bestKey: 'shuttlematch:coin-flick:best',
+  },
 ]
