@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from '@tanstack/react-router'
-import { History, Home, Menu, X } from 'lucide-react'
+import { History, Home, Info, Menu, X } from 'lucide-react'
 
 /**
  * サイト共通ヘッダー。ロゴとハンバーガーメニューのみ。
@@ -113,6 +113,14 @@ export function Header() {
                   >
                     <History className="h-4 w-4 text-slate-400" />
                     過去の開催
+                  </Link>
+                  <Link
+                    to="/about"
+                    onClick={close}
+                    className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <Info className="h-4 w-4 text-slate-400" />
+                    ShuttleMatch について
                   </Link>
                 </nav>
               </div>
