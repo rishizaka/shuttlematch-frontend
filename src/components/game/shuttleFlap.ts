@@ -7,7 +7,8 @@
  * - 描画はすべて canvas。React の再レンダリングはスコア更新等のコールバック経由のみ
  *
  * 10点ごとにレベルアップ: ステージテーマ(背景・ネットの配色)がクロスフェードで切り替わり、
- * スピードが一段速く・すき間が一段狭くなる。レベル2からはネットが上下に揺れ始める。
+ * スピードが一段速く・すき間が一段狭くなる。レベル2からネットが上下に揺れ始め、
+ * レベル3で揺れが速くなり、レベル4からはすき間の高さそのものが伸び縮みする。
  *
  * 座標系は論理幅 360 固定で、高さはキャンバスのアスペクト比から導出する。
  * デバイスピクセル比は setTransform で吸収する。
@@ -47,13 +48,37 @@ const MAX_SPEED = 285
 const GAP_START = 188
 const GAP_MIN = 142
 
-interface Net {
-  x: number
-  baseGapY: number // すき間の上端(揺れの中心)
-  gapY: number
-  gapH: number
-  amp: number // 上下の揺れ幅(レベル3未満は 0)
+/** すき間の動きを決めるパラメータ。時間を与えると現在の位置が決まる。 */
+export interface NetGapShape {
+  baseGapY: number // 揺れていないときのすき間の上端
+  baseGapH: number // 伸び縮みの中心となる高さ
+  amp: number // すき間の中心が上下に揺れる幅(レベル2未満は 0)
   phase: number
+  breathAmp: number // すき間そのものが伸び縮みする幅(レベル4未満は 0)
+  breathPhase: number
+}
+
+/**
+ * ある時刻のすき間(上端と高さ)。中心が上下に揺れながら、高さ自体も伸び縮みする。
+ * 当たり判定と描画で必ず同じ値を使うため、幾何計算はここに集約する。
+ */
+export function netGapAt(
+  n: NetGapShape,
+  t: number,
+  oscSpeed: number,
+  breathSpeed: number,
+): { gapY: number; gapH: number } {
+  const center =
+    n.baseGapY + n.baseGapH / 2 + (n.amp > 0 ? Math.sin(t * oscSpeed + n.phase) * n.amp : 0)
+  const gapH =
+    n.baseGapH + (n.breathAmp > 0 ? Math.sin(t * breathSpeed + n.breathPhase) * n.breathAmp : 0)
+  return { gapY: center - gapH / 2, gapH }
+}
+
+interface Net extends NetGapShape {
+  x: number
+  gapY: number // 現在のすき間の上端
+  gapH: number // 現在のすき間の高さ
   passed: boolean
 }
 
@@ -134,20 +159,30 @@ export function createShuttleFlapGame(
   const speed = () => Math.min(BASE_SPEED + score * 1.2 + (level + 1) * 14, MAX_SPEED)
   const gapH = () => Math.max(GAP_START - (level + 1) * 11, GAP_MIN)
   // レベル2からネットが上下に揺れ始め、以降じわじわ大きくなる
-  const oscAmp = () => (level >= 2 ? Math.min(10 + (level - 2) * 4, 26) : 0)
+  const oscAmp = () => (level >= 2 ? Math.min(10 + (level - 2) * 5, 30) : 0)
+  // 揺れの速さ。レベル3で一段上がり、以降も少しずつ速くなる
+  const oscSpeed = () => (level >= 3 ? Math.min(2.8 + (level - 3) * 0.3, 4) : 1.9)
+  // レベル4からは、すき間の高さそのものが伸び縮みする
+  const breathAmp = () => (level >= 4 ? Math.min(11 + (level - 4) * 3, 20) : 0)
+  const breathSpeed = () => Math.min(1.5 + (level - 4) * 0.15, 2.4)
 
   const spawnNet = (x: number) => {
     const g = gapH()
     const amp = oscAmp()
-    const margin = 46 + amp
+    const bamp = breathAmp()
+    // 揺れ幅と、いちばん広がったときの高さを見込んで上下に余白を残す
+    const margin = 46 + amp + bamp / 2
     const baseGapY = margin + Math.random() * (LH - FLOOR_H - g - margin * 2)
     nets.push({
       x,
       baseGapY,
       gapY: baseGapY,
       gapH: g,
+      baseGapH: g,
       amp,
       phase: Math.random() * Math.PI * 2,
+      breathAmp: bamp,
+      breathPhase: Math.random() * Math.PI * 2,
       passed: false,
     })
   }
@@ -234,7 +269,11 @@ export function createShuttleFlapGame(
       if (lastNet.x < LW - NET_SPACING) spawnNet(lastNet.x + NET_SPACING)
       for (const n of nets) {
         n.x -= speed() * dt
-        if (n.amp > 0) n.gapY = n.baseGapY + Math.sin(elapsed * 1.9 + n.phase) * n.amp
+        if (n.amp > 0 || n.breathAmp > 0) {
+          const g = netGapAt(n, elapsed, oscSpeed(), breathSpeed())
+          n.gapY = g.gapY
+          n.gapH = g.gapH
+        }
         if (!n.passed && n.x + NET_W < SHUTTLE_X - SHUTTLE_R) {
           n.passed = true
           score += 1
@@ -392,8 +431,17 @@ export function createShuttleFlapGame(
         ctx.fillText(`LV.${level}`, LW / 2, 100)
       }
 
+      const name = themeForLevel(level).name
       const sub =
-        level >= 2 ? `${themeForLevel(level).name} — ネットが揺れる!` : themeForLevel(level).name
+        level === 2
+          ? `${name} — ネットが揺れる!`
+          : level === 3
+            ? `${name} — 揺れが速くなる!`
+            : level === 4
+              ? `${name} — すき間が伸び縮み!`
+              : level >= 5
+                ? `${name} — さらに激しく!`
+                : name
       drawLevelBanner(ctx, LW, LH, level, elapsed - levelUpAt, sub)
     } else {
       // ready 画面
