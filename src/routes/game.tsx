@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronRight, Trophy } from 'lucide-react'
 import { AdSlot } from '../components/game/AdSlot'
+import { GAMES } from '../components/game/catalog'
 
 export const Route = createFileRoute('/game')({
   head: () => ({
@@ -16,42 +17,6 @@ export const Route = createFileRoute('/game')({
   }),
   component: GameHubPage,
 })
-
-interface GameEntry {
-  to: string
-  icon: string
-  iconBg: string
-  name: string
-  description: string
-  bestKey: string
-}
-
-const GAMES: GameEntry[] = [
-  {
-    to: '/game/flap',
-    icon: '🏸',
-    iconBg: 'from-sky-100 to-brand-100',
-    name: 'シャトルフラップ',
-    description: 'タップで浮かせて、ネットのすき間をくぐり抜けろ',
-    bestKey: 'shuttlematch:shuttle-flap:best',
-  },
-  {
-    to: '/game/rain',
-    icon: '☔',
-    iconBg: 'from-orange-100 to-rose-100',
-    name: 'スマッシュレイン',
-    description: '降り注ぐシャトルの雨を、左右によけて生き残れ',
-    bestKey: 'shuttlematch:smash-rain:best',
-  },
-  {
-    to: '/game/coin',
-    icon: '🪙',
-    iconBg: 'from-amber-100 to-yellow-100',
-    name: '10円ゲーム',
-    description: '駄菓子屋の名機。穴を飛び越え、下まで転がして10円ゲット',
-    bestKey: 'shuttlematch:coin-drop:best',
-  },
-]
 
 function GameHubPage() {
   // ベストスコアは localStorage にあるためマウント後に読む(SSR では出さない)

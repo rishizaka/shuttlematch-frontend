@@ -1,13 +1,18 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { ChevronRight } from 'lucide-react'
+import { GAMES } from '../game/catalog'
 
 /** アナウンスを自動で閉じるまでの時間 (ms)。 */
 const AUTO_CLOSE_MS = 5000
+/** 休憩(ミニゲーム導線あり)のときは読む・タップする時間を長めにとる (ms)。 */
+const AUTO_CLOSE_RESTING_MS = 8000
 
 /**
  * セット開始の全画面アナウンス。ポーリングで他端末のセット開始を検知したときに表示する。
  * 参加者が知りたい「自分は出るのか・どのコートか」を通知の中で答える。
  * タップどこでも閉じ、一定時間で自動的に閉じる。
+ * 休憩の人にはミニゲームを1つピックアップして「待ち時間にどうぞ」と誘導する。
  */
 export function SetStartAnnouncement({
   setNumber,
@@ -25,21 +30,24 @@ export function SetStartAnnouncement({
   identified: boolean
   onClose: () => void
 }) {
+  const playing = memberIndexes != null
+  const resting = identified && !playing
+
   useEffect(() => {
-    const timer = setTimeout(onClose, AUTO_CLOSE_MS)
+    const timer = setTimeout(onClose, resting ? AUTO_CLOSE_RESTING_MS : AUTO_CLOSE_MS)
     return () => clearTimeout(timer)
-  }, [onClose])
+  }, [onClose, resting])
 
   // SSR では描画しない(ポーリング検知によりクライアントでのみ開かれる)。
   if (typeof document === 'undefined') return null
 
-  const playing = memberIndexes != null
+  // 休憩のたびに違うゲームを紹介する(セット番号で決定的にローテーション)。
+  const game = GAMES[(setNumber - 1) % GAMES.length]
 
   return createPortal(
-    <button
-      type="button"
+    <div
       onClick={onClose}
-      aria-label="閉じる"
+      role="presentation"
       className="animate-announce-fade fixed inset-0 z-50 flex w-full items-center justify-center bg-slate-900/70 p-6 backdrop-blur-sm"
     >
       <div className="animate-announce-pop w-full max-w-sm rounded-3xl bg-white p-8 text-center shadow-2xl">
@@ -71,14 +79,47 @@ export function SetStartAnnouncement({
             </div>
           </div>
         ) : identified ? (
-          <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-4">
-            <p className="text-xl font-bold text-slate-600">今回は休憩です 🍵</p>
-          </div>
+          <>
+            <div className="mt-6 rounded-2xl bg-slate-50 px-4 py-4">
+              <p className="text-xl font-bold text-slate-600">今回は休憩です 🍵</p>
+            </div>
+            {/* ルーター非依存の <a> で遷移する(ポータル内・テスト簡素化のため)。
+                タップでモーダルが閉じてしまわないよう伝播を止める。 */}
+            <a
+              href={game.to}
+              onClick={(e) => e.stopPropagation()}
+              className="mt-3 flex items-center gap-3 rounded-2xl border border-brand-100 bg-brand-50/60 p-3 text-left transition hover:border-brand-200 hover:bg-brand-50"
+            >
+              <span
+                aria-hidden
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-2xl ${game.iconBg}`}
+              >
+                {game.icon}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-semibold text-brand-600">
+                  待ち時間にミニゲームどうぞ
+                </span>
+                <span className="block text-sm font-bold text-slate-900">{game.name}</span>
+                <span className="mt-0.5 block text-[11px] leading-snug text-slate-500">
+                  {game.description}
+                </span>
+              </span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-brand-300" aria-hidden />
+            </a>
+          </>
         ) : null}
 
-        <p className="mt-5 text-xs text-slate-400">タップで閉じる</p>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="閉じる"
+          className="mt-5 text-xs text-slate-400"
+        >
+          タップで閉じる
+        </button>
       </div>
-    </button>,
+    </div>,
     document.body,
   )
 }
