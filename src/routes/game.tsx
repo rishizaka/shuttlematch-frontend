@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { RotateCcw, Share2, Trophy } from 'lucide-react'
-import { createShuttleFlapGame } from '../components/game/shuttleFlap'
+import { createShuttleFlapGame, levelOf } from '../components/game/shuttleFlap'
 import { useToast } from '../components/ui/Toast'
 import type { GamePhase, ShuttleFlapHandle } from '../components/game/shuttleFlap'
 
@@ -78,14 +78,22 @@ function GamePage() {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const game = createShuttleFlapGame(canvas, {
-      onPhaseChange: (p) => {
-        setPhase(p)
-        if (p === 'playing') setScore(0)
+    // 開発時のみ ?s=25 のように途中スコアから開始できる(レベル・テーマ確認用)
+    const startScore = import.meta.env.DEV
+      ? Number(new URLSearchParams(window.location.search).get('s')) || 0
+      : 0
+    const game = createShuttleFlapGame(
+      canvas,
+      {
+        onPhaseChange: (p) => {
+          setPhase(p)
+          if (p === 'playing') setScore(startScore)
+        },
+        onScore: setScore,
+        onGameOver: handleGameOver,
       },
-      onScore: setScore,
-      onGameOver: handleGameOver,
-    })
+      { startScore },
+    )
     gameRef.current = game
     return () => {
       gameRef.current = null
@@ -94,7 +102,11 @@ function GamePage() {
   }, [handleGameOver])
 
   const share = async () => {
-    const text = `シャトルフラップで ${score} 点とった！🏸 きみは超えられる？`
+    const lv = levelOf(score)
+    const text =
+      lv >= 2
+        ? `シャトルフラップで ${score} 点(レベル${lv})とった！🏸 きみは超えられる？`
+        : `シャトルフラップで ${score} 点とった！🏸 きみは超えられる？`
     const url = 'https://s-match.net/game'
     if (navigator.share) {
       try {
@@ -136,6 +148,11 @@ function GamePage() {
               <p className="text-3xl">{rank.emoji}</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">{rank.label}</p>
               <p className="mt-2 text-4xl font-black text-slate-900">{score}</p>
+              {levelOf(score) >= 2 ? (
+                <p className="mt-0.5 text-xs font-semibold text-brand-500">
+                  レベル {levelOf(score)} 到達
+                </p>
+              ) : null}
               {isNewBest ? (
                 <p className="mt-1 text-sm font-bold text-amber-600">🎉 自己ベスト更新!</p>
               ) : (
@@ -169,9 +186,9 @@ function GamePage() {
       <AdSlot />
 
       <p className="text-center text-[11px] leading-relaxed text-slate-400">
-        タップ(またはスペースキー)でシャトルが浮きます。
+        タップ(またはスペースキー)でシャトルが浮きます。ネットのすき間をくぐるたびに 1 点。
         <br />
-        ネットのすき間をくぐるたびに 1 点。ベストスコアはこの端末に保存されます。
+        10 点ごとにレベルアップしてステージと難易度が変わります。ベストスコアはこの端末に保存されます。
       </p>
     </div>
   )
