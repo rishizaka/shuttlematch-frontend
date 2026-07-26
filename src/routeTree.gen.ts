@@ -22,6 +22,7 @@ import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as JoinRoomIdRouteImport } from './routes/join.$roomId'
 import { Route as GameRainRouteImport } from './routes/game_.rain'
 import { Route as GameFlapRouteImport } from './routes/game_.flap'
+import { Route as GameCoinRouteImport } from './routes/game_.coin'
 import { Route as RoomsRoomIdMatchesRouteImport } from './routes/rooms/$roomId_.matches'
 import { Route as OrganizerRoomsNewRouteImport } from './routes/organizer/rooms.new'
 import { Route as RoomsRoomIdMatchesPrintRouteImport } from './routes/rooms/$roomId_.matches_.print'
@@ -91,6 +92,11 @@ const GameFlapRoute = GameFlapRouteImport.update({
   path: '/game/flap',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GameCoinRoute = GameCoinRouteImport.update({
+  id: '/game_/coin',
+  path: '/game/coin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoomsRoomIdMatchesRoute = RoomsRoomIdMatchesRouteImport.update({
   id: '/rooms/$roomId_/matches',
   path: '/rooms/$roomId/matches',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/past': typeof PastRoute
   '/releases': typeof ReleasesRoute
   '/signup': typeof SignupRoute
+  '/game/coin': typeof GameCoinRoute
   '/game/flap': typeof GameFlapRoute
   '/game/rain': typeof GameRainRoute
   '/join/$roomId': typeof JoinRoomIdRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/past': typeof PastRoute
   '/releases': typeof ReleasesRoute
   '/signup': typeof SignupRoute
+  '/game/coin': typeof GameCoinRoute
   '/game/flap': typeof GameFlapRoute
   '/game/rain': typeof GameRainRoute
   '/join/$roomId': typeof JoinRoomIdRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/past': typeof PastRoute
   '/releases': typeof ReleasesRoute
   '/signup': typeof SignupRoute
+  '/game_/coin': typeof GameCoinRoute
   '/game_/flap': typeof GameFlapRoute
   '/game_/rain': typeof GameRainRoute
   '/join/$roomId': typeof JoinRoomIdRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/past'
     | '/releases'
     | '/signup'
+    | '/game/coin'
     | '/game/flap'
     | '/game/rain'
     | '/join/$roomId'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/past'
     | '/releases'
     | '/signup'
+    | '/game/coin'
     | '/game/flap'
     | '/game/rain'
     | '/join/$roomId'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/past'
     | '/releases'
     | '/signup'
+    | '/game_/coin'
     | '/game_/flap'
     | '/game_/rain'
     | '/join/$roomId'
@@ -227,6 +239,7 @@ export interface RootRouteChildren {
   PastRoute: typeof PastRoute
   ReleasesRoute: typeof ReleasesRoute
   SignupRoute: typeof SignupRoute
+  GameCoinRoute: typeof GameCoinRoute
   GameFlapRoute: typeof GameFlapRoute
   GameRainRoute: typeof GameRainRoute
   JoinRoomIdRoute: typeof JoinRoomIdRoute
@@ -331,6 +344,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GameFlapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/game_/coin': {
+      id: '/game_/coin'
+      path: '/game/coin'
+      fullPath: '/game/coin'
+      preLoaderRoute: typeof GameCoinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rooms/$roomId_/matches': {
       id: '/rooms/$roomId_/matches'
       path: '/rooms/$roomId/matches'
@@ -363,6 +383,7 @@ const rootRouteChildren: RootRouteChildren = {
   PastRoute: PastRoute,
   ReleasesRoute: ReleasesRoute,
   SignupRoute: SignupRoute,
+  GameCoinRoute: GameCoinRoute,
   GameFlapRoute: GameFlapRoute,
   GameRainRoute: GameRainRoute,
   JoinRoomIdRoute: JoinRoomIdRoute,

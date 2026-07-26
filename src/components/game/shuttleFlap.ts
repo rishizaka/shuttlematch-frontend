@@ -7,7 +7,7 @@
  * - 描画はすべて canvas。React の再レンダリングはスコア更新等のコールバック経由のみ
  *
  * 10点ごとにレベルアップ: ステージテーマ(背景・ネットの配色)がクロスフェードで切り替わり、
- * スピードが一段速く・すき間が一段狭くなる。レベル3からはネットが上下に揺れ始める。
+ * スピードが一段速く・すき間が一段狭くなる。レベル2からはネットが上下に揺れ始める。
  *
  * 座標系は論理幅 360 固定で、高さはキャンバスのアスペクト比から導出する。
  * デバイスピクセル比は setTransform で吸収する。
@@ -130,11 +130,11 @@ export function createShuttleFlapGame(
   }
 
   // レベルが上がるごとに一段速く・狭く。レベル内でも1点ごとにわずかに加速する。
-  // 序盤が優しすぎたため難易度は1レベル前倒し(レベル1が旧レベル2相当)。
-  const speed = () => Math.min(BASE_SPEED + score * 1.2 + level * 14, MAX_SPEED)
-  const gapH = () => Math.max(GAP_START - level * 11, GAP_MIN)
-  // レベル3からネットが上下に揺れ始め、以降じわじわ大きくなる
-  const oscAmp = () => (level >= 3 ? Math.min(10 + (level - 3) * 4, 26) : 0)
+  // プレイヤーは動体視力に自信のある層なので、難易度は2レベル前倒し(レベル1=初期テーブルのレベル3相当)。
+  const speed = () => Math.min(BASE_SPEED + score * 1.2 + (level + 1) * 14, MAX_SPEED)
+  const gapH = () => Math.max(GAP_START - (level + 1) * 11, GAP_MIN)
+  // レベル2からネットが上下に揺れ始め、以降じわじわ大きくなる
+  const oscAmp = () => (level >= 2 ? Math.min(10 + (level - 2) * 4, 26) : 0)
 
   const spawnNet = (x: number) => {
     const g = gapH()
@@ -393,7 +393,7 @@ export function createShuttleFlapGame(
       }
 
       const sub =
-        level >= 3 ? `${themeForLevel(level).name} — ネットが揺れる!` : themeForLevel(level).name
+        level >= 2 ? `${themeForLevel(level).name} — ネットが揺れる!` : themeForLevel(level).name
       drawLevelBanner(ctx, LW, LH, level, elapsed - levelUpAt, sub)
     } else {
       // ready 画面

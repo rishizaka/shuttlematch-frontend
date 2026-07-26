@@ -3,7 +3,9 @@
  *
  * 昔懐かしい「上から降ってくるものをよけるだけ」系をバドミントン仕様にアレンジ:
  * - シャトルは羽根の空気抵抗でふらふら揺れながら落ちてくる(まっすぐ落ちない)
- * - レベルが上がると、画面上部に「!」の予告が出たあと自分を狙う高速スマッシュが飛んでくる
+ * - 自分を狙う高速スマッシュが最初から飛んでくる。「!」の予告はレベル1だけの
+ *   チュートリアル扱いで、レベル2からは予告なしで急に来る
+ * - レベル3からは、落下の途中で横に切れ込む「カットショット」が混ざる
  * - スポーツドリンクをキャッチすると +5 点
  * - 落ちたシャトルは床にコルクから刺さって立つ(当たり判定なし)
  *
@@ -31,9 +33,13 @@ interface FallingShuttle {
   x: number
   y: number
   vy: number
+  vx: number // カットショットの横方向速度(切れ込み後)
   terminal: number
   swayPhase: number
-  smash: boolean // 予告つき高速スマッシュ
+  smash: boolean // 自分を狙う高速スマッシュ
+  cut: boolean // 途中で横に切れ込むカットショット
+  cutAt: number // 切れ込みが始まる高さ
+  broken: boolean // 切れ込み済みか
   landed: boolean
   landT: number // 着地からの経過秒(刺さって立ち、やがて消える)
 }
@@ -140,8 +146,8 @@ export function createSmashRainGame(
     playerVx = 0
     overRot = 0
     scoreT = 0
-    spawnT = 1.2
-    smashT = 5
+    spawnT = 1
+    smashT = 3
     bottleT = 6
     levelUpAt = -10
     theme.set(level, instantTheme)
@@ -150,11 +156,12 @@ export function createSmashRainGame(
   }
 
   // ---- 難易度(レベルで物量・速度が増える) ------------------------------
+  // プレイヤーは動体視力に自信のある層なので、難易度は2レベル前倒し(レベル1=初期テーブルのレベル3相当)。
 
-  const spawnInterval = () => Math.max(0.95 - (level - 1) * 0.1, 0.4)
-  const fallTerminal = () => Math.min(200 + (level - 1) * 28, 400)
-  const smashInterval = () => Math.max(4.2 - (level - 1) * 0.45, 1.7)
-  const smashSpeed = () => Math.min(520 + (level - 1) * 35, 760)
+  const spawnInterval = () => Math.max(0.95 - (level + 1) * 0.1, 0.4)
+  const fallTerminal = () => Math.min(200 + (level + 1) * 28, 400)
+  const smashInterval = () => Math.max(4.2 - (level + 1) * 0.45, 1.7)
+  const smashSpeed = () => Math.min(520 + (level + 1) * 35, 760)
 
   const addScore = (n: number) => {
     score += n
@@ -167,26 +174,48 @@ export function createSmashRainGame(
     }
   }
 
+  // レベル3からカットショットが混ざり、以降じわじわ割合が増える
+  const cutChance = () => (level >= 3 ? Math.min(0.3 + (level - 3) * 0.06, 0.55) : 0)
+
   const spawnShuttle = () => {
+    const cut = Math.random() < cutChance()
     shuttles.push({
       x: 24 + Math.random() * (LW - 48),
       y: -24,
       vy: 90 + Math.random() * 50,
+      vx: 0,
       terminal: fallTerminal() * (0.85 + Math.random() * 0.3),
       swayPhase: Math.random() * Math.PI * 2,
       smash: false,
+      cut,
+      cutAt: LH * (0.28 + Math.random() * 0.3),
+      broken: false,
       landed: false,
       landT: 0,
     })
   }
 
-  const fireWarning = () => {
+  const smashTargetX = () =>
     // 6割の確率でプレイヤーの近くを狙う(逃げ先を考えさせる)
-    const x =
-      Math.random() < 0.6
-        ? Math.min(Math.max(playerX + (Math.random() - 0.5) * 90, 24), LW - 24)
-        : 24 + Math.random() * (LW - 48)
-    warnings.push({ x, t: WARN_TIME })
+    Math.random() < 0.6
+      ? Math.min(Math.max(playerX + (Math.random() - 0.5) * 90, 24), LW - 24)
+      : 24 + Math.random() * (LW - 48)
+
+  const fireSmash = (x: number) => {
+    shuttles.push({
+      x,
+      y: -24,
+      vy: smashSpeed(),
+      vx: 0,
+      terminal: smashSpeed(),
+      swayPhase: 0,
+      smash: true,
+      cut: false,
+      cutAt: 0,
+      broken: false,
+      landed: false,
+      landT: 0,
+    })
   }
 
   const crashFeathers = (x: number, y: number) => {
@@ -274,28 +303,18 @@ export function createSmashRainGame(
         spawnShuttle()
       }
 
-      // スマッシュ(レベル2から)
-      if (level >= 2) {
-        smashT -= dt
-        if (smashT <= 0) {
-          smashT = smashInterval() * (0.8 + Math.random() * 0.4)
-          fireWarning()
-        }
+      // スマッシュ(最初から飛んでくる)。「!」の予告はレベル1だけで、
+      // レベル2からは予告なしで急に来る
+      smashT -= dt
+      if (smashT <= 0) {
+        smashT = smashInterval() * (0.8 + Math.random() * 0.4)
+        const x = smashTargetX()
+        if (level === 1) warnings.push({ x, t: WARN_TIME })
+        else fireSmash(x)
       }
       for (const w of warnings) {
         w.t -= dt
-        if (w.t <= 0) {
-          shuttles.push({
-            x: w.x,
-            y: -24,
-            vy: smashSpeed(),
-            terminal: smashSpeed(),
-            swayPhase: 0,
-            smash: true,
-            landed: false,
-            landT: 0,
-          })
-        }
+        if (w.t <= 0) fireSmash(w.x)
       }
       warnings = warnings.filter((w) => w.t > 0)
 
@@ -313,15 +332,28 @@ export function createSmashRainGame(
         s.landT += dt
         continue
       }
+      // カットショット: 指定の高さでプレイヤー側へ鋭く切れ込む
+      if (s.cut && !s.broken && s.y >= s.cutAt) {
+        s.broken = true
+        const dir = playerX > s.x ? 1 : -1
+        s.vx = dir * Math.min(200 + (level - 3) * 20, 300)
+        s.vy = Math.max(s.vy, 240)
+      }
       s.vy += (s.terminal - s.vy) * Math.min(dt * 2.5, 1)
       s.y += s.vy * dt
-      if (!s.smash) s.x += Math.sin(elapsed * 2.6 + s.swayPhase) * 26 * dt
+      if (s.broken) {
+        s.x += s.vx * dt
+      } else if (!s.smash) {
+        s.x += Math.sin(elapsed * 2.6 + s.swayPhase) * 26 * dt
+      }
       if (s.y >= floorY - 8) {
         s.y = floorY - 8
         s.landed = true
       }
     }
-    shuttles = shuttles.filter((s) => !s.landed || s.landT < LAND_KEEP)
+    shuttles = shuttles.filter(
+      (s) => (!s.landed || s.landT < LAND_KEEP) && s.x > -40 && s.x < LW + 40,
+    )
 
     for (const b of bottles) b.y += 130 * dt
     bottles = bottles.filter((b) => b.y < LH + 30)
@@ -409,25 +441,25 @@ export function createSmashRainGame(
         ctx.rotate(Math.PI / 2)
         drawShuttleSprite(ctx)
       } else {
-        if (s.smash) {
-          // 高速スマッシュの残像
-          ctx.save()
-          for (const [dy, a] of [
-            [-26, 0.22],
-            [-14, 0.4],
+        // 進行方向(コルクの向き)。切れ込み後のカットは速度ベクトルを向く
+        const heading = s.broken ? Math.atan2(s.vy, s.vx) : Math.PI / 2
+        if (s.smash || s.broken) {
+          // 高速弾の残像(進行方向の逆側に置く)
+          for (const [back, a] of [
+            [26, 0.22],
+            [14, 0.4],
           ] as const) {
             ctx.save()
             ctx.globalAlpha = a
-            ctx.translate(0, dy)
-            ctx.rotate(Math.PI / 2)
+            ctx.translate(-Math.cos(heading) * back, -Math.sin(heading) * back)
+            ctx.rotate(heading)
             drawShuttleSprite(ctx)
             ctx.restore()
           }
-          ctx.restore()
         }
-        // コルクが下(進行方向)を向く。通常弾は揺れに合わせて少し傾く
-        const tilt = s.smash ? 0 : Math.cos(elapsed * 2.6 + s.swayPhase) * 0.25
-        ctx.rotate(Math.PI / 2 + tilt)
+        // 通常弾は揺れに合わせて少し傾く
+        const tilt = s.smash || s.broken ? 0 : Math.cos(elapsed * 2.6 + s.swayPhase) * 0.25
+        ctx.rotate(heading + tilt)
         drawShuttleSprite(ctx)
       }
       ctx.restore()
@@ -612,11 +644,7 @@ export function createSmashRainGame(
         ctx.fillText(`LV.${level}`, LW / 2, 100)
       }
 
-      const sub =
-        level === 2
-          ? `${themeForLevel(level).name} — スマッシュが来る!`
-          : themeForLevel(level).name
-      drawLevelBanner(ctx, LW, LH, level, elapsed - levelUpAt, sub)
+      drawLevelBanner(ctx, LW, LH, level, elapsed - levelUpAt, themeForLevel(level).name)
     } else {
       const bounce = Math.sin(elapsed * 3.2) * 4
       ctx.fillStyle = '#0b2c58'

@@ -1,38 +1,38 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, RotateCcw, Share2, Trophy } from 'lucide-react'
-import { createSmashRainGame, rainLevelOf } from '../components/game/smashRain'
+import { coinLevelOf, createCoinDropGame } from '../components/game/coinDrop'
 import { AdSlot } from '../components/game/AdSlot'
 import { useToast } from '../components/ui/Toast'
 import type { GamePhase, MiniGameHandle } from '../components/game/shared'
 
-export const Route = createFileRoute('/game_/rain')({
+export const Route = createFileRoute('/game_/coin')({
   head: () => ({
     meta: [
-      { title: 'スマッシュレイン — 待ち時間のミニゲーム | ShuttleMatch' },
+      { title: '10円ゲーム — 待ち時間のミニゲーム | ShuttleMatch' },
       {
         name: 'description',
         content:
-          '降り注ぐシャトルをよけ続けるサバイバルミニゲーム。予告つきの狙い撃ちスマッシュをかわし、ドリンクで加点。試合の待ち時間にどうぞ。',
+          '駄菓子屋の名機を片手で。10円玉をジャンプで操って穴を飛び越え、下まで転がせば10円ゲット。試合の待ち時間にどうぞ。',
       },
     ],
   }),
-  component: RainPage,
+  component: CoinPage,
 })
 
-const BEST_KEY = 'shuttlematch:smash-rain:best'
+const BEST_KEY = 'shuttlematch:coin-drop:best'
 
 /** スコアに応じた称号。リトライ意欲を出すための小さなご褒美。 */
 function rankOf(score: number): { emoji: string; label: string } {
-  if (score >= 90) return { emoji: '🏆', label: '鉄壁のレシーバー!' }
-  if (score >= 60) return { emoji: '🥇', label: '全日本の粘り' }
-  if (score >= 40) return { emoji: '🥈', label: '県大会の反応速度' }
-  if (score >= 20) return { emoji: '🥉', label: '部内一のフットワーク' }
-  if (score >= 8) return { emoji: '🏸', label: '初心者卒業' }
-  return { emoji: '🐣', label: 'まずは8点!' }
+  if (score >= 150) return { emoji: '🏆', label: '伝説のコロコロ名人!' }
+  if (score >= 100) return { emoji: '🥇', label: '10円長者' }
+  if (score >= 60) return { emoji: '🥈', label: '駄菓子屋の常連' }
+  if (score >= 30) return { emoji: '🥉', label: 'コツをつかんだ' }
+  if (score >= 10) return { emoji: '🪙', label: 'はじめての10円' }
+  return { emoji: '🐣', label: 'まずは1枚(10円)!' }
 }
 
-function RainPage() {
+function CoinPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const gameRef = useRef<MiniGameHandle | null>(null)
   const { showToast } = useToast()
@@ -41,7 +41,7 @@ function RainPage() {
   const [score, setScore] = useState(0)
   const [best, setBest] = useState(0)
   const [isNewBest, setIsNewBest] = useState(false)
-  // ゲームオーバー表示時点のベスト(更新前)。「あと N 点でベスト」表示に使う。
+  // ゲームオーバー表示時点のベスト(更新前)。「あと N 円でベスト」表示に使う。
   const bestRef = useRef(0)
 
   useEffect(() => {
@@ -67,11 +67,11 @@ function RainPage() {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    // 開発時のみ ?s=30 のように途中スコアから開始できる(レベル・テーマ確認用)
+    // 開発時のみ ?s=40 のように途中スコアから開始できる(レベル・テーマ確認用)
     const startScore = import.meta.env.DEV
       ? Number(new URLSearchParams(window.location.search).get('s')) || 0
       : 0
-    const game = createSmashRainGame(
+    const game = createCoinDropGame(
       canvas,
       {
         onPhaseChange: (p) => {
@@ -91,12 +91,12 @@ function RainPage() {
   }, [handleGameOver])
 
   const share = async () => {
-    const lv = rainLevelOf(score)
+    const lv = coinLevelOf(score)
     const text =
       lv >= 2
-        ? `スマッシュレインで ${score} 点生き残った！(レベル${lv})🏸 きみは超えられる？`
-        : `スマッシュレインで ${score} 点生き残った！🏸 きみは超えられる？`
-    const url = 'https://s-match.net/game/rain'
+        ? `10円ゲームで ${score}円ためた！(レベル${lv})🪙 きみは超えられる？`
+        : `10円ゲームで ${score}円ためた！🪙 きみは超えられる？`
+    const url = 'https://s-match.net/game/coin'
     if (navigator.share) {
       try {
         await navigator.share({ text, url })
@@ -122,12 +122,12 @@ function RainPage() {
             <ChevronLeft className="h-3.5 w-3.5" />
             ミニゲーム一覧
           </Link>
-          <h1 className="text-xl font-bold text-slate-900">スマッシュレイン</h1>
-          <p className="text-xs text-slate-500">ドラッグでよけるだけ。何秒生き残れる？</p>
+          <h1 className="text-xl font-bold text-slate-900">10円ゲーム</h1>
+          <p className="text-xs text-slate-500">タップでジャンプ。何円ためられる？</p>
         </div>
         <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
           <Trophy className="h-4 w-4" />
-          ベスト {best}
+          ベスト {best}円
         </div>
       </div>
 
@@ -143,17 +143,17 @@ function RainPage() {
             <div className="w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-xl">
               <p className="text-3xl">{rank.emoji}</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">{rank.label}</p>
-              <p className="mt-2 text-4xl font-black text-slate-900">{score}</p>
-              {rainLevelOf(score) >= 2 ? (
+              <p className="mt-2 text-4xl font-black text-slate-900">{score}円</p>
+              {coinLevelOf(score) >= 2 ? (
                 <p className="mt-0.5 text-xs font-semibold text-brand-500">
-                  レベル {rainLevelOf(score)} 到達
+                  レベル {coinLevelOf(score)} 到達
                 </p>
               ) : null}
               {isNewBest ? (
                 <p className="mt-1 text-sm font-bold text-amber-600">🎉 自己ベスト更新!</p>
               ) : (
                 <p className="mt-1 text-xs text-slate-400">
-                  ベストまであと {Math.max(best - score, 1)} 点
+                  ベストまであと {Math.max(best - score, 1)}円
                 </p>
               )}
               <div className="mt-4 grid gap-2">
@@ -182,9 +182,9 @@ function RainPage() {
       <AdSlot />
 
       <p className="text-center text-[11px] leading-relaxed text-slate-400">
-        ドラッグ(または←→キー)で移動。生き残り 1 秒ごとに 1 点、ドリンクをキャッチで +5 点。
+        タップ(またはスペースキー)でジャンプ。赤い縁の穴はハズレ、落ちたらおしまい。
         <br />
-        狙い撃ちスマッシュの「!」予告はレベル 1 だけ。レベル 3 からは横に切れ込むカットショットも飛んできます。
+        棚を1段降りるごとに +1円、下の「あたり」まで転がせば1盤面で10円。20円ごとにレベルアップします。
       </p>
     </div>
   )

@@ -43,6 +43,14 @@ const GAMES: GameEntry[] = [
     description: '降り注ぐシャトルの雨を、左右によけて生き残れ',
     bestKey: 'shuttlematch:smash-rain:best',
   },
+  {
+    to: '/game/coin',
+    icon: '🪙',
+    iconBg: 'from-amber-100 to-yellow-100',
+    name: '10円ゲーム',
+    description: '駄菓子屋の名機。穴を飛び越え、下まで転がして10円ゲット',
+    bestKey: 'shuttlematch:coin-drop:best',
+  },
 ]
 
 function GameHubPage() {
@@ -62,7 +70,7 @@ function GameHubPage() {
       <div>
         <h1 className="text-xl font-bold text-slate-900">ミニゲーム</h1>
         <p className="text-sm text-slate-500">
-          試合の待ち時間に、片手でどうぞ。10〜15点ごとにレベルアップして難易度が上がります。
+          試合の待ち時間に、片手でどうぞ。スコアを重ねるとレベルアップして難易度が上がります。
         </p>
       </div>
 
