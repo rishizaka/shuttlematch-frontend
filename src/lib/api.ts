@@ -34,6 +34,29 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * サーバーに到達できなかったときのエラー(オフライン・DNS失敗・接続拒否など)。
+ * fetch が reject する「Failed to fetch」を利用者向けの文言に変換する。
+ */
+export class NetworkError extends Error {
+  constructor(cause?: unknown) {
+    super('ネットワークに繋がらないようです。通信環境を確認して、もう一度お試しください。', {
+      cause,
+    })
+    this.name = 'NetworkError'
+  }
+}
+
+/**
+ * ネットワーク到達不能のエラーか。SSR の loader で投げられたエラーは
+ * シリアライズでクラス情報が落ちることがあるため、name でも判定する。
+ */
+export function isNetworkError(error: unknown): boolean {
+  return (
+    error instanceof NetworkError || (error instanceof Error && error.name === 'NetworkError')
+  )
+}
+
 interface ProblemDetail {
   title?: string
   detail?: string
@@ -41,14 +64,19 @@ interface ProblemDetail {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      Accept: 'application/json',
-      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
-      ...init?.headers,
-    },
-  })
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: {
+        Accept: 'application/json',
+        ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+        ...init?.headers,
+      },
+    })
+  } catch (cause) {
+    throw new NetworkError(cause)
+  }
 
   if (!res.ok) {
     let problem: ProblemDetail = {}

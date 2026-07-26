@@ -44,6 +44,7 @@ function HomePage() {
           message={
             today.error instanceof Error ? today.error.message : '一覧を取得できませんでした'
           }
+          onRetry={() => void today.refetch()}
         />
       ) : (
         <>

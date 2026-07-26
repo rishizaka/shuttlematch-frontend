@@ -31,6 +31,7 @@ function PastRoomsPage() {
           message={
             closed.error instanceof Error ? closed.error.message : '一覧を取得できませんでした'
           }
+          onRetry={() => void closed.refetch()}
         />
       ) : past.length === 0 ? (
         <Card>

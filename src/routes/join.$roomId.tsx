@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Calendar, MapPin, Users } from 'lucide-react'
 import { useAddParticipant, useRoom } from '../hooks/queries'
+import { isNetworkError } from '../lib/api'
 import { setSelfParticipant } from '../lib/local-store'
 import { formatDateTime } from '../lib/format'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
@@ -17,7 +18,7 @@ export const Route = createFileRoute('/join/$roomId')({ component: JoinPage })
  */
 function JoinPage() {
   const { roomId } = Route.useParams()
-  const { data: room, isLoading, isError } = useRoom(roomId)
+  const { data: room, isLoading, isError, error, refetch } = useRoom(roomId)
   const add = useAddParticipant(roomId)
   const [joinedNumber, setJoinedNumber] = useState<number | null>(null)
 
@@ -46,6 +47,10 @@ function JoinPage() {
 
   if (isLoading) return <LoadingBlock />
   if (isError || !room) {
+    // ネットワーク断は「見つからない」ではないので、文言を分けて再試行を出す。
+    if (isNetworkError(error)) {
+      return <ErrorBlock message={(error as Error).message} onRetry={() => void refetch()} />
+    }
     return <ErrorBlock message="ルームが見つかりません。招待リンクを確認してください。" />
   }
 

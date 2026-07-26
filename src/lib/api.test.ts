@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, roomApi, userApi } from './api'
+import { ApiError, NetworkError, isNetworkError, roomApi, userApi } from './api'
 
 const okJson = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -59,5 +59,21 @@ describe('api client', () => {
     const err = await userApi.get('x').catch((e) => e)
     expect(err).toBeInstanceOf(ApiError)
     expect(err.status).toBe(500)
+  })
+
+  it('fetch の reject (オフライン等) は利用者向け文言の NetworkError になる', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'))
+    const err = await userApi.get('x').catch((e) => e)
+    expect(err).toBeInstanceOf(NetworkError)
+    expect(isNetworkError(err)).toBe(true)
+    expect(err.message).toContain('ネットワークに繋がらない')
+  })
+
+  it('isNetworkError はシリアライズでクラス情報が落ちても name で判定できる', () => {
+    const revived = new Error('ネットワークに繋がらないようです。')
+    revived.name = 'NetworkError'
+    expect(isNetworkError(revived)).toBe(true)
+    expect(isNetworkError(new ApiError(404, 'not found'))).toBe(false)
+    expect(isNetworkError(undefined)).toBe(false)
   })
 })

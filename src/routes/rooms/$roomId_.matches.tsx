@@ -88,13 +88,13 @@ function MatchesPage() {
   const { showToast } = useToast()
   // ポーリングで他端末の操作 (セット開始・ニックネーム変更・出入り) をリロードなしで反映する。
   // 終了済みルームでは自動停止する (queries.ts 側の判定)。
-  const { data: schedule, isLoading, error } = useMatches(roomId, {
+  const { data: schedule, isLoading, error, refetch: refetchMatches } = useMatches(roomId, {
     live: true,
   })
   // 参加者情報 (room) もルーム終了までポーリングする (終了判定は queries.ts 側)。
   // 番号の変更・途中参加・早退・終了検知が他端末に反映されるようにするため。
   // 内容が変わらない間は TanStack Query の structural sharing により再レンダリングは発生しない。
-  const { data: room } = useRoom(roomId, { live: true })
+  const { data: room, refetch: refetchRoom } = useRoom(roomId, { live: true })
   const closed = room?.status === 'CLOSED'
   const qc = useQueryClient()
 
@@ -265,7 +265,22 @@ function MatchesPage() {
   }
   if (isLoading) return <LoadingBlock />
   if (!schedule) {
-    if (!room) return <LoadingBlock />
+    if (!room) {
+      // room も matches も取れていない。取得失敗(ネットワーク断など)なら再試行を出し、
+      // 取得中ならローディングを出す。
+      if (error) {
+        return (
+          <ErrorBlock
+            message={error.message}
+            onRetry={() => {
+              void refetchRoom()
+              void refetchMatches()
+            }}
+          />
+        )
+      }
+      return <LoadingBlock />
+    }
     // 生成済みだがスケジュール取得待ち(生成直後など)はロビー、終了済みはエラー。
     if (room.status !== 'CLOSED') {
       return <Lobby room={room} isOrganizer={isOrganizer} />
@@ -275,6 +290,7 @@ function MatchesPage() {
         message={
           error instanceof Error ? error.message : 'この試合表はまだ生成されていません'
         }
+        onRetry={error ? () => void refetchMatches() : undefined}
       />
     )
   }
