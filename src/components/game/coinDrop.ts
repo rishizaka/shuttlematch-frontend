@@ -7,7 +7,8 @@
  *
  * アレンジ要素:
  * - 20円ごとにレベルアップして、ステージテーマ(他のミニゲームと共通)が切り替わる
- * - レベル3からは穴が左右にスライドし始める
+ *   (難易度・テーマとも1レベル前倒しで夕焼けスタート)
+ * - レベル2からは穴が左右にスライドし始める
  * - 10円玉は転がりに合わせて「10」の刻印が回転する
  *
  * 操作はタップ(またはスペース)でジャンプするだけの1ボタン。
@@ -117,12 +118,14 @@ export function createCoinDropGame(
   }
 
   // ---- 難易度 ----------------------------------------------------------
-  // 動体視力に自信のある層向けに、最初から本気の速度で転がす。
+  // 動体視力に自信のある層向けに、1レベル前倒し(レベル1=旧レベル2の夕焼け相当)。
+  // テーマも1つずらして夕焼けスタートにする。
 
-  const rollSpeed = () => Math.min(130 + (level - 1) * 16 + boardsCleared * 6, 250)
-  const holeWidth = () => Math.min(34 + level * 2, 50)
-  const holesPerShelf = (i: number) => (i === 0 ? 1 : Math.min(2 + (level >= 4 ? 1 : 0), 3))
-  const holesMove = () => level >= 3
+  const stageOf = (lv: number) => lv + 1
+  const rollSpeed = () => Math.min(130 + level * 16 + boardsCleared * 6, 250)
+  const holeWidth = () => Math.min(34 + (level + 1) * 2, 50)
+  const holesPerShelf = (i: number) => (i === 0 ? 1 : Math.min(2 + (level >= 3 ? 1 : 0), 3))
+  const holesMove = () => level >= 2
 
   const buildShelf = (i: number): Shelf => {
     const dir: 1 | -1 = i % 2 === 0 ? 1 : -1
@@ -169,7 +172,7 @@ export function createCoinDropGame(
     particles = []
     clearingT = 0
     levelUpAt = -10
-    theme.set(level, instantTheme)
+    theme.set(stageOf(level), instantTheme)
     newBoard()
     if (startScore > 0) cb.onScore?.(score)
     setPhase('ready')
@@ -182,7 +185,7 @@ export function createCoinDropGame(
     if (lv !== level) {
       level = lv
       levelUpAt = elapsed
-      theme.set(lv)
+      theme.set(stageOf(lv))
     }
   }
 
@@ -463,7 +466,9 @@ export function createCoinDropGame(
         ctx.fillText(`LV.${level}`, LW / 2, 92)
       }
       const sub =
-        level >= 3 ? `${themeForLevel(level).name} — 穴が動く!` : themeForLevel(level).name
+        level >= 2
+          ? `${themeForLevel(stageOf(level)).name} — 穴が動く!`
+          : themeForLevel(stageOf(level)).name
       drawLevelBanner(ctx, LW, LH, level, elapsed - levelUpAt, sub)
     } else {
       const bounce = Math.sin(elapsed * 3.2) * 4
