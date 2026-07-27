@@ -1,7 +1,19 @@
 import { LogOut, RotateCcw, Trash2, Unlink } from 'lucide-react'
 import type { Participant } from '../../lib/types'
 import { FREE_SLOT } from '../../lib/guests'
+import { isUnclaimedGuestName } from '../../lib/format'
 import { Badge } from '../ui/Badge'
+
+/**
+ * 「フリーにする」(番号とユーザーの紐付けを解く) を出してよい枠か。
+ * 人数を指定して作成したルームの参加者は番号だけで誰とも紐付いていないため、
+ * 解くものが無く操作の意味がない。早退中と既にフリーの枠にも出さない。
+ */
+export function canMakeFree(p: Participant): boolean {
+  if (p.status === 'LEFT') return false
+  if (isUnclaimedGuestName(p)) return false
+  return p.guestName?.trim() !== FREE_SLOT
+}
 
 export function ParticipantList({
   participants,
@@ -65,9 +77,8 @@ export function ParticipantList({
                   復帰
                 </button>
               ) : null}
-              {/* フリーにする: 番号とユーザーの紐付けを解き、誰でも入れる枠として残す。
-                  既にフリーの枠には出さない。 */}
-              {onMakeFree && !left && p.guestName?.trim() !== FREE_SLOT ? (
+              {/* フリーにする: 番号とユーザーの紐付けを解き、誰でも入れる枠として残す。 */}
+              {onMakeFree && canMakeFree(p) ? (
                 <button
                   type="button"
                   onClick={() => onMakeFree(p)}
