@@ -9,7 +9,7 @@
  * - ステージテーマ(他のミニゲームと共通)は盤面ごとに切り替わる。1面目が昼で、
  *   1面クリア後(11円の面)から夕焼け → ナイター → …と進む
  * - 難易度は20円ごとにレベルアップ(1レベル前倒しのチューニング)
- * - レベル2からは穴が左右にスライドし始める
+ * - 2面目(夕焼け)からは穴が左右にスライドし始める
  * - 10円玉は転がりに合わせて「10」の刻印が回転する
  *
  * 操作はタップ(またはスペース)でジャンプするだけの1ボタン。
@@ -125,7 +125,8 @@ export function createCoinDropGame(
   const rollSpeed = () => Math.min(130 + level * 16 + boardsCleared * 6, 250)
   const holeWidth = () => Math.min(34 + (level + 1) * 2, 50)
   const holesPerShelf = (i: number) => (i === 0 ? 1 : Math.min(2 + (level >= 3 ? 1 : 0), 3))
-  const holesMove = () => level >= 2
+  // 穴のスライドは盤面(テーマ)に紐づける。1面目の昼は静止、2面目の夕焼けから動き出す。
+  const holesMove = () => boardsCleared >= 1
 
   const buildShelf = (i: number): Shelf => {
     const dir: 1 | -1 = i % 2 === 0 ? 1 : -1
@@ -253,6 +254,10 @@ export function createCoinDropGame(
         if (clearingT <= 0) {
           boardsCleared += 1
           newBoard()
+          // 夕焼け(2面目)に入る瞬間だけは、穴が動き出すことを一度だけ知らせる
+          if (boardsCleared === 1) {
+            floats.push({ x: LW / 2, y: LH / 2, text: '穴が動きだす!', life: 1.4 })
+          }
         }
       } else if (phase === 'playing' || doomed) {
         // スポーン直後(どの棚にも触れていない間)はまっすぐ落とす
@@ -467,7 +472,8 @@ export function createCoinDropGame(
         ctx.fillText(`LV.${level}`, LW / 2, 92)
       }
       // テーマ名は盤面ごとに変わるのでバナーには出さず、難易度の変化だけを伝える
-      const sub = level === 2 ? '穴が動きだす!' : level === 3 ? '穴が増える!' : 'スピードアップ!'
+      // 穴のスライドは盤面側(夕焼け)で始まるので、レベルの告知はスピードと穴の数だけ
+      const sub = level === 3 ? '穴が増える!' : 'スピードアップ!'
       drawLevelBanner(ctx, LW, LH, level, elapsed - levelUpAt, sub)
     } else {
       const bounce = Math.sin(elapsed * 3.2) * 4
