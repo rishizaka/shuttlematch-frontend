@@ -3,18 +3,25 @@ import type { JoinResult, MatchSchedule, Room, RoomStatus, User } from './types'
 // バックエンドのベース URL は実行環境で変わる:
 //  - SSR(サーバー): 同一ホスト上の backend を直接叩く(localhost:8080)。CORS 不要。
 //  - 本番ブラウザ: 相対パス('')で同一オリジンへ。serve.mjs が /api を backend へ中継する。
-//  - 開発ブラウザ: プロキシが無いので backend を直接叩く(localhost:8080、CORS 許可済み)。
+//  - 開発ブラウザ(PC): プロキシを通さず backend を直接叩く(localhost:8080、CORS 許可済み)。
+//  - 開発ブラウザ(スマホ実機など LAN 経由): localhost はスマホ自身を指してしまうので、
+//    相対パスにして vite dev の /api プロキシ(vite.config.ts)経由で backend に届ける。
 // VITE_API_BASE_URL が設定されていればそれを優先する(ドメイン/ALB 経由にする場合など)。
 const CONFIGURED_BASE_URL = (
   import.meta.env?.VITE_API_BASE_URL as string | undefined
 )?.replace(/\/$/, '')
 
-export const API_BASE_URL: string =
-  typeof window === 'undefined'
-    ? CONFIGURED_BASE_URL ?? 'http://localhost:8080'
-    : import.meta.env?.PROD
-      ? CONFIGURED_BASE_URL ?? ''
-      : CONFIGURED_BASE_URL ?? 'http://localhost:8080'
+function resolveApiBaseUrl(): string {
+  if (CONFIGURED_BASE_URL != null) return CONFIGURED_BASE_URL
+  if (typeof window === 'undefined') return 'http://localhost:8080'
+  if (import.meta.env?.PROD) return ''
+  const host = window.location.hostname
+  return host === 'localhost' || host === '127.0.0.1'
+    ? 'http://localhost:8080'
+    : ''
+}
+
+export const API_BASE_URL: string = resolveApiBaseUrl()
 
 /**
  * バックエンドの ProblemDetail (RFC 7807) に対応するエラー。
