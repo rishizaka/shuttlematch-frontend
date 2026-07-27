@@ -1,3 +1,5 @@
+import { formatJapaneseDate } from './date'
+
 export type ReleaseTag = '新機能' | '改善' | '不具合修正'
 
 export type ReleaseNote = {
@@ -54,8 +56,4 @@ export function findRelease(id: string): ReleaseNote | undefined {
 }
 
 /** 'YYYY-MM-DD' を「2026年7月27日」形式に整形する。 */
-export function formatReleaseDate(date: string): string {
-  const [y, m, d] = date.split('-').map(Number)
-  if (!y || !m || !d) return date
-  return `${y}年${m}月${d}日`
-}
+export const formatReleaseDate = formatJapaneseDate

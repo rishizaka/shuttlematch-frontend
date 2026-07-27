@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, RotateCcw, Share2, Trophy } from 'lucide-react'
 import { coinLevelOf, createCoinDropGame } from '../components/game/coinDrop'
 import { AdSlot } from '../components/game/AdSlot'
+import { GameGuide } from '../components/game/GameGuide'
 import { useToast } from '../components/ui/Toast'
 import type { GamePhase, MiniGameHandle } from '../components/game/shared'
 
@@ -179,12 +180,24 @@ function CoinPage() {
         ) : null}
       </div>
 
+      <GameGuide
+        howTo={[
+          '駄菓子屋にあった 10 円ゲームがモチーフ。10 円玉がジグザグの棚を自動で転がり落ちていきます。',
+          'タップ(パソコンならスペースキー)で小さくジャンプ。棚に開いた赤い縁の穴はハズレで、落ちたらそこで終了です。',
+          '棚を 1 段降りるごとに +1 円。いちばん下の「あたり」まで届けば +5 円で、1 盤面をきれいに抜けると 10 円になります。',
+          '1 盤面クリアするたびに棚と穴が組み変わり、転がりが速く、穴が増えていきます。20 円ごとにレベルアップし、レベル 2 からは穴が左右にスライドし始めます。',
+        ]}
+        tips={[
+          'ジャンプは小さいので、穴の手前ぎりぎりではなく「ひと呼吸早く」跳ぶくらいでちょうど穴を越えられます。',
+          '目線は転がっている 10 円玉ではなく、進行方向の次の穴に置きます。壁ぎわの降り口の位置も先に確認しておきましょう。',
+          '穴が動くレベル 2 以降は、穴が自分から遠ざかる向きに動いている瞬間を狙うと、跳んだ先が塞がりません。',
+        ]}
+      />
+
       <AdSlot />
 
       <p className="text-center text-[11px] leading-relaxed text-slate-400">
-        タップ(またはスペースキー)でジャンプ。赤い縁の穴はハズレ、落ちたらおしまい。
-        <br />
-        棚を1段降りるごとに +1円、下の「あたり」まで転がせば1盤面で10円。20円ごとにレベルアップします。
+        ベストスコアはこの端末にだけ保存されます。
       </p>
     </div>
   )

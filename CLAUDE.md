@@ -21,6 +21,31 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
       `redirect`（旧URL→試合表）。
   - ルームを作る副作用があるので直列実行(`workers: 1`)。成果物は `.gitignore` 済み。
 
+## 広告・マネタイズ（/game に閉じる）
+
+**マネタイズはミニゲーム（`/game`）のページだけに閉じる。試合表や TOP には広告を出さない。**
+
+- 広告枠の実体は `src/components/game/AdSlot.tsx`。現在はダミー（`AD SPACE` のプレースホルダ）。
+  ゲームの canvas と広告枠の間には必ず `GameGuide`（遊び方・コツ）を挟む。誤タップは
+  AdSense では無効トラフィック扱いになるため、**キャンバス／ゲームオーバーのモーダルと
+  広告を隣接させないこと。**
+- 法務ページは `src/lib/legal.ts` に文面、`src/routes/{privacy,terms}.tsx` が表示、
+  `components/layout/Footer.tsx` が全ページから導線を出す（**フッターからの到達性は審査要件**）。
+  文面を改定したら `PRIVACY_UPDATED_AT` / `TERMS_UPDATED_AT` も更新する。
+  広告 Cookie とオプトアウト先の記載が消えていないかは
+  `components/legal/LegalDocument.test.tsx` が固定している。
+- 問い合わせ窓口は `contact@s-match.net`。実体は **Cloudflare Email Routing の転送**
+  （s-match.net ゾーン → Email Routing → 宛先は運営者の個人メール）。受信専用なので、
+  返信は個人メールから行うことになる。MX / SPF の TXT は Email Routing が自動で入れる
+  （このドメインは他にメールを使っていないので競合しない）。疎通は `dig +short MX s-match.net`
+  で `mx.cloudflare.net` 系が3件返ることで確認できる。
+- **未了（AdSense 申請前にやること）**:
+  1. `public/ads.txt` を追加（AdSense が発行する
+     `google.com, pub-XXXXXXXX, DIRECT, f08c47fec0942fa0` の1行）。`serveStatic` が
+     `dist/client` を配信するので、`public/` に置けば `https://s-match.net/ads.txt` で出る。
+     **パブリッシャー ID が出るまで置かない**（内容が不正な ads.txt は警告になる）。
+  2. AdSense のスクリプトは `__root.tsx` の `head.scripts` に入れる。
+
 ## デプロイ（本番反映）
 
 > **main に push すれば自動デプロイされる**（`.github/workflows/ci.yml`）。以下の手動手順は

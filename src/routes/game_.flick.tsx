@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, RotateCcw, Share2, Trophy } from 'lucide-react'
 import { createCoinFlickGame, flickLevelOf } from '../components/game/coinFlick'
 import { AdSlot } from '../components/game/AdSlot'
+import { GameGuide } from '../components/game/GameGuide'
 import { useToast } from '../components/ui/Toast'
 import type { GamePhase, MiniGameHandle } from '../components/game/shared'
 
@@ -179,12 +180,26 @@ function FlickPage() {
         ) : null}
       </div>
 
+      <GameGuide
+        howTo={[
+          '駄菓子屋のエレメカがモチーフ。長押しでパワーをためて、離すと 10 円玉が右のレールを駆け上がり、釘に弾かれながら落ちていきます。',
+          'パワーゲージは行ったり来たりを繰り返すので、狙った強さで指を離すタイミング勝負です。',
+          '下のポケットは 10 円・30 円・50 円(大当たり)・ハズレ。入った金額がそのままスコアに加算されます。',
+          '持ち玉は 3 枚スタートで、1 回の発射につき 1 枚消費。10 円で +1 枚、30 円で +2 枚、50 円で +3 枚戻ってきます。持ち玉が尽きたら終了です。',
+          'チャージが弱すぎるとレールを登り切れず「もどり」になり、1 枚まるごと損をします。50 円ごとにレベルアップし、ゲージが速く・当たりポケットが狭くなり、レベル 2 からはポケット列が左右に動きます。',
+        ]}
+        tips={[
+          '迷ったら強めに離します。弱すぎる「もどり」は 1 枚の丸損ですが、強すぎても釘に弾かれてどこかのポケットには入ります。',
+          'ゲージは折り返しの前後でゆっくりに見えます。折り返し地点を目標にすると、狙った強さで離しやすくなります。',
+          '同じ強さで撃つと、釘への当たり方が似て入るポケットも偏ります。狙いを外し続けるときは強さを少しずらしてみてください。',
+          '持ち玉が残り 1 枚のときは大当たり狙いより、まず 10 円ポケットで 1 枚戻して延命するほうが結果的に伸びます。',
+        ]}
+      />
+
       <AdSlot />
 
       <p className="text-center text-[11px] leading-relaxed text-slate-400">
-        長押しでチャージ(ゲージは往復)、離すと発射。弱すぎると「もどり」で1枚損。
-        <br />
-        持ち玉3枚スタート、10円で+1枚・30円で+2枚・50円で+3枚。50円ごとにレベルアップし、レベル2からポケットが動きます。
+        ベストスコアはこの端末にだけ保存されます。
       </p>
     </div>
   )

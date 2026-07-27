@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, RotateCcw, Share2, Trophy } from 'lucide-react'
 import { createSmashRainGame, rainLevelOf } from '../components/game/smashRain'
 import { AdSlot } from '../components/game/AdSlot'
+import { GameGuide } from '../components/game/GameGuide'
 import { useToast } from '../components/ui/Toast'
 import type { GamePhase, MiniGameHandle } from '../components/game/shared'
 
@@ -179,12 +180,26 @@ function RainPage() {
         ) : null}
       </div>
 
+      <GameGuide
+        howTo={[
+          '画面をドラッグすると選手が指を追いかけます。パソコンなら←→キーでも動かせます。',
+          '降ってくるシャトルに当たらず生き残った時間がスコア。1 秒ごとに 1 点入ります。',
+          'ときどき落ちてくるスポーツドリンクをキャッチすると +5 点。',
+          '15 点ごとにレベルアップし、ステージが変わって物量と落下速度が上がります。',
+          '自分を狙う高速スマッシュは最初から飛んできます。「!」の予告が出るのはレベル 1 のうちだけで、レベル 2 からは予告なしです。レベル 3 からは落下の途中で横に切れ込むカットショットも混ざります。',
+        ]}
+        tips={[
+          'シャトルは羽根の抵抗でふらふら揺れながら落ちてきます。真下ではなく、揺れ幅のぶんだけ余裕をとってよけましょう。',
+          '端に寄ると逃げ道が片側だけになります。基本は中央付近で待ち、最小限の移動でしのぐのが安定します。',
+          'スマッシュは自分の位置を狙って撃たれます。撃たれたと気づいたら、細かく動かず一気に横へ抜けるのが確実です。',
+          'ドリンクは +5 点ぶんの価値がありますが、無理に取りにいくと事故ります。安全に届く位置のときだけ拾いましょう。',
+        ]}
+      />
+
       <AdSlot />
 
       <p className="text-center text-[11px] leading-relaxed text-slate-400">
-        ドラッグ(または←→キー)で移動。生き残り 1 秒ごとに 1 点、ドリンクをキャッチで +5 点。
-        <br />
-        狙い撃ちスマッシュの「!」予告はレベル 1 だけ。レベル 3 からは横に切れ込むカットショットも飛んできます。
+        ベストスコアはこの端末にだけ保存されます。
       </p>
     </div>
   )

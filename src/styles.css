@@ -27,18 +27,19 @@
   --color-accent-700: #9c6a0c;
 }
 
-* {
-  box-sizing: border-box;
-}
+/* ここのリセットは必ず @layer base に入れること。
+   カスケードレイヤーの外に書いたスタイルは Tailwind の全レイヤー(utilities を含む)より
+   優先されるため、レイヤー外に置くと要素セレクタが min-h-* 等のユーティリティに勝ってしまう。
+   (実際 body の min-height: 100% が min-h-dvh を打ち消し、html に高さが無いので 100% も効かず、
+   コンテンツが短いページでフッターが画面の途中に浮いていた) */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-html,
-body,
-#app {
-  min-height: 100%;
-}
-
-body {
-  margin: 0;
+  body {
+    margin: 0;
+  }
 }
 
 

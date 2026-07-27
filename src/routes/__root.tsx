@@ -8,6 +8,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 import { Header } from '../components/layout/Header'
+import { Footer } from '../components/layout/Footer'
 import { ToastProvider } from '../components/ui/Toast'
 import { defaultOgMeta } from '../lib/og'
 
@@ -45,10 +46,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="min-h-screen bg-slate-50 text-slate-900">
+      {/* フッターを常に最下部へ落とすため、body を縦フレックスにして main を伸ばす。
+          高さは dvh(表示中のビューポート)。スマホのアドレスバーぶん 100vh が実際の表示領域より
+          大きくなり、コンテンツが短いページで不要なスクロールが出るのを避ける。 */}
+      <body className="flex min-h-dvh flex-col bg-slate-50 text-slate-900">
         <ToastProvider>
           <Header />
-          <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
+          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
+          <Footer />
           <TanStackDevtools
             config={{ position: 'bottom-right' }}
             plugins={[

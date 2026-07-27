@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ReleasesRouteImport } from './routes/releases'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PastRouteImport } from './routes/past'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as GameRouteImport } from './routes/game'
@@ -28,6 +30,11 @@ import { Route as RoomsRoomIdMatchesRouteImport } from './routes/rooms/$roomId_.
 import { Route as OrganizerRoomsNewRouteImport } from './routes/organizer/rooms.new'
 import { Route as RoomsRoomIdMatchesPrintRouteImport } from './routes/rooms/$roomId_.matches_.print'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -36,6 +43,11 @@ const SignupRoute = SignupRouteImport.update({
 const ReleasesRoute = ReleasesRouteImport.update({
   id: '/releases',
   path: '/releases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PastRoute = PastRouteImport.update({
@@ -125,8 +137,10 @@ export interface FileRoutesByFullPath {
   '/game': typeof GameRoute
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
+  '/privacy': typeof PrivacyRoute
   '/releases': typeof ReleasesRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
   '/game/coin': typeof GameCoinRoute
   '/game/flap': typeof GameFlapRoute
   '/game/flick': typeof GameFlickRoute
@@ -145,8 +159,10 @@ export interface FileRoutesByTo {
   '/game': typeof GameRoute
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
+  '/privacy': typeof PrivacyRoute
   '/releases': typeof ReleasesRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
   '/game/coin': typeof GameCoinRoute
   '/game/flap': typeof GameFlapRoute
   '/game/flick': typeof GameFlickRoute
@@ -166,8 +182,10 @@ export interface FileRoutesById {
   '/game': typeof GameRoute
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
+  '/privacy': typeof PrivacyRoute
   '/releases': typeof ReleasesRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
   '/game_/coin': typeof GameCoinRoute
   '/game_/flap': typeof GameFlapRoute
   '/game_/flick': typeof GameFlickRoute
@@ -188,8 +206,10 @@ export interface FileRouteTypes {
     | '/game'
     | '/login'
     | '/past'
+    | '/privacy'
     | '/releases'
     | '/signup'
+    | '/terms'
     | '/game/coin'
     | '/game/flap'
     | '/game/flick'
@@ -208,8 +228,10 @@ export interface FileRouteTypes {
     | '/game'
     | '/login'
     | '/past'
+    | '/privacy'
     | '/releases'
     | '/signup'
+    | '/terms'
     | '/game/coin'
     | '/game/flap'
     | '/game/flick'
@@ -228,8 +250,10 @@ export interface FileRouteTypes {
     | '/game'
     | '/login'
     | '/past'
+    | '/privacy'
     | '/releases'
     | '/signup'
+    | '/terms'
     | '/game_/coin'
     | '/game_/flap'
     | '/game_/flick'
@@ -249,8 +273,10 @@ export interface RootRouteChildren {
   GameRoute: typeof GameRoute
   LoginRoute: typeof LoginRoute
   PastRoute: typeof PastRoute
+  PrivacyRoute: typeof PrivacyRoute
   ReleasesRoute: typeof ReleasesRoute
   SignupRoute: typeof SignupRoute
+  TermsRoute: typeof TermsRoute
   GameCoinRoute: typeof GameCoinRoute
   GameFlapRoute: typeof GameFlapRoute
   GameFlickRoute: typeof GameFlickRoute
@@ -266,6 +292,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -278,6 +311,13 @@ declare module '@tanstack/react-router' {
       path: '/releases'
       fullPath: '/releases'
       preLoaderRoute: typeof ReleasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/past': {
@@ -401,8 +441,10 @@ const rootRouteChildren: RootRouteChildren = {
   GameRoute: GameRoute,
   LoginRoute: LoginRoute,
   PastRoute: PastRoute,
+  PrivacyRoute: PrivacyRoute,
   ReleasesRoute: ReleasesRoute,
   SignupRoute: SignupRoute,
+  TermsRoute: TermsRoute,
   GameCoinRoute: GameCoinRoute,
   GameFlapRoute: GameFlapRoute,
   GameFlickRoute: GameFlickRoute,
