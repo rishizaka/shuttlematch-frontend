@@ -70,7 +70,7 @@ export function ClaimNumberModal({
 
         {slots.length === 0 ? (
           <p className="mt-4 text-sm text-slate-500">
-            選べる番号がありません。「新しく参加」をお使いください。
+            選べる番号がありません。運営者に空き番号を追加してもらってください。
           </p>
         ) : (
           <div className="mt-4 space-y-3">

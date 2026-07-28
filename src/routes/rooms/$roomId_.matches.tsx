@@ -12,7 +12,6 @@ import {
   RefreshCw,
   Settings2,
   Trash2,
-  UserPlus,
   UserRound,
   Users,
 } from 'lucide-react'
@@ -23,7 +22,6 @@ import {
   useRenameParticipant,
   useCloseRoom,
   useDeleteRoom,
-  useJoinRoom,
   useMatches,
   useReplanFutureSets,
   useRevertSet,
@@ -47,7 +45,6 @@ import { Button } from '../../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
 import { useToast } from '../../components/ui/Toast'
 import { ClaimNumberModal } from '../../components/room/ClaimNumberModal'
-import { JoinModal } from '../../components/room/JoinModal'
 import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { RosterAccordion } from '../../components/room/RosterAccordion'
@@ -118,7 +115,6 @@ function MatchesPage() {
   const replan = useReplanFutureSets(roomId)
   const closeRoom = useCloseRoom(roomId)
   const deleteRoom = useDeleteRoom(roomId)
-  const join = useJoinRoom(roomId)
   const claim = useClaimNumber(roomId)
   const rename = useRenameParticipant(roomId)
   const navigate = useNavigate()
@@ -132,8 +128,6 @@ function MatchesPage() {
   const [organizerOpen, setOrganizerOpen] = useState(false)
   const [showSelfModal, setShowSelfModal] = useState(false)
   const [showRenameModal, setShowRenameModal] = useState(false)
-  // 受付モードの自己参加(名前で参加)モーダルの開閉。
-  const [showJoinModal, setShowJoinModal] = useState(false)
   // 既存の番号(番号だけの枠)に名前を付けて当てはまるモーダルの開閉。
   const [showClaimModal, setShowClaimModal] = useState(false)
   // 自分の ParticipantId (localStorage 由来)。参加(join)や番号設定で store が更新されたら
@@ -307,16 +301,7 @@ function MatchesPage() {
     }
   }
 
-  const submitJoin = (name: string) => {
-    join.mutate(name, {
-      onSuccess: (result) => {
-        setShowJoinModal(false)
-        showToast(`${result.number}番で参加しました`)
-      },
-    })
-  }
-
-  const submitClaim = (participantId: string, name: string | null) => {
+  const submitClaim =(participantId: string, name: string | null) => {
     // 実名入りの番号を選んだ場合(name=null)は名簿に触れず、端末の紐付けだけ行う。
     // 番号の指定は排他にしない(重複可)。間違えても選び直すだけで直せるようにする。
     if (name === null) {
@@ -408,16 +393,6 @@ function MatchesPage() {
         />
       ) : null}
 
-      {showJoinModal ? (
-        <JoinModal
-          pending={join.isPending}
-          error={join.isError ? (join.error as Error).message : null}
-          predictedNumber={(room?.participants.length ?? 0) + 1}
-          onSubmit={submitJoin}
-          onCancel={() => setShowJoinModal(false)}
-        />
-      ) : null}
-
       {showClaimModal ? (
         <ClaimNumberModal
           participants={room?.participants ?? []}
@@ -483,86 +458,34 @@ function MatchesPage() {
         </div>
       </div>
 
-      {/* 自分がまだ未設定の人への誘導。受付モードは「参加する(名前で参加→番号自動)」、
-          番号運用は「自分の番号を入力(既存番号を選ぶ)」を出す。
-          番号運用では運営者も同じ導線を使う(運営メニューには置かない)。
-          受付モードの参加ボタンは参加者専用(運営者が押すと別人として増えてしまう)。 */}
+      {/* 自分がまだ未設定の人への誘導。受付モード・番号運用のどちらも同じ1枚の案内を出す。
+          遅刻者も新規に番号を増やすのではなく、運営が用意した空き番号を指定して入る。
+          開く先だけが違い、受付モードは「番号を指定」(空き枠なら名前を付けて名簿に入る)、
+          番号運用は「自分の番号を選ぶ」(端末に覚えるだけ)。
+          番号運用では運営者も同じ導線を使う(運営メニューには置かない)。受付モードの
+          運営者には出さない(運営メニューの「自分の番号」を使う)。 */}
       {!closed && !myParticipantId && (!isOrganizer || !receptionMode) ? (
-        receptionMode ? (
-          // 新規参加と番号指定参加を横並びにする。ほぼ必ず入力するので縦幅は取ってよい。
-          <div className="grid grid-cols-2 gap-2">
-            {/* 選択肢1: 新しく参加(名前→番号自動採番)。 */}
-            <button
-              type="button"
-              onClick={() => setShowJoinModal(true)}
-              className="flex h-full flex-col items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left transition hover:bg-amber-100"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                <UserPlus className="h-4.5 w-4.5" />
-              </span>
-              <span className="block text-sm font-semibold text-amber-900">新しく参加</span>
-              <span className="block text-xs text-amber-700">
-                名前を入れると番号が自動で割り振られます。
-              </span>
-              <span className="mt-auto inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
-                <Plus className="h-4 w-4" />
-                参加
-              </span>
-            </button>
-
-            {/* 選択肢2: 番号を指定して参加する。空き枠なら名前を付けて名簿に入り、
-                実名入りの番号なら名簿はそのままで端末の紐付けだけ行う(重複可)。 */}
-            {(room?.participants.length ?? 0) > 0 ? (
-              <button
-                type="button"
-                onClick={() => setShowClaimModal(true)}
-                className="flex h-full flex-col items-start gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:bg-slate-50"
-              >
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                  <UserRound className="h-4.5 w-4.5" />
-                </span>
-                <span className="block text-sm font-semibold text-slate-800">番号を指定</span>
-                <span className="block text-xs text-slate-500">
-                  自分の番号が決まっている人はこちら。
-                </span>
-                <span className="mt-auto inline-flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-sm font-semibold text-slate-600">
-                  番号を選ぶ
-                </span>
-              </button>
-            ) : null}
-            {/* すでに参加している(番号がある)人は、自分の番号を選ぶだけでハイライトできる。
-                任意の番号を選べる(重複可)。col-span で全幅にする。 */}
-            <button
-              type="button"
-              onClick={() => setShowSelfModal(true)}
-              className="col-span-full text-xs font-medium text-brand-600 hover:underline"
-            >
-              すでに参加している人は「自分の番号を選ぶ」
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowSelfModal(true)}
-            className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-              <UserRound className="h-4.5 w-4.5" />
+        <button
+          type="button"
+          onClick={() => (receptionMode ? setShowClaimModal(true) : setShowSelfModal(true))}
+          className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+            <UserRound className="h-4.5 w-4.5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-amber-900">
+              自分の番号を入力しましょう
             </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold text-amber-900">
-                自分の番号を入力しましょう
-              </span>
-              <span className="block text-xs text-amber-700">
-                設定すると、自分が出る試合が強調表示されて見やすくなります。
-              </span>
+            <span className="block text-xs text-amber-700">
+              設定すると、自分が出る試合が強調表示されて見やすくなります。
             </span>
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
-              <Plus className="h-4 w-4" />
-              入力
-            </span>
-          </button>
-        )
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
+            <Plus className="h-4 w-4" />
+            入力
+          </span>
+        </button>
       ) : null}
 
       {closed ? (

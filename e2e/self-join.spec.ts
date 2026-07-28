@@ -77,28 +77,8 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     await expect(mePage.getByRole('tooltip')).toHaveText('たろう')
     await meCtx.close()
 
-    // 遅刻者: 生成後の試合表からも「参加する」で自己参加でき、番号が自動反映される。
-    const lateCtx = await browser.newContext()
-    const latePage = await lateCtx.newPage()
-    await latePage.goto(`/rooms/${roomId}/matches`)
-    await expect(latePage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
-    await latePage.getByRole('button', { name: /新しく参加/ }).click()
-    const joinDialog = latePage.getByRole('dialog', { name: '参加する' })
-    // 自動採番の確認: 「あなたは X番になります」が表示される。
-    await expect(joinDialog.getByText(/あなたは.*番になります/)).toBeVisible()
-    await joinDialog.getByPlaceholder('あなたの名前').fill('ちこく')
-    await joinDialog.getByRole('button', { name: 'この番号で参加する' }).click()
-    await expect(latePage.getByText(/あなた:\s*\d+番/)).toBeVisible({ timeout: 10_000 })
-
-    // 参加者(非運営者)には参加者名簿(番号→名前)が見える。運営者側は名簿を出さない。
-    const roster = latePage.getByRole('button', { name: /参加者名簿/ })
-    await expect(roster).toBeVisible()
-    await roster.click()
-    await expect(latePage.getByText('たろう')).toBeVisible()
-    await expect(page.getByRole('button', { name: /参加者名簿/ })).toBeHidden()
-    await lateCtx.close()
-
-    // 既存の番号に当てはまる: 運営者が番号だけの枠を用意 → 別の遅刻者が名前を付けて当てはまる。
+    // 遅刻者: 生成後の試合表から新しく番号を増やす導線は無い。運営者が用意した
+    // 空き番号を指定して入る(案内は番号運用のルームと同じ1枚のnote)。
     await request.post(`${API_BASE}/api/v1/rooms/${roomId}/participants`, {
       data: { guestName: '99' },
     })
@@ -106,7 +86,8 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     const claimPage = await claimCtx.newPage()
     await claimPage.goto(`/rooms/${roomId}/matches`)
     await expect(claimPage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
-    await claimPage.getByRole('button', { name: /番号を指定/ }).click()
+    await expect(claimPage.getByRole('button', { name: /新しく参加/ })).toBeHidden()
+    await claimPage.getByRole('button', { name: /自分の番号を入力しましょう/ }).click()
     const claimDialog = claimPage.getByRole('dialog', { name: '運営指定の番号で参加' })
     // 候補には実名入りの番号も並ぶので、「空き」の枠を選ぶ。
     const openOption = claimDialog.locator('option', { hasText: '空き' }).first()
@@ -116,6 +97,13 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     await claimDialog.getByPlaceholder('あなたの名前').fill('あとから')
     await claimDialog.getByRole('button', { name: 'この番号で参加' }).click()
     await expect(claimPage.getByText(/あなた:\s*\d+番/)).toBeVisible({ timeout: 10_000 })
+
+    // 参加者(非運営者)には参加者名簿(番号→名前)が見える。運営者側は名簿を出さない。
+    const roster = claimPage.getByRole('button', { name: /参加者名簿/ })
+    await expect(roster).toBeVisible()
+    await roster.click()
+    await expect(claimPage.getByText('たろう')).toBeVisible()
+    await expect(page.getByRole('button', { name: /参加者名簿/ })).toBeHidden()
     await claimCtx.close()
 
     // 実名入りの番号も指定できる(名簿は変えず端末の紐付けのみ・重複可)。
@@ -124,7 +112,7 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     const dupPage = await dupCtx.newPage()
     await dupPage.goto(`/rooms/${roomId}/matches`)
     await expect(dupPage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
-    await dupPage.getByRole('button', { name: /番号を指定/ }).click()
+    await dupPage.getByRole('button', { name: /自分の番号を入力しましょう/ }).click()
     const dupDialog = dupPage.getByRole('dialog', { name: '運営指定の番号で参加' })
     const namedOption = dupDialog.locator('option', { hasText: 'あとから' }).first()
     await dupDialog
@@ -135,9 +123,10 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     await dupDialog.getByRole('button', { name: 'この番号を自分にする' }).click()
     await expect(dupPage.getByText(/あなた:\s*\d+番/)).toBeVisible({ timeout: 10_000 })
     // 名簿の名前は上書きされていない(「あとから」のまま)。
+    // ヘッダーの「あなた: N番 ・ あとから」にも含まれるので、名簿の行だけを完全一致で見る。
     const dupRoster = dupPage.getByRole('button', { name: /参加者名簿/ })
     await dupRoster.click()
-    await expect(dupPage.getByText('あとから')).toBeVisible()
+    await expect(dupPage.getByText('あとから', { exact: true })).toBeVisible()
     await dupCtx.close()
 
     // 生成後、APIで最低限(試合が生成されている)を確認。
