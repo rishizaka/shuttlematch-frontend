@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import aboutCss from '../styles/about.css?url'
 
 export const Route = createFileRoute('/about')({
@@ -597,8 +597,12 @@ function AboutPage() {
           </p>
 
           <div className="cta-row">
-            <a className="btn btn-gold" href="#">試合表を作ってみる</a>
-            <a className="btn btn-outline" href="#">今日のルームを見る</a>
+            <Link className="btn btn-gold" to="/organizer/rooms/new">
+              試合表を作ってみる
+            </Link>
+            <Link className="btn btn-outline" to="/">
+              今日のルームを見る
+            </Link>
           </div>
         </div>
 
@@ -726,7 +730,9 @@ function AboutPage() {
                 <p className="set-body">
                   試合表を何通りも作って、いちばん混ざったものだけをお出しします。
                 </p>
-                <a className="set-link" href="#">アルゴリズムの中身をゼロから学ぶ<em>→</em></a>
+                <a className="set-link" href="/about/algorithm">
+                  アルゴリズムの中身をゼロから学ぶ<em>→</em>
+                </a>
               </div>
             </div>
           </div>
@@ -805,8 +811,12 @@ function AboutPage() {
         <div className="sheet">
           <h2 className="colophon-head reveal">今日の練習会から、<br /><span className="foil">どうぞ。</span></h2>
           <div className="cta-row reveal">
-            <a className="btn btn-gold" href="#">ルームを作成する</a>
-            <a className="btn btn-outline" href="#">ルーム一覧へ</a>
+            <Link className="btn btn-gold" to="/organizer/rooms/new">
+              ルームを作成する
+            </Link>
+            <Link className="btn btn-outline" to="/">
+              ルーム一覧へ
+            </Link>
           </div>
           <p className="imprint">
             <span>SHUTTLEMATCH</span><span>バドミントンの試合表を、公平に</span><span>SPRING BOOT / REACT</span>
