@@ -3,7 +3,6 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, RotateCcw, Share2, Trophy } from 'lucide-react'
 import { coinLevelOf, createCoinDropGame } from '../components/game/coinDrop'
 import { AdSlot } from '../components/game/AdSlot'
-import { GameGuide } from '../components/game/GameGuide'
 import { useToast } from '../components/ui/Toast'
 import type { GamePhase, MiniGameHandle } from '../components/game/shared'
 
@@ -180,19 +179,7 @@ function CoinPage() {
         ) : null}
       </div>
 
-      <GameGuide
-        howTo={[
-          '駄菓子屋にあった 10 円ゲームがモチーフ。10 円玉がジグザグの棚を自動で転がり落ちていきます。',
-          'タップ(パソコンならスペースキー)で小さくジャンプ。棚に開いた赤い縁の穴はハズレで、落ちたらそこで終了です。',
-          '棚を 1 段降りるごとに +1 円。いちばん下の「あたり」まで届けば +5 円で、1 盤面をきれいに抜けると 10 円になります。',
-          '1 盤面クリアするたびに棚と穴が組み変わり、景色が昼 → 夕焼け → ナイターと移ります。夕焼け(2 面目)からは穴が左右にスライドし始めます。さらに 20 円ごとにレベルアップし、転がりが速く・穴が増えていきます。',
-        ]}
-        tips={[
-          'ジャンプは小さいので、穴の手前ぎりぎりではなく「ひと呼吸早く」跳ぶくらいでちょうど穴を越えられます。',
-          '目線は転がっている 10 円玉ではなく、進行方向の次の穴に置きます。壁ぎわの降り口の位置も先に確認しておきましょう。',
-          '穴が動きだす夕焼け以降は、穴が自分から遠ざかる向きに動いている瞬間を狙うと、跳んだ先が塞がりません。',
-        ]}
-      />
+      <AdSlot />
 
       <AdSlot />
 

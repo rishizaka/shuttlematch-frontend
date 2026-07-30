@@ -26,9 +26,11 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 **マネタイズはミニゲーム（`/game`）のページだけに閉じる。試合表や TOP には広告を出さない。**
 
 - 広告枠の実体は `src/components/game/AdSlot.tsx`。現在はダミー（`AD SPACE` のプレースホルダ）。
-  ゲームの canvas と広告枠の間には必ず `GameGuide`（遊び方・コツ）を挟む。誤タップは
-  AdSense では無効トラフィック扱いになるため、**キャンバス／ゲームオーバーのモーダルと
-  広告を隣接させないこと。**
+  各ゲームページは canvas の下に `<AdSlot />` を2つ並べている（同じ広告ユニットの繰り返し設置は
+  AdSense のポリシー上問題ない）。以前あった「遊び方・コツ」の説明文（`GameGuide`）は
+  広告面を確保するために削除した。canvas とのあいだの緩衝はレイアウトの
+  `space-y-4`（1rem）のみなので、ゲームオーバーのモーダル操作直後に広告へ誤タップしやすい
+  構成になっている点は把握しておくこと（AdSense では誤クリックは無効トラフィック扱い）。
 - 法務ページは `src/lib/legal.ts` に文面、`src/routes/{privacy,terms}.tsx` が表示、
   `components/layout/Footer.tsx` が全ページから導線を出す（**フッターからの到達性は審査要件**）。
   文面を改定したら `PRIVACY_UPDATED_AT` / `TERMS_UPDATED_AT` も更新する。
@@ -39,12 +41,16 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
   返信は個人メールから行うことになる。MX / SPF の TXT は Email Routing が自動で入れる
   （このドメインは他にメールを使っていないので競合しない）。疎通は `dig +short MX s-match.net`
   で `mx.cloudflare.net` 系が3件返ることで確認できる。
-- **未了（AdSense 申請前にやること）**:
-  1. `public/ads.txt` を追加（AdSense が発行する
-     `google.com, pub-XXXXXXXX, DIRECT, f08c47fec0942fa0` の1行）。`serveStatic` が
-     `dist/client` を配信するので、`public/` に置けば `https://s-match.net/ads.txt` で出る。
-     **パブリッシャー ID が出るまで置かない**（内容が不正な ads.txt は警告になる）。
-  2. AdSense のスクリプトは `__root.tsx` の `head.scripts` に入れる。
+- AdSense のクライアント ID・スロット ID は `src/lib/ads.ts`。サイト確認用スクリプトは
+  `__root.tsx` の head に本番ビルドでだけ載る（`import.meta.env.DEV` で分岐。Vite が
+  ビルド時に静的展開するので env の設定忘れで開発サーバーに載ることはない）。
+  `public/ads.txt` は設置済み（`google.com, pub-<ID>, DIRECT, f08c47fec0942fa0`。
+  `ca-pub-` の数字部分がそのまま `pub-` になる、同一の値）。
+- **未了**: `ADSENSE_SLOT_ID` が未設定。AdSense 管理画面で `/game` 用の表示広告ユニットを
+  作成して発行された ID をここに設定するまで、`AdSlot` はプレースホルダーのまま。
+  **審査が通ったら、AdSense の Auto ads はオフのままにしておくこと**（オンだと Google が
+  試合表や TOP にも自動で広告を差し込みうる。ads.txt とスクリプトは全ページの head に
+  乗っているため、Auto ads を止める歯止めは AdSense 側の設定しかない）。
 
 ## デプロイ（本番反映）
 

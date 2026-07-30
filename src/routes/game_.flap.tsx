@@ -3,7 +3,6 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, RotateCcw, Share2, Trophy } from 'lucide-react'
 import { createShuttleFlapGame, levelOf } from '../components/game/shuttleFlap'
 import { AdSlot } from '../components/game/AdSlot'
-import { GameGuide } from '../components/game/GameGuide'
 import { useToast } from '../components/ui/Toast'
 import type { GamePhase, ShuttleFlapHandle } from '../components/game/shuttleFlap'
 
@@ -180,19 +179,7 @@ function FlapPage() {
         ) : null}
       </div>
 
-      <GameGuide
-        howTo={[
-          'タップ(パソコンならスペースキーか↑キー)でシャトルがふわりと浮きます。押さなければ落ちていきます。',
-          '向かってくるネットのすき間をくぐり抜けるたびに 1 点。ネットに当たるか、床か天井に触れたら終了です。',
-          '10 点ごとにレベルアップ。体育館のステージが昼から夕方、ナイターへと変わり、スピードが上がってすき間が狭くなります。',
-          'レベル 2 からはネットが上下に揺れ始め、レベル 3 で揺れが速くなり、レベル 4 からはすき間の高さ自体が伸び縮みします。',
-        ]}
-        tips={[
-          '連打よりも、短いタップを一定のリズムで刻むほうが高さを保てます。上がりすぎたら思い切って指を止めます。',
-          '見るべきはシャトルではなく、次のすき間の位置。すき間の中心より少し上を通るつもりで狙うと当たりにくくなります。',
-          'ネットが揺れるレベル 2 以降は、すき間が折り返す瞬間(いちばん上か、いちばん下で止まる一瞬)に通すと安全です。',
-        ]}
-      />
+      <AdSlot />
 
       <AdSlot />
 

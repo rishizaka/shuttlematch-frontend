@@ -11,6 +11,7 @@ import { Header } from '../components/layout/Header'
 import { Footer } from '../components/layout/Footer'
 import { ToastProvider } from '../components/ui/Toast'
 import { defaultOgMeta } from '../lib/og'
+import { ADSENSE_CLIENT_ID } from '../lib/ads'
 
 import appCss from '../styles.css?url'
 
@@ -45,6 +46,19 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="ja">
       <head>
         <HeadContent />
+        {/* AdSense のサイト確認・広告配信スクリプト。全ページの head に置く必要がある
+            (Google が所有権確認のためにクロールする)。本番ビルドでだけ読み込む
+            (import.meta.env.DEV は Vite がビルド時に静的展開するので、ここで判定を
+            忘れても開発サーバーに実広告のスクリプトが載ることはない)。
+            広告そのものは /game の AdSlot にしか出さない(Auto ads は使わない方針、
+            AdSense 管理画面でも Auto ads は無効のままにすること)。 */}
+        {import.meta.env.PROD ? (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
+            crossOrigin="anonymous"
+          />
+        ) : null}
       </head>
       {/* フッターを常に最下部へ落とすため、body を縦フレックスにして main を伸ばす。
           高さは dvh(表示中のビューポート)。スマホのアドレスバーぶん 100vh が実際の表示領域より
