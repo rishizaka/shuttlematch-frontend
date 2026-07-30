@@ -5,13 +5,17 @@
  * 右のレールを駆け上がり、盤面へ飛び出して釘に弾かれながら落ちていく。
  * 下のポケットは 10円 / 30円 / 50円(大当たり) / ハズレ。
  *
- * 持ち玉制: 3枚スタートで1発射=1枚消費。10円で+1枚、30円で+2枚、50円で+3枚
+ * 持ち玉制: 4枚スタートで1発射=1枚消費。10円で+1枚、30円で+2枚、50円で+3枚
  * 戻ってくる。持ち玉が尽きたら終了(スコアは稼いだ合計円)。
  * チャージが弱すぎるとレールを登り切れず「もどり」(1枚損)。
  *
  * 50円ごとにレベルアップ: ステージテーマ(他ゲームと共通・昼スタート)が切り替わり、
  * ゲージが速く・当たりポケットが狭くなる。レベル2からはポケット列が左右にスライド。
- * 初期レベルから「普通よりじゃっかんハード」のチューニング。
+ *
+ * 難易度メモ: 初版は当たりポケットの合計幅が盤面の4割未満しかなく、レール登りの
+ * 必要パワーも高めで「難しすぎる」というフィードバックがあった。当たり幅の比率
+ * (winRatio)・ゲージ速度・レール重力を緩め、level が進むほど厳しくなる形はそのままに
+ * level1 の初見体験を大きく易化してある。
  */
 import {
   createThemeMixer,
@@ -33,12 +37,12 @@ const FRAME_W = 6 // 外枠の板厚
 const CHANNEL_W = 26 // 右の発射レールの幅
 const CHANNEL_X = LW - FRAME_W - CHANNEL_W // レールの内側の壁
 const EXIT_Y = 76 // レールを登り切って盤面へ飛び出す高さ
-const CHANNEL_GRAVITY = 420 // レール内の減速
+const CHANNEL_GRAVITY = 340 // レール内の減速(以前は420。強すぎて軽いチャージが軒並み「もどり」になっていた)
 const FIELD_GRAVITY = 980
 const PEG_RESTITUTION = 0.5 // 釘に当たったときの跳ね返り(法線方向)
 const STALL_AFTER = 2.6 // これ以上盤面に留まったら重力を強めて決着させる
 const PEG_R = 4.5
-const START_COINS = 3
+const START_COINS = 4
 
 type SlotType = 'hazure' | 's10' | 'm30' | 'b50'
 
@@ -140,21 +144,27 @@ export function createCoinFlickGame(
   }
 
   // ---- 難易度 ----------------------------------------------------------
-  // 「普通よりじゃっかんハード」: ゲージは最初からやや速く、当たりは狭め。
+  // レベルが進むほどタイミングがシビアに・当たりが狭くなる方向は維持しつつ、
+  // level1 の初見体験はしっかり甘めにしてある(以前は当たり合計が盤面の36%しかなかった)。
 
-  const gaugeSpeed = () => 1.15 + (level - 1) * 0.2 // 往復ゲージの速さ(1往復/秒換算)
+  const gaugeSpeed = () => 0.85 + (level - 1) * 0.15 // 往復ゲージの速さ(1往復/秒換算)
   const slotsSlide = () => (level >= 2 ? 26 + (level - 2) * 6 : 0)
 
+  /** 当たりポケット(3つ合計)が盤面の全幅に占める割合。level1=52%、以降じわじわ絞って34%で下げ止まる。 */
+  const winRatio = () => Math.max(0.52 - (level - 1) * 0.04, 0.34)
+
   const buildSlots = () => {
-    const shrink = Math.min((level - 1) * 3, 12)
     const field = CHANNEL_X - FRAME_W // ポケット列の全幅
+    const winTotal = field * winRatio()
+    // 3つの当たりの相対比率(10円:50円:30円 ≒ 0.40:0.26:0.34)は固定し、
+    // winRatio で全体のサイズだけを伸び縮みさせる。50円だけ常に一番狭い。
     const win: Slot[] = [
-      { type: 's10', w: 46 - shrink },
-      { type: 'b50', w: 30 - Math.min(shrink, 8) },
-      { type: 'm30', w: 40 - shrink },
+      { type: 's10', w: winTotal * 0.4 },
+      { type: 'b50', w: winTotal * 0.26 },
+      { type: 'm30', w: winTotal * 0.34 },
     ]
     // ハズレで区切る: [x, 10円, x, 50円, x, 30円, x]
-    const rest = field - win.reduce((a, s) => a + s.w, 0)
+    const rest = field - winTotal
     const hz = rest / 4
     slots = [
       { type: 'hazure', w: hz },
@@ -638,7 +648,7 @@ export function createCoinFlickGame(
       ctx.fillStyle = '#3d68a2'
       ctx.fillText('離すと発射・強さはタイミングで決まる', LW / 2, cy + 26)
       ctx.font = '500 12px system-ui, sans-serif'
-      ctx.fillText('持ち玉3枚スタート・当たりで増える・尽きたら終了', LW / 2, cy + 46)
+      ctx.fillText('持ち玉4枚スタート・当たりで増える・尽きたら終了', LW / 2, cy + 46)
     }
   }
 
