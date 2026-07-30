@@ -1,0 +1,604 @@
+/*
+ * About ページ専用のスタイル。
+ *
+ * サイト全体は Tailwind なので、.cover / .set / .btn のような汎用的な
+ * クラス名をそのまま出すと衝突しかねない。CSS ネスティングで丸ごと
+ * .about-stage の中に閉じてある(Lightning CSS が展開する)。
+ * 色変数も :root ではなく .about-stage に載せているので、他のページには漏れない。
+ */
+.about-stage {
+
+  /* =========================================================
+     ShuttleMatch — About
+     大会プログラムの箔押し表紙という見立て。
+     表紙(hero / 巻末CTA)は常に紺地で固定し、本文は紙地でテーマ追従する。
+
+     動きは2種類に分けてある。
+       装飾(表紙の視差・シャトルの軌跡・進捗バー・章ラベル)
+         … スクロール量に連続追従する。背面なので読書を邪魔しない。
+       読む要素(見出し・本文・図表)
+         … 画面に入ったら一度だけ .shown が付いて出し切る。以後は動かさない。
+     読む対象を連続追従させると、読もうとして止めた位置で半透明・半分隠れの
+     まま固定され、しかも読み返すたびに巻き戻る。そこを分けるのが要点。
+     ========================================================= */
+
+  & {
+    /* 紺は単色で置かず3層。深淵→地→持ち上げ */
+    --abyss: #00081a;
+    --navy-deep: #001433;
+    --navy: #002050;
+    --navy-lift: #0b2c58;
+
+    /* 金は箔。単色ではなくグラデーションの素材として扱う */
+    --gold: #e0a020;
+    --gold-hi: #f7e0a8;
+    --gold-mid: #edbb4e;
+    --gold-deep: #9c6a0c;
+
+    /* 紙は温かみのある白。純白はプログラム用紙に見えない */
+    --paper: #f7f4ec;
+
+    /* --------------------------------------------------------
+       背景が紺と紙のあいだを連続的に混ざるので、文字や罫線の色も
+       それに追従しないと読めなくなる。JS が背景の「紙らしさ」を
+       計算して、下の 5 つを毎フレーム書き換える。
+       ここの値は JS が動く前の初期値(＝紺地)。
+       -------------------------------------------------------- */
+    --ink: #eaf0fb;
+    --ink-soft: #b6c8e6;
+    --ink-faint: #8298bd;
+    --line: rgba(190, 210, 240, 0.16);
+    --card: rgba(255, 255, 255, 0.05);
+
+    --thread: rgba(237, 187, 78, 0.3);
+
+    /* 見出しは明朝。和文の極太ゴシックは字面が大きく詰まって量販店の POP に見える。
+       「箔押しのプログラム」の格を出すのは、細めの明朝と広い字間・行間。
+       Hiragino Mincho ProN は W3/W6 しか無いので weight は 600 までに留める
+       (700 以上を指定すると合成太字になって輪郭が濁る)。 */
+    --serif: 'Hiragino Mincho ProN', 'Hiragino Mincho Pro', 'Yu Mincho', YuMincho,
+      'Noto Serif JP', 'Songti SC', serif;
+
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  /* =========================================================
+     全面の背景。紺と紙がスクロールに応じて滲み合う。
+     セクションごとに地色を切り替えると境界が直線で出てしまうので、
+     ページ全体を1枚の面として扱い、その面の色を動かしている。
+     ========================================================= */
+  #bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -10;
+    pointer-events: none;
+    display: block;
+  }
+
+  & {
+    margin: 0;
+    /* 地色は #bg の canvas が全面で描く。ここで色を置くと混ざりを覆ってしまう */
+    background: var(--abyss);
+    color: var(--ink);
+    font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic',
+      'Noto Sans JP', -apple-system, system-ui, sans-serif;
+    font-feature-settings: 'palt' 1;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--gold-mid); outline-offset: 4px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .sheet { max-width: 62rem; margin: 0 auto; padding: 0 1.75rem; }
+  .col   { max-width: 34rem; min-width: 0; }
+
+  /* ---------- 箔押しの金文字 ---------- */
+  .foil {
+    background: linear-gradient(
+      100deg,
+      var(--gold-deep) 0%, var(--gold) 24%, var(--gold-hi) 42%,
+      var(--gold) 58%, var(--gold-deep) 82%, var(--gold) 100%
+    );
+    background-size: 260% 100%;
+    background-position: 82% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: foil-sweep 9s ease-in-out infinite;
+  }
+
+  /* =========================================================
+     スクロール進捗(上端の金の細線)
+     ========================================================= */
+  .progress {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 2px;
+    z-index: 60;
+    pointer-events: none;
+    background: color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+  .progress i {
+    display: block;
+    height: 100%;
+    transform-origin: left;
+    transform: scaleX(var(--sp, 0));
+    background: linear-gradient(90deg, var(--gold-deep), var(--gold), var(--gold-hi));
+  }
+
+  /* =========================================================
+     章インジケーター(縦組み・現在の章を出す)
+     ========================================================= */
+  .rail {
+    position: fixed;
+    left: 1.4rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 30;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    pointer-events: none;
+  }
+  @media (min-width: 1180px) { .rail { display: flex; } }
+  .rail-line {
+    width: 1px;
+    height: 4.5rem;
+    background: color-mix(in srgb, var(--ink) 14%, transparent);
+    position: relative;
+    overflow: hidden;
+  }
+  /* 章の進行に合わせて金が伸びる */
+  .rail-line::after {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--gold), var(--gold-hi));
+    transform-origin: top;
+    transform: scaleY(var(--sp, 0));
+  }
+  .rail-label {
+    writing-mode: vertical-rl;
+    font-size: 0.68rem;
+    letter-spacing: 0.4em;
+    /* 画面のいちばん端に置く小さな文字。ここだけ --ink-faint では
+       背景の混ざり際でコントラストが 4.5 を割るので、一段濃い色を使う。 */
+    color: var(--ink-soft);
+    font-weight: 700;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    min-height: 9rem;
+  }
+  .rail-label.swap { opacity: 0; transform: translateY(8px); }
+
+  /* =========================================================
+     表紙
+     ========================================================= */
+  .cover {
+    position: relative;
+    /* 地色は #bg が描く。ここでは重ねる装飾だけを持つ */
+    overflow: hidden;
+    isolation: isolate;
+  }
+  /* ガットの網目。スクロールで奥に沈む(視差) */
+  .cover::before {
+    content: '';
+    position: absolute;
+    inset: -20%;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(224,160,32,0.10) 0 1px, transparent 1px 15px),
+      repeating-linear-gradient(0deg,  rgba(224,160,32,0.10) 0 1px, transparent 1px 15px);
+    mask-image: radial-gradient(70% 55% at 50% 44%, #000 0%, transparent 78%);
+    transform: translate3d(0, calc(var(--p, 0) * 7vh), 0) scale(calc(1 + var(--p, 0) * 0.06));
+    z-index: -2;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -34%;
+    width: 130%;
+    height: 62%;
+    transform: translateX(-50%) translateY(calc(var(--p, 0) * 12vh));
+    background: radial-gradient(closest-side, rgba(160,200,255,0.16), transparent 72%);
+    z-index: -1;
+    pointer-events: none;
+  }
+  .cover canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    z-index: -1; pointer-events: none;
+    opacity: calc(1 - var(--p, 0) * 0.85);
+  }
+
+  /* 中身はスクロールで上へ抜けて消える */
+  .cover-inner {
+    position: relative;
+    min-height: min(100svh, 52rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* padding の一括指定は禁止。.sheet の左右 padding を潰してしまう。 */
+    padding-top: 5.5rem;
+    padding-bottom: 4.5rem;
+    transform: translateY(calc(var(--p, 0) * -14vh));
+    opacity: calc(1 - var(--p, 0) * 1.35);
+    will-change: transform, opacity;
+  }
+
+  .brand { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 3.25rem; }
+  .brand-rule {
+    height: 1px; width: 3.5rem;
+    background: linear-gradient(90deg, transparent, var(--gold));
+    transform-origin: left;
+    animation: rule-in 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .brand-name {
+    font-size: 0.74rem; letter-spacing: 0.44em; font-weight: 700; color: var(--ink-faint);
+    animation: fade-up 0.9s ease-out 0.25s both;
+  }
+
+  .cover-head {
+    font-family: var(--serif);
+    font-size: clamp(2.15rem, 6.6vw, 4.3rem);
+    font-weight: 600;
+    line-height: 1.5;
+    /* 明朝は詰めずに開く。詰めると途端に安くなる */
+    letter-spacing: 0.04em;
+    margin: 0 0 2.25rem;
+    text-wrap: balance;
+  }
+  .line-mask { display: block; overflow: hidden; }
+  .line-mask > span { display: block; animation: line-rise 1.15s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .line-mask:nth-of-type(1) > span { animation-delay: 0.35s; }
+  .line-mask:nth-of-type(2) > span { animation-delay: 0.5s; }
+
+  .cover-lede {
+    font-size: clamp(0.98rem, 1.5vw, 1.1rem); line-height: 2.1;
+    color: var(--ink-soft); max-width: 30em; margin: 0 0 2.75rem;
+    animation: fade-up 1s ease-out 0.8s both;
+  }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: 0.85rem; }
+  .cover .cta-row { animation: fade-up 1s ease-out 1s both; }
+
+  .btn {
+    position: relative; display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.95rem 1.85rem; font-size: 0.9rem; font-weight: 700;
+    letter-spacing: 0.04em; text-decoration: none; border-radius: 2px; overflow: hidden;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn-gold {
+    background: linear-gradient(103deg, var(--gold-deep), var(--gold) 32%, var(--gold-hi) 52%, var(--gold) 72%, var(--gold-deep));
+    background-size: 220% 100%; background-position: 70% 0; color: #241500;
+    box-shadow: 0 10px 30px rgba(224, 160, 32, 0.22);
+    transition: background-position 0.7s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .btn-gold:hover { background-position: 10% 0; box-shadow: 0 14px 38px rgba(224, 160, 32, 0.32); }
+  .btn-outline {
+    color: var(--ink);
+    border: 1px solid var(--line);
+    background: var(--card);
+    backdrop-filter: blur(4px);
+  }
+  .btn-outline:hover { border-color: var(--gold-mid); }
+
+  .scroll-cue {
+    position: absolute; left: 50%; bottom: 1.75rem;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    font-size: 0.6rem; letter-spacing: 0.32em; color: var(--ink-faint);
+    animation: fade-up 1s ease-out 1.4s both;
+    opacity: calc(1 - var(--p, 0) * 3);
+  }
+  .scroll-cue i {
+    display: block; width: 1px; height: 2.75rem;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    animation: cue 2.1s ease-in-out infinite; transform-origin: top;
+  }
+
+  /* =========================================================
+     本文 — 背面をシャトルの軌跡が縫って降りる
+     ========================================================= */
+  .body-wrap { position: relative; }
+  .thread {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .thread path {
+    fill: none;
+    stroke: var(--thread);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+  }
+  .thread .shuttle-body { fill: var(--gold); }
+  .thread .shuttle-glow { fill: var(--gold); opacity: 0.18; }
+
+  .set {
+    position: relative;
+    z-index: 1;
+    padding-top: clamp(4.5rem, 11vw, 8.5rem);
+    padding-bottom: clamp(4.5rem, 11vw, 8.5rem);
+    border-top: 1px solid var(--line);
+  }
+  .set:first-of-type { border-top: none; }
+
+  /* ---------------------------------------------------------------
+     読む要素(見出し・本文)と、装飾(軌跡・視差・進捗)を分けて扱う。
+
+     読む要素をスクロール量に連続追従させると、読もうとして止めた位置で
+     半透明・半分隠れのまま固定されてしまい、しかも読み返しで巻き戻る。
+     ここは「画面に入ったら素早く出し切り、以後は動かさない」に徹する。
+     動きは 10px の上昇のみ、透明度も 0.4 までしか下げない。
+     --------------------------------------------------------------- */
+  .reveal {
+    opacity: 0.4;
+    transform: translateY(10px);
+    transition: opacity 0.45s ease-out, transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.shown { opacity: 1; transform: none; }
+
+  .set-mark { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.75rem; }
+  .set-mark i {
+    height: 1px; flex: 0 0 2.5rem; background: var(--gold);
+    transform-origin: left; transform: scaleX(0);
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .shown .set-mark i, .set-mark.shown i { transform: scaleX(1); }
+  .set-mark span { font-size: 0.68rem; letter-spacing: 0.34em; color: var(--ink-faint); font-weight: 700; }
+  .set-mark b { font-size: 0.68rem; letter-spacing: 0.16em; color: var(--gold-deep); font-weight: 800; }
+
+  .set-title {
+    font-family: var(--serif);
+    font-size: clamp(1.45rem, 3.4vw, 2.3rem);
+    font-weight: 600;
+    line-height: 1.68;
+    letter-spacing: 0.045em;
+    margin: 0 0 1.6rem;
+    text-wrap: balance;
+  }
+  /* 章見出しのマスク演出は廃止。行が半分隠れた状態で止まると読めない。
+     見出しは .reveal 側のフェードだけで扱う(表紙のロード演出は別で残す)。 */
+  .set-title .line-mask { overflow: visible; }
+  .set-title .line-mask > span { animation: none; transform: none; }
+  .set-body { font-size: 1rem; line-height: 2.15; color: var(--ink-soft); }
+  .set-body + .set-body { margin-top: 1.1rem; }
+  .set-note { margin-top: 1rem; font-size: 0.86rem; color: var(--ink-faint); line-height: 1.9; }
+
+  .set-link {
+    display: inline-flex; align-items: center; gap: 0.45rem; margin-top: 1.6rem;
+    font-size: 0.92rem; font-weight: 700; text-decoration: none; color: var(--ink);
+    padding-bottom: 0.3rem; position: relative;
+  }
+  .set-link::after {
+    content: ''; position: absolute; left: 0; bottom: 0; width: 100%; height: 1.5px;
+    background: var(--gold); transform: scaleX(0); transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .set-link:hover::after { transform: scaleX(1); }
+  .set-link em { font-style: normal; transition: transform 0.3s ease; }
+  .set-link:hover em { transform: translateX(4px); }
+
+  .split {
+    display: grid;
+    /* 1fr は min-width:auto で中身が縮まないため minmax(0,1fr) にする */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(2.5rem, 6vw, 5rem);
+    align-items: center;
+  }
+  .split > * { min-width: 0; }
+  /* 片側が縦に長い段は上揃え。中央揃えだと見出しがリストの途中の高さに来てしまう */
+  .split.top { align-items: start; }
+  .split.rev > *:first-child { order: 2; }
+  @media (max-width: 820px) {
+    .split, .split.rev { grid-template-columns: minmax(0, 1fr); }
+    .split.rev > *:first-child { order: 0; }
+  }
+
+  /* ---------- SET 01 ---------- */
+  .fair { display: flex; align-items: flex-end; gap: clamp(1rem, 3vw, 2.25rem); min-width: 0; }
+  .fair-num {
+    font-family: var(--serif);
+    font-size: clamp(6.5rem, 18vw, 11.5rem);
+    font-weight: 600;
+    line-height: 0.8; letter-spacing: 0; flex: none;
+    opacity: 0.4;
+    transform: translateY(12px);
+    transition: opacity 0.5s ease-out, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .shown .fair-num { opacity: 1; transform: none; }
+  .fair-num small {
+    display: block; font-size: 0.09em; font-weight: 700; letter-spacing: 0.3em;
+    color: var(--ink-faint); margin-top: 1.1rem; -webkit-text-fill-color: var(--ink-faint);
+  }
+  /* align-items:flex-end だと列が高さを持たず棒の height:% が 0 になる */
+  .bars { display: flex; align-items: stretch; gap: 0.45rem; height: 8.5rem; flex: 1; min-width: 0; }
+  .bar-col {
+    flex: 1; min-width: 0; display: flex; flex-direction: column;
+    justify-content: flex-end; align-items: center; gap: 0.5rem;
+  }
+  .bar {
+    flex: none; width: 100%; max-width: 1.35rem; border-radius: 1px;
+    background: var(--ink-faint); opacity: 0.28;
+    transform-origin: bottom;
+    transform: scaleY(0);
+    /* 列ごとに --d だけ遅れて、一度だけ伸びる */
+    transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d, 0) * 1s);
+  }
+  .bars.shown .bar, .shown .bar { transform: scaleY(1); }
+  .bar-col.top .bar {
+    background: linear-gradient(to top, var(--gold-deep), var(--gold), var(--gold-hi));
+    opacity: 1;
+  }
+  .bar-cap { font-size: 0.62rem; color: var(--ink-faint); letter-spacing: 0.04em; }
+  .fair-foot {
+    display: flex; justify-content: space-between; gap: 1rem;
+    margin-top: 1.4rem; padding-top: 0.85rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.74rem; letter-spacing: 0.06em; color: var(--ink-faint);
+    opacity: 0.4;
+    transition: opacity 0.5s ease-out 0.35s;
+  }
+  .shown .fair-foot { opacity: 1; }
+
+  /* ---------- SET 02 ---------- */
+  .courts { display: grid; gap: 0.75rem; }
+  .court-row {
+    display: grid; grid-template-columns: 3.1rem minmax(0, 1fr);
+    align-items: center; gap: 1rem; padding: 0.85rem 0;
+    border-top: 1px solid var(--line);
+    /* 行ごとに --d だけ遅れて、一度だけ左からスライドインする */
+    opacity: 0.35;
+    transform: translateX(-10px);
+    transition:
+      opacity 0.5s ease-out calc(var(--d, 0) * 1s),
+      transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d, 0) * 1s);
+  }
+  .courts.shown .court-row, .shown .court-row { opacity: 1; transform: none; }
+  .court-row:first-child { border-top: none; }
+  .court-row > span { font-size: 0.64rem; letter-spacing: 0.16em; color: var(--ink-faint); font-weight: 700; }
+  .court-row svg { display: block; width: 100%; height: auto; }
+  .court-row .frame { fill: none; stroke: var(--line); stroke-width: 1.2; }
+  .court-row .mid { stroke: var(--ink-faint); stroke-width: 1.1; opacity: 0.45; }
+  /* ペアを結ぶ線は、行が出たあとに描かれる */
+  .court-row .tie {
+    stroke-width: 1.6;
+    stroke-dasharray: 40;
+    stroke-dashoffset: 40;
+    transition: stroke-dashoffset 0.7s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d, 0) * 1s + 0.25s);
+  }
+  .courts.shown .court-row .tie, .shown .court-row .tie { stroke-dashoffset: 0; }
+
+  /* ---------- SET 03 ---------- */
+  .ops { list-style: none; margin: 0; padding: 0; display: grid; }
+  .ops li {
+    display: grid; grid-template-columns: 2.75rem minmax(0, 1fr); gap: 1.1rem;
+    padding: 1.5rem 0; border-top: 1px solid var(--line);
+    opacity: 0.4;
+    transform: translateY(12px);
+    transition:
+      opacity 0.45s ease-out calc(var(--d, 0) * 1s),
+      transform 0.55s cubic-bezier(0.16, 1, 0.3, 1) calc(var(--d, 0) * 1s);
+  }
+  .ops.shown li, .shown .ops li { opacity: 1; transform: none; }
+  .ops-no { font-size: 0.68rem; letter-spacing: 0.1em; color: var(--gold-deep); font-weight: 800; padding-top: 0.35rem; }
+  .ops h3 { margin: 0 0 0.5rem; font-family: var(--serif); font-size: 1.08rem; font-weight: 600; letter-spacing: 0.05em; }
+  .ops p { margin: 0; font-size: 0.95rem; line-height: 1.95; color: var(--ink-soft); }
+
+  /* ---------- SET 04 ---------- */
+  /* 通知は下からすくい上げるように「届く」 */
+  .notice {
+    background: var(--card);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--line);
+    border-radius: 3px; padding: 1.4rem 1.5rem; max-width: 23rem;
+    position: relative;
+    box-shadow: 0 24px 60px -32px rgba(0, 20, 51, 0.35);
+    opacity: 0.4;
+    transform: translateY(22px) rotate(-1.2deg);
+    transition: opacity 0.5s ease-out, transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .shown .notice { opacity: 1; transform: none; }
+  .notice::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: linear-gradient(to bottom, var(--gold-hi), var(--gold), var(--gold-deep));
+  }
+  .notice-top { display: flex; align-items: center; gap: 0.5rem; font-size: 0.64rem; letter-spacing: 0.2em; color: var(--ink-faint); font-weight: 700; }
+  .notice-top i {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--gold);
+    animation: ping 2.4s ease-out infinite;
+  }
+
+  .notice-msg { margin: 0.85rem 0 0.2rem; font-size: 1.05rem; font-weight: 800; }
+  .notice-sub { margin: 0; font-size: 0.86rem; color: var(--ink-faint); letter-spacing: 0.02em; }
+
+  /* =========================================================
+     巻末
+     ========================================================= */
+  .colophon-cover {
+    position: relative;
+    text-align: center;
+    padding-top: clamp(5rem, 12vw, 8.5rem);
+    padding-bottom: 3rem;
+    overflow: hidden; isolation: isolate;
+  }
+  .colophon-cover canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    z-index: -1; pointer-events: none;
+  }
+  .colophon-head {
+    font-family: var(--serif);
+    font-size: clamp(1.65rem, 4.2vw, 2.7rem); font-weight: 600;
+    line-height: 1.6; letter-spacing: 0.05em;
+    margin: 0 0 2.75rem; text-wrap: balance;
+    opacity: 0.4;
+    transform: translateY(14px);
+    transition: opacity 0.5s ease-out, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .shown.colophon-head, .shown .colophon-head { opacity: 1; transform: none; }
+  .colophon-cover .cta-row {
+    justify-content: center;
+    opacity: 0.4;
+    transform: translateY(12px);
+    transition: opacity 0.5s ease-out 0.1s, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
+  }
+  .colophon-cover .cta-row.shown { opacity: 1; transform: none; }
+  .imprint {
+    margin-top: 4.5rem; padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.68rem; letter-spacing: 0.16em; color: var(--ink-faint);
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem 1.5rem;
+  }
+
+  /* =========================================================
+     動きを減らす設定では、すべて最終状態で静止させる
+     ========================================================= */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .cover-inner, .cover::before, .cover::after, .cover canvas,
+    .reveal, .fair-num, .fair-foot, .court-row, .ops li, .notice,
+    .colophon-head, .colophon-cover .cta-row, .scroll-cue {
+      transform: none !important;
+      opacity: 1 !important;
+    }
+    .set-mark i { transform: scaleX(1) !important; }
+    .bar { transform: scaleY(1) !important; }
+    .court-row .tie { stroke-dashoffset: 0 !important; }
+    .progress i { transform: scaleX(1) !important; }
+    .rail-line::after { transform: scaleY(1) !important; }
+  }
+
+}
+
+
+/* @keyframes はネストの中に置けない(Lightning CSS が展開できない)ため、
+   ここに出してある。名前空間はグローバルだが、他と衝突しない名前にしてある。 */
+@keyframes foil-sweep {
+    0%, 100% { background-position: 82% 0; }
+    50%      { background-position: 8% 0; }
+  }
+@keyframes rule-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes line-rise { from { transform: translateY(105%); } to { transform: translateY(0); } }
+@keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes cue {
+    0%, 100% { transform: scaleY(0.35); opacity: 0.45; }
+    50%      { transform: scaleY(1);    opacity: 1; }
+  }
+@keyframes ping {
+    0%   { box-shadow: 0 0 0 0 rgba(224,160,32,0.55); }
+    70%  { box-shadow: 0 0 0 9px rgba(224,160,32,0); }
+    100% { box-shadow: 0 0 0 0 rgba(224,160,32,0); }
+  }
