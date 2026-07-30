@@ -132,6 +132,16 @@ export function createCoinFlickGame(
   const slotTopY = () => floorY() - 58
   const launcherY = () => floorY() - COIN_R
 
+  /**
+   * 釘の Y 座標を最後に構築したときの LH。
+   * 釘は buildPegs() 実行時の floorY()/slotTopY()(= LH に依存)を使って絶対座標で
+   * 一度だけ焼き込まれる。そのあとブラウザの address bar の出し引きや画面回転で
+   * dvh ベースの canvas の高さ(= LH)が変わっても釘は再構築されず、ポケットの上端
+   * (slotTopY() は常に最新の LH で毎フレーム計算し直される)だけが動いてしまい、
+   * 「釘がゴール(ポケット)の中にある」ように見えるズレが起きていた。
+   */
+  let pegsBuiltForLH = 0
+
   const resize = () => {
     const w = canvas.clientWidth
     const h = canvas.clientHeight
@@ -141,6 +151,8 @@ export function createCoinFlickGame(
     canvas.height = Math.round(h * dpr)
     scale = (w * dpr) / LW
     LH = h / (w / LW)
+    // 釘構築後に LH が変わっていたら、ポケットとの相対位置がズレる前に組み直す。
+    if (pegs.length > 0 && Math.abs(LH - pegsBuiltForLH) > 0.5) buildPegs()
   }
 
   // ---- 難易度 ----------------------------------------------------------
@@ -187,8 +199,12 @@ export function createCoinFlickGame(
     const maxX = CHANNEL_X - COIN_R * 2 - PEG_R - 4
     const x0 = minX + 6
     const x1 = maxX - 6
-    const y0 = 140
+    // y1 はポケット上端から常に46だけ上(釘の下端+ジッターが乗っても届かない安全マージン)。
+    // y0(釘フィールドの上端)は本来140固定でよいが、canvas が極端に低い(横向きの狭い画面など)
+    // 場合は 140 > y1 になり得て、その場合「上端のはずの行」が y1 を超えて安全マージンの
+    // 内側(=ポケットの中)に描かれてしまう。y1 を絶対に超えないよう y0 を y1 基準にも制限する。
     const y1 = slotTopY() - 46
+    const y0 = Math.min(140, y1 - 40)
     for (let r = 0; r < rows; r++) {
       const y = y0 + ((y1 - y0) * r) / (rows - 1)
       const stagger = r % 2 === 0 ? 0 : (x1 - x0) / (cols - 1) / 2
@@ -201,6 +217,7 @@ export function createCoinFlickGame(
         })
       }
     }
+    pegsBuiltForLH = LH
   }
 
   const toReady = (instantTheme = false) => {
