@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ChevronLeft, RotateCcw, Share2, Trophy } from 'lucide-react'
+import { ChevronLeft, Crown, RotateCcw, Share2 } from 'lucide-react'
 import { createShuttleFlapGame, levelOf } from '../components/game/shuttleFlap'
 import { AdSlot } from '../components/game/AdSlot'
+import { GameOverRanking } from '../components/game/GameOverRanking'
+import { RankingModal } from '../components/game/RankingModal'
 import { useToast } from '../components/ui/Toast'
 import type { GamePhase, ShuttleFlapHandle } from '../components/game/shuttleFlap'
 
@@ -41,6 +43,8 @@ function FlapPage() {
   const [score, setScore] = useState(0)
   const [best, setBest] = useState(0)
   const [isNewBest, setIsNewBest] = useState(false)
+  // ランキング(冠アイコン)のモーダルの開閉。
+  const [showRanking, setShowRanking] = useState(false)
   // ゲームオーバー表示時点のベスト(更新前)。「あと N 点でベスト」表示に使う。
   const bestRef = useRef(0)
 
@@ -125,9 +129,21 @@ function FlapPage() {
           <h1 className="text-xl font-bold text-slate-900">シャトルフラップ</h1>
           <p className="text-xs text-slate-500">タップだけで遊べます。</p>
         </div>
-        <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
-          <Trophy className="h-4 w-4" />
-          ベスト {best}
+        {/* 冠を押すとレトロなアーケード風のランキング(全員の記録)が開く。
+            端末ごとの自己ベストはその下に小さく添える。 */}
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <button
+            type="button"
+            onClick={() => setShowRanking(true)}
+            aria-label="ランキングを見る"
+            className="arcade-scanlines relative flex items-center gap-1.5 rounded-lg border-2 border-[#2b3566] bg-[#080a18] px-3 py-2 font-mono text-xs font-bold tracking-[0.15em] text-[#ffd24a] shadow-[inset_0_0_12px_rgba(60,90,200,0.35)] transition hover:bg-[#111634] active:scale-95"
+          >
+            <Crown className="arcade-glow h-4 w-4" />
+            RANKING
+          </button>
+          <p className="whitespace-nowrap text-[10px] tabular-nums text-slate-400">
+            自己ベスト {best}
+          </p>
         </div>
       </div>
 
@@ -140,7 +156,7 @@ function FlapPage() {
 
         {phase === 'over' ? (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-900/45 p-6 backdrop-blur-[2px]">
-            <div className="w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-xl">
+            <div className="max-h-full w-full max-w-xs overflow-y-auto rounded-2xl bg-white p-5 text-center shadow-xl">
               <p className="text-3xl">{rank.emoji}</p>
               <p className="mt-1 text-sm font-semibold text-slate-500">{rank.label}</p>
               <p className="mt-2 text-4xl font-black text-slate-900">{score}</p>
@@ -156,6 +172,7 @@ function FlapPage() {
                   ベストまであと {Math.max(best - score, 1)} 点
                 </p>
               )}
+              <GameOverRanking game="flap" unit="点" score={score} />
               <div className="mt-4 grid gap-2">
                 <button
                   type="button"
@@ -186,6 +203,9 @@ function FlapPage() {
       <p className="text-center text-[11px] leading-relaxed text-slate-400">
         ベストスコアはこの端末にだけ保存されます。
       </p>
+      {showRanking ? (
+        <RankingModal game="flap" unit="点" onClose={() => setShowRanking(false)} />
+      ) : null}
     </div>
   )
 }

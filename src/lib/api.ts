@@ -1,4 +1,12 @@
-import type { JoinResult, MatchSchedule, Room, RoomStatus, User } from './types'
+import type {
+  GameRanking,
+  JoinResult,
+  MatchSchedule,
+  Room,
+  RoomStatus,
+  SubmitScoreResult,
+  User,
+} from './types'
 
 // バックエンドのベース URL は実行環境で変わる:
 //  - SSR(サーバー): 同一ホスト上の backend を直接叩く(localhost:8080)。CORS 不要。
@@ -259,5 +267,21 @@ export const matchApi = {
   replan: (roomId: string) =>
     request<MatchSchedule>(`/api/v1/rooms/${roomId}/matches/replan`, {
       method: 'POST',
+    }),
+}
+
+// ---- Mini game ranking ----
+
+export const gameApi = {
+  /** 上位5件を取得する。 */
+  ranking: (game: string) => request<GameRanking>(`/api/v1/games/${game}/ranking`),
+  /**
+   * スコアを登録する。ランクインしなければ保存されず rankedIn=false が返る
+   * (表示中のランキングは他端末の登録で変わるため、最終判定はサーバー側)。
+   */
+  submit: (game: string, input: { playerName: string; score: number }) =>
+    request<SubmitScoreResult>(`/api/v1/games/${game}/ranking`, {
+      method: 'POST',
+      body: JSON.stringify(input),
     }),
 }

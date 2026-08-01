@@ -77,3 +77,28 @@ export interface MatchSchedule {
   matchCount: number
   matches: Match[]
 }
+
+/** ミニゲームのランキング1行。 */
+export interface RankingEntry {
+  /** 順位 (1始まり)。 */
+  rank: number
+  playerName: string
+  score: number
+  /** ISO-8601 (UTC)。 */
+  recordedAt: string
+}
+
+/** ミニゲームのランキング (上位5件)。 */
+export interface GameRanking {
+  /** ミニゲームのスラッグ (flap / rain / coin / flick)。 */
+  game: string
+  entries: RankingEntry[]
+}
+
+/** スコア登録の結果。ランクインの最終判定はサーバー側で行う。 */
+export interface SubmitScoreResult {
+  rankedIn: boolean
+  /** ランクインしたときの順位。しなければ null。 */
+  rank: number | null
+  ranking: GameRanking
+}

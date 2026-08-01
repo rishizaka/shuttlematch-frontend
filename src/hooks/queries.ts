@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  gameApi,
   matchApi,
   roomApi,
   userApi,
@@ -29,6 +30,7 @@ export const queryKeys = {
   matches: (id: string) => ["matches", id] as const,
   roomLists: ["rooms", "list"] as const,
   roomList: (params: RoomListParams) => ["rooms", "list", params] as const,
+  gameRanking: (game: string) => ["game", "ranking", game] as const,
 };
 
 // ---- User ----
@@ -329,3 +331,27 @@ export function useReplanFutureSets(roomId: string) {
   });
 }
 
+
+// ---- Mini game ranking ----
+
+/** ミニゲームのランキング (上位5件)。ゲームのページとゲームオーバー画面で共有する。 */
+export function useGameRanking(game: string) {
+  return useQuery({
+    queryKey: queryKeys.gameRanking(game),
+    queryFn: () => gameApi.ranking(game),
+    // 他人の記録で変わるが、遊んでいる最中に勝手に動くと落ち着かないので自動更新はしない。
+    staleTime: 60_000,
+  });
+}
+
+/** スコアの登録。ランクインの最終判定はサーバー側で行い、結果のランキングで置き換える。 */
+export function useSubmitScore(game: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { playerName: string; score: number }) =>
+      gameApi.submit(game, input),
+    onSuccess: (result) => {
+      qc.setQueryData(queryKeys.gameRanking(game), result.ranking);
+    },
+  });
+}

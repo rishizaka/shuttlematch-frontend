@@ -55,3 +55,30 @@
 }
 .animate-announce-fade { animation: announce-fade 0.25s ease-out; }
 .animate-announce-pop { animation: announce-pop 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* ミニゲームのランキング(レトロなアーケード筐体風)の演出。
+   /game 配下のランキング表示だけで使う。 */
+@keyframes arcade-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.15; }
+}
+.animate-arcade-blink { animation: arcade-blink 0.9s steps(1, end) infinite; }
+
+/* CRT の走査線。中身の上に重ねるだけなのでクリックは透過させる。 */
+.arcade-scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* 蛍光管のにじみ。文字色に追従させる。 */
+.arcade-glow { text-shadow: 0 0 6px currentColor; }
