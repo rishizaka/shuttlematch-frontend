@@ -42,7 +42,7 @@ import { ConfirmModal } from '../../components/ui/ConfirmModal'
 import { roomOgMeta } from '../../lib/og'
 import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
-import { ErrorBlock, LoadingBlock } from '../../components/ui/Spinner'
+import { ErrorBlock } from '../../components/ui/Spinner'
 import { useToast } from '../../components/ui/Toast'
 import { ClaimNumberModal } from '../../components/room/ClaimNumberModal'
 import { Lobby } from '../../components/room/Lobby'
@@ -51,6 +51,7 @@ import { RosterAccordion } from '../../components/room/RosterAccordion'
 import { SelfNumberModal } from '../../components/room/SelfNumberModal'
 import { RenameModal } from '../../components/room/RenameModal'
 import { MatchScheduleList } from '../../components/match/MatchScheduleList'
+import { MatchesSkeleton } from '../../components/match/MatchesSkeleton'
 import { SetStartAnnouncement } from '../../components/match/SetStartAnnouncement'
 
 export const Route = createFileRoute('/rooms/$roomId_/matches')({
@@ -76,11 +77,17 @@ export const Route = createFileRoute('/rooms/$roomId_/matches')({
     loaderData
       ? { meta: roomOgMeta(loaderData, `/rooms/${params.roomId}/matches`, '試合表') }
       : {},
+  // ルーム一覧などから遷移してきて loader を待つあいだ。初回表示(SSR)の待ちは
+  // コンポーネント側の MatchesSkeleton が受け持つ。
+  pendingComponent: () => <MatchesSkeleton />,
   component: MatchesPage,
 })
 
 function MatchesPage() {
   const { roomId } = Route.useParams()
+  // OGP 用に loader が SSR で取ってきたルーム(失敗時は null)。
+  // 読み込み中の骨組みに本物のルーム名とコート数を出すのに使い回す。
+  const seed = Route.useLoaderData()
   const { user } = useCurrentUser()
   const { showToast } = useToast()
   // ポーリングで他端末の操作 (セット開始・ニックネーム変更・出入り) をリロードなしで反映する。
@@ -257,7 +264,15 @@ function MatchesPage() {
   if (room && room.status !== 'GENERATED' && room.status !== 'CLOSED') {
     return <Lobby room={room} isOrganizer={isOrganizer} />
   }
-  if (isLoading) return <LoadingBlock />
+  // 試合表が届くまでの場所取り。リンクから開くと数秒かかることがあり、
+  // スピナーだけだと真っ白なページに見えてしまう。
+  const skeleton = (
+    <MatchesSkeleton
+      title={room?.title ?? seed?.title}
+      courts={(room ?? seed)?.courtCount ?? undefined}
+    />
+  )
+  if (isLoading) return skeleton
   if (!schedule) {
     if (!room) {
       // room も matches も取れていない。取得失敗(ネットワーク断など)なら再試行を出し、
@@ -273,7 +288,7 @@ function MatchesPage() {
           />
         )
       }
-      return <LoadingBlock />
+      return skeleton
     }
     // 生成済みだがスケジュール取得待ち(生成直後など)はロビー、終了済みはエラー。
     if (room.status !== 'CLOSED') {
