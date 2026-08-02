@@ -1,9 +1,11 @@
 /**
  * ランクインの祝福シーン(three.js)。順位が上ほど派手になる。
  *
- * - 1位: 星空 + リング3重 + 大量のパーティクル + 何回転もするプレート(いちばん派手)
- * - 2位: リング2重 + そこそこのパーティクル
- * - 3位: リング1重 + 控えめなパーティクル
+ * 共通の見せ物(プレート・弾ける粒・広がるリング)をここで組み立て、
+ * 順位ごとの世界観は「舞台」に分けてある:
+ * - 1位: 深宇宙(`rankInCosmicStage`) + リング3重 + 大量の粒 + 何回転もするプレート
+ * - 2位: 大海原(`rankInOceanStage`) + リング2重 + そこそこの粒
+ * - 3位: 大陸(`rankInContinentStage`) + リング1重 + 控えめな粒
  * (4〜5位はこのシーンを使わず、CSS だけの軽い演出にする)
  *
  * three.js はこのモジュール内で動的 import する(SSR と初期バンドルに載せない)。
@@ -11,7 +13,11 @@
  * 静的 import されるもの(演出の長さなど)は rankInTiers.ts に置くこと。
  * 呼び出し側は dispose() を必ず呼ぶこと。About ページの badmintonScene.ts と同じ流儀。
  */
+import { createCosmicStage } from './rankInCosmicStage'
+import { createContinentStage } from './rankInContinentStage'
+import { createOceanStage } from './rankInOceanStage'
 import { RANK_IN_TIERS, type TierConfig } from './rankInTiers'
+import type { Stage, StageContext } from './rankInStage'
 
 type Disposer = { dispose: () => void }
 
@@ -70,26 +76,37 @@ export async function createRankInScene(host: HTMLElement, rank: number): Promis
   host.appendChild(renderer.domElement)
 
   const scene = new THREE.Scene()
-  const camera = new THREE.PerspectiveCamera(
-    50,
-    host.clientWidth / host.clientHeight,
-    0.1,
-    200,
-  )
-  camera.position.set(0, 0, 7)
+  // 遠くまで抜ける舞台(大陸)があるので far は大きめに取る。
+  // near を 0.1 のままにすると、その比で深度の精度が落ちる。
+  const camera = new THREE.PerspectiveCamera(50, host.clientWidth / host.clientHeight, 0.5, 1500)
+  const CAMERA_Z = 7 // 演出中に少しだけ寄る。倍率の計算にはこの初期値を使う
+  camera.position.set(0, 0, CAMERA_Z)
 
   const spriteTexture = new THREE.CanvasTexture(makeSpriteCanvas())
 
+  // 共通の見せ物は霧の外に置く。2位の大海原がシーンに霧をかけるので、
+  // 指定しないとプレートや粒まで水平線の色に溶けてしまう。
   // --- プレート(RANK IN / 1ST) ---------------------------------------------
   const plateTexture = new THREE.CanvasTexture(makePlateCanvas(tier, hex))
   plateTexture.colorSpace = THREE.SRGBColorSpace
   const plate = new THREE.Mesh(
     new THREE.PlaneGeometry(4.0, 2.0),
-    new THREE.MeshBasicMaterial({ map: plateTexture, transparent: true }),
+    new THREE.MeshBasicMaterial({ map: plateTexture, transparent: true, fog: false }),
   )
   // パーティクルより手前に置く。奥に置くと弾けた粒に順位の数字が埋もれて読めない。
   plate.position.z = 1.4
   scene.add(plate)
+
+  // スマホの縦画面ではプレートの横幅(4.0)が画面に収まらず「1ST」が見切れる。
+  // 収まる倍率を出しておき、プレートと舞台の飾りにかける(横長の画面では 1 のまま)。
+  let fit = 1
+  const updateFit = () => {
+    const distance = CAMERA_Z - plate.position.z
+    const visibleHeight = 2 * Math.tan((camera.fov * Math.PI) / 360) * distance
+    // 0.86 は左右の余白。カメラが漂う分(舞台側の position.x)を吸収できる幅を残す。
+    fit = Math.min(1, (visibleHeight * camera.aspect * 0.86) / 4.0)
+  }
+  updateFit()
 
   // プレート裏の光芒。金/銀/銅の色で後光を作る。
   const halo = new THREE.Sprite(
@@ -100,6 +117,7 @@ export async function createRankInScene(host: HTMLElement, rank: number): Promis
       opacity: 0.55,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
+      fog: false,
     }),
   )
   halo.scale.set(9, 9, 1)
@@ -130,6 +148,7 @@ export async function createRankInScene(host: HTMLElement, rank: number): Promis
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
+      fog: false,
     }),
   )
   scene.add(particles)
@@ -143,6 +162,7 @@ export async function createRankInScene(host: HTMLElement, rank: number): Promis
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
+        fog: false,
       }),
     )
     ring.userData.delay = i * 0.28
@@ -150,45 +170,28 @@ export async function createRankInScene(host: HTMLElement, rank: number): Promis
     return ring
   })
 
-  // --- 星空(1位だけ) --------------------------------------------------------
-  let starfield: InstanceType<typeof THREE.Points> | null = null
-  if (tier.starfield) {
-    const stars = 600
-    const starPositions = new Float32Array(stars * 3)
-    for (let i = 0; i < stars; i++) {
-      const r = 20 + Math.random() * 40
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(2 * Math.random() - 1)
-      starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
-      starPositions[i * 3 + 1] = r * Math.cos(phi)
-      starPositions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta)
-    }
-    const starGeometry = new THREE.BufferGeometry()
-    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
-    starfield = new THREE.Points(
-      starGeometry,
-      new THREE.PointsMaterial({
-        map: spriteTexture,
-        color: 0xffffff,
-        size: 0.9,
-        transparent: true,
-        opacity: 0.8,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      }),
-    )
-    scene.add(starfield)
-  }
+  // --- 舞台(順位ごとの世界観) -----------------------------------------------
+  const context: StageContext = { three: THREE, scene, camera, sprite: spriteTexture }
+  const stage: Stage =
+    tier.stage === 'cosmic'
+      ? createCosmicStage(context)
+      : tier.stage === 'ocean'
+        ? createOceanStage(context)
+        : createContinentStage(context)
+  const plateOffsetY = stage.plateOffsetY ?? 0
+  const haloGain = stage.haloOpacity ?? 1
 
   const onResize = () => {
     if (host.clientWidth === 0 || host.clientHeight === 0) return
     renderer.setSize(host.clientWidth, host.clientHeight)
     camera.aspect = host.clientWidth / host.clientHeight
     camera.updateProjectionMatrix()
+    updateFit()
   }
   window.addEventListener('resize', onResize)
 
   const duration = tier.durationMs / 1000
+  const particleLife = Math.min(duration, 2.8)
   const start = performance.now()
   let raf = 0
 
@@ -200,12 +203,13 @@ export async function createRankInScene(host: HTMLElement, rank: number): Promis
     // プレート: 回りながら現れ、最後に正面で静止する(easeOutCubic)
     const ease = 1 - Math.pow(1 - Math.min(t / 0.9, 1), 3)
     plate.rotation.y = (1 - ease) * Math.PI * 2 * tier.spins
-    const scale = 0.2 + ease * 0.8
+    const scale = (0.2 + ease * 0.8) * fit
     plate.scale.set(scale, scale, 1)
     // 静止後はゆっくり揺らす(完全に止めると書き割りに見える)
-    plate.position.y = Math.sin(t * 1.6) * 0.08 * ease
-    halo.material.opacity = 0.55 * ease * (1 - progress * 0.5)
-    halo.scale.setScalar(9 + Math.sin(t * 2.2) * 0.6)
+    plate.position.y = plateOffsetY + Math.sin(t * 1.6) * 0.08 * ease
+    halo.position.y = plateOffsetY
+    halo.material.opacity = 0.55 * haloGain * ease * (1 - progress * 0.5)
+    halo.scale.setScalar((9 + Math.sin(t * 2.2) * 0.6) * fit)
 
     // パーティクル: 外へ飛びながら落ちる
     const position = particleGeometry.getAttribute('position') as {
@@ -219,7 +223,9 @@ export async function createRankInScene(host: HTMLElement, rank: number): Promis
       position.array[i * 3 + 2] += velocities[i * 3 + 2] * 0.016
     }
     position.needsUpdate = true
-    ;(particles.material as { opacity: number }).opacity = 1 - progress
+    // 弾けた粒は演出の長さに関わらず 2.8 秒で消す。上位ほど演出が長いので、
+    // 進捗に比例させると最後まで粒が残って舞台が見えなくなる。
+    ;(particles.material as { opacity: number }).opacity = 1 - Math.min(t / particleLife, 1)
 
     // リング: 時間差で広がりながら消える
     rings.forEach((ring) => {
@@ -231,10 +237,9 @@ export async function createRankInScene(host: HTMLElement, rank: number): Promis
       ;(ring.material as { opacity: number }).opacity = Math.max(0, 0.9 - rt * 0.8)
     })
 
-    if (starfield) starfield.rotation.y = t * 0.05
-
-    // カメラをわずかに寄せる
-    camera.position.z = 7 - ease * 0.8
+    // カメラをわずかに寄せる。この先の漂い(位置・傾き)は舞台に任せる。
+    camera.position.z = CAMERA_Z - ease * 0.8
+    stage.update(t, ease, fit)
     renderer.render(scene, camera)
   }
   frame()
@@ -250,8 +255,10 @@ export async function createRankInScene(host: HTMLElement, rank: number): Promis
         if (Array.isArray(m)) m.forEach((x) => (x as { dispose: () => void }).dispose())
         else if (m) (m as { dispose: () => void }).dispose()
       })
-      spriteTexture.dispose()
-      plateTexture.dispose()
+      // map に貼ったテクスチャは material.dispose() では解放されない。
+      ;[spriteTexture, plateTexture, ...stage.textures].forEach((texture) =>
+        texture.dispose(),
+      )
       renderer.dispose()
       renderer.domElement.remove()
     },

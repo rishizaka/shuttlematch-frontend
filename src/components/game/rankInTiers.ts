@@ -10,7 +10,14 @@
 export interface TierConfig {
   particles: number
   rings: number
-  starfield: boolean
+  /**
+   * 順位ごとの世界観。1位は深宇宙(ワープアウト・星雲・惑星・彗星)、
+   * 2位は昼の大海原(うねる海面・水平線・光の道・カモメ)、
+   * 3位は大陸(見下ろす大地・メサ・砂塵)。夜 → 昼 → 昼、と順位が下がるほど
+   * 舞台が地に足がつく。実体は rankIn*Stage.ts。
+   * 見せ場が順に立ち上がるので、舞台を持たせるなら durationMs も長めが要る。
+   */
+  stage: 'cosmic' | 'ocean' | 'continent'
   /** プレートが回る回数。多いほど大げさに見える。 */
   spins: number
   durationMs: number
@@ -23,27 +30,30 @@ export const RANK_IN_TIERS: Record<number, TierConfig> = {
   1: {
     particles: 900,
     rings: 3,
-    starfield: true,
+    stage: 'cosmic',
     spins: 3,
-    durationMs: 3600,
+    // 減速しきったワープの先に惑星が昇り、彗星が横切るまでを見せる長さ。
+    durationMs: 5600,
     color: 0xffd24a,
     label: '1ST',
   },
   2: {
     particles: 420,
     rings: 2,
-    starfield: false,
+    stage: 'ocean',
     spins: 2,
-    durationMs: 2800,
+    // 水平線までうねりが続き、カモメが横切るまでを見せる長さ。
+    durationMs: 4400,
     color: 0xdfe9ff,
     label: '2ND',
   },
   3: {
     particles: 200,
     rings: 1,
-    starfield: false,
+    stage: 'continent',
     spins: 1,
-    durationMs: 2200,
+    // 地平線まで見渡してから、砂塵が横切るまでを見せる長さ。
+    durationMs: 3600,
     color: 0xff9d4a,
     label: '3RD',
   },
