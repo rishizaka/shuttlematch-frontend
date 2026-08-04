@@ -44,4 +44,12 @@ export const GAMES: GameEntry[] = [
     description: 'エレメカ風。長押しチャージではじいて、当たりポケットを狙え',
     bestKey: 'shuttlematch:coin-flick:best',
   },
+  {
+    to: '/game/ski',
+    icon: '⛷️',
+    iconBg: 'from-sky-100 to-indigo-100',
+    name: 'シャトポコスキー',
+    description: '120秒の一本勝負。3本のコースを横スワイプ、加速して距離をかせげ',
+    bestKey: 'shuttlematch:shatopoko-ski:best',
+  },
 ]

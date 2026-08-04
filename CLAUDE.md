@@ -21,6 +21,25 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
       `redirect`（旧URL→試合表）。
   - ルームを作る副作用があるので直列実行(`workers: 1`)。成果物は `.gitignore` 済み。
 
+## ミニゲーム
+
+現在5本（`flap` / `rain` / `coin` / `flick` / `ski`）。1本につき
+**ページ `src/routes/game_.{slug}.tsx` とコア `src/components/game/{name}.ts` の対**で、
+コアは canvas だけを受け取り React に依存しない（描画とゲームロジックはコア、
+スコア表示・ランキング・シェアはページ側）。共通の型と体育館背景は `components/game/shared.ts`。
+
+- 描画は**論理幅 360px 固定**で、`resize()` が DPR とクライアント幅から `scale` を出して
+  `ctx.setTransform` する。高さ `LH` は縦横比から毎回決まるので、レイアウトを縦にも横にも
+  効かせたいものは `LH` 基準で置く。
+- 一覧は `components/game/catalog.ts` の 1 エントリ。ここに足すと `/game` のハブと
+  セット開始アナウンスの「待ち時間にどうぞ」の両方に出る。
+- **ランキングを持たせるなら backend の `MiniGame` enum に同じスラッグを足す**。
+  忘れると登録 API が 400 を返し、結果画面のランキング欄だけが壊れる。
+- 新しいルートを足したら `npm run generate-routes`（`tsr generate`）。忘れると
+  `createFileRoute` の型が通らない。
+- 純粋な計算(当たり判定・スコア式・弾道)はコアから export してテストする
+  （`shuttleFlap.test.ts` / `shatopokoSki.test.ts`）。canvas ごと動かす必要はない。
+
 ## 広告・マネタイズ（/game に閉じる）
 
 **マネタイズはミニゲーム（`/game`）のページだけに閉じる。試合表や TOP には広告を出さない。**

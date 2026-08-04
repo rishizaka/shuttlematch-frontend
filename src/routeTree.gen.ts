@@ -22,6 +22,7 @@ import { Route as RoomsRoomIdRouteImport } from './routes/rooms/$roomId'
 import { Route as ReleaseIdRouteImport } from './routes/release.$id'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as JoinRoomIdRouteImport } from './routes/join.$roomId'
+import { Route as GameSkiRouteImport } from './routes/game_.ski'
 import { Route as GameRainRouteImport } from './routes/game_.rain'
 import { Route as GameFlickRouteImport } from './routes/game_.flick'
 import { Route as GameFlapRouteImport } from './routes/game_.flap'
@@ -95,6 +96,11 @@ const JoinRoomIdRoute = JoinRoomIdRouteImport.update({
   path: '/join/$roomId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GameSkiRoute = GameSkiRouteImport.update({
+  id: '/game_/ski',
+  path: '/game/ski',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GameRainRoute = GameRainRouteImport.update({
   id: '/game_/rain',
   path: '/game/rain',
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/game/flap': typeof GameFlapRoute
   '/game/flick': typeof GameFlickRoute
   '/game/rain': typeof GameRainRoute
+  '/game/ski': typeof GameSkiRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/game/flap': typeof GameFlapRoute
   '/game/flick': typeof GameFlickRoute
   '/game/rain': typeof GameRainRoute
+  '/game/ski': typeof GameSkiRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/game_/flap': typeof GameFlapRoute
   '/game_/flick': typeof GameFlickRoute
   '/game_/rain': typeof GameRainRoute
+  '/game_/ski': typeof GameSkiRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/game/flap'
     | '/game/flick'
     | '/game/rain'
+    | '/game/ski'
     | '/join/$roomId'
     | '/r/$code'
     | '/release/$id'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/game/flap'
     | '/game/flick'
     | '/game/rain'
+    | '/game/ski'
     | '/join/$roomId'
     | '/r/$code'
     | '/release/$id'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/game_/flap'
     | '/game_/flick'
     | '/game_/rain'
+    | '/game_/ski'
     | '/join/$roomId'
     | '/r/$code'
     | '/release/$id'
@@ -281,6 +293,7 @@ export interface RootRouteChildren {
   GameFlapRoute: typeof GameFlapRoute
   GameFlickRoute: typeof GameFlickRoute
   GameRainRoute: typeof GameRainRoute
+  GameSkiRoute: typeof GameSkiRoute
   JoinRoomIdRoute: typeof JoinRoomIdRoute
   RCodeRoute: typeof RCodeRoute
   ReleaseIdRoute: typeof ReleaseIdRoute
@@ -383,6 +396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinRoomIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/game_/ski': {
+      id: '/game_/ski'
+      path: '/game/ski'
+      fullPath: '/game/ski'
+      preLoaderRoute: typeof GameSkiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/game_/rain': {
       id: '/game_/rain'
       path: '/game/rain'
@@ -449,6 +469,7 @@ const rootRouteChildren: RootRouteChildren = {
   GameFlapRoute: GameFlapRoute,
   GameFlickRoute: GameFlickRoute,
   GameRainRoute: GameRainRoute,
+  GameSkiRoute: GameSkiRoute,
   JoinRoomIdRoute: JoinRoomIdRoute,
   RCodeRoute: RCodeRoute,
   ReleaseIdRoute: ReleaseIdRoute,
