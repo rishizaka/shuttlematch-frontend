@@ -2,6 +2,7 @@ import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { ArrowLeft } from 'lucide-react'
 import { Badge } from '../components/ui/Badge'
 import { Card, CardBody } from '../components/ui/Card'
+import { releaseOgMeta } from '../lib/og'
 import { findRelease, formatReleaseDate } from '../lib/releases'
 import type { ReleaseTag } from '../lib/releases'
 
@@ -13,12 +14,7 @@ export const Route = createFileRoute('/release/$id')({
     return release
   },
   head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.title} — ShuttleMatch リリースノート` },
-          { name: 'description', content: loaderData.summary },
-        ]
-      : [],
+    meta: loaderData ? releaseOgMeta(loaderData) : [],
   }),
   component: ReleaseDetailPage,
   notFoundComponent: ReleaseNotFound,
@@ -56,6 +52,16 @@ function ReleaseDetailPage() {
         </div>
         <h1 className="mt-2 text-2xl font-bold leading-snug text-slate-900">{release.title}</h1>
       </div>
+
+      {release.hero ? (
+        <img
+          src={release.hero.src}
+          alt={release.hero.alt}
+          width={release.hero.width}
+          height={release.hero.height}
+          className="w-full rounded-xl border border-slate-200 shadow-sm"
+        />
+      ) : null}
 
       <Card>
         <CardBody className="space-y-6 py-6">

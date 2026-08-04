@@ -35,6 +35,36 @@ export function defaultOgMeta() {
 }
 
 /**
+ * リリースノート詳細ページの OGP メタタグ。
+ *
+ * サイト共通(defaultOgMeta)では og:image を出さない方針だが、リリース告知は
+ * 共有されて嬉しいページなので、見出し画像があるときだけカード画像を付ける。
+ * og:image は絶対 URL でないとクローラーが解決できない。
+ */
+export function releaseOgMeta(
+  release: { id: string; title: string; summary: string; hero?: { src: string; width: number; height: number } },
+) {
+  const title = `${release.title} — ${SITE_NAME} リリースノート`
+  const meta: Array<Record<string, string>> = [
+    { title },
+    { name: 'description', content: release.summary },
+    { property: 'og:type', content: 'article' },
+    { property: 'og:title', content: title },
+    { property: 'og:description', content: release.summary },
+    { property: 'og:url', content: `${SITE_ORIGIN}/release/${release.id}` },
+  ]
+  if (release.hero) {
+    meta.push(
+      { property: 'og:image', content: `${SITE_ORIGIN}${release.hero.src}` },
+      { property: 'og:image:width', content: String(release.hero.width) },
+      { property: 'og:image:height', content: String(release.hero.height) },
+      { name: 'twitter:card', content: 'summary_large_image' },
+    )
+  }
+  return meta
+}
+
+/**
  * ルーム系ページの動的 OGP メタタグ。
  * クローラーは JS を実行しないため、route の loader で取得した room を
  * head() から渡して SSR の HTML に含めること。

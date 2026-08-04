@@ -2,6 +2,7 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { Badge } from '../components/ui/Badge'
 import { Card, CardBody } from '../components/ui/Card'
+import { cn } from '../lib/cn'
 import { RELEASES, formatReleaseDate } from '../lib/releases'
 import type { ReleaseTag } from '../lib/releases'
 
@@ -49,7 +50,26 @@ function ReleasesPage() {
               className="block"
             >
               <Card className="transition hover:border-brand-300 hover:shadow">
-                <CardBody className="flex items-center gap-4">
+                {/* 画像があるカードは、狭い画面では見出し画像を上に回す。
+                    横に並べたままだと本文が4行折り返しになって読みにくい */}
+                <CardBody
+                  className={cn(
+                    'flex gap-4',
+                    release.hero ? 'flex-col sm:flex-row sm:items-center' : 'items-center',
+                  )}
+                >
+                  {release.hero ? (
+                    <img
+                      src={release.hero.thumb}
+                      // 見出し画像は隣の文字で内容が分かるので、読み上げでは飛ばす
+                      alt=""
+                      width={release.hero.width}
+                      height={release.hero.height}
+                      loading="lazy"
+                      decoding="async"
+                      className="aspect-[3/2] w-full rounded-lg object-cover sm:w-36 sm:shrink-0"
+                    />
+                  ) : null}
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <time dateTime={release.date} className="text-xs text-slate-500">
@@ -68,7 +88,13 @@ function ReleasesPage() {
                       {release.summary}
                     </p>
                   </div>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-slate-300" />
+                  <ChevronRight
+                    className={cn(
+                      'h-5 w-5 shrink-0 text-slate-300',
+                      // 縦積みのときは行き先を示す矢印が宙に浮くので隠す(カード全体がリンク)
+                      release.hero && 'hidden sm:block',
+                    )}
+                  />
                 </CardBody>
               </Card>
             </Link>
