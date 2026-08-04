@@ -1,17 +1,20 @@
 import { Link } from '@tanstack/react-router'
 import { Calendar, MapPin, Users } from 'lucide-react'
-import type { Room } from '../../lib/types'
+import type { PublicRoom } from '../../lib/types'
 import { formatDateTime, roomStatusLabel } from '../../lib/format'
 import { Badge, statusTone } from '../ui/Badge'
 
-export function RoomCard({ room }: { room: Room }) {
-  return (
-    <Link
-      to="/rooms/$roomId/matches"
-      params={{ roomId: room.id }}
-      search={{ openExternalBrowser: 1 }}
-      className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-300 hover:shadow"
-    >
+/**
+ * 一覧に並ぶルームのカード。
+ *
+ * `roomId` が渡されたときだけ試合表へのリンクになる。一覧 API は roomId を返さないので、
+ * リンクになるのは「作成した」「参加した」などで既にその roomId を知っている端末だけ
+ * (照合は `lib/public-room-id.ts`)。知らないルームは、何が開催されているかは見えるが
+ * 押せないカードとして並ぶ。中に入るには共有URL(`/r/{shareCode}`)が要る。
+ */
+export function RoomCard({ room, roomId }: { room: PublicRoom; roomId?: string | null }) {
+  const body = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-semibold text-slate-900">{room.title}</h3>
         <div className="flex shrink-0 items-center gap-1.5">
@@ -37,6 +40,23 @@ export function RoomCard({ room }: { room: Room }) {
           </span>
         </div>
       </dl>
+    </>
+  )
+
+  // 押せないカードは背景を落として影を外す。リンクと同じ見た目だと、タップして
+  // 反応しないのが不具合に見える(ホバーの無いモバイルでは特に分からない)。
+  if (!roomId) {
+    return <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">{body}</div>
+  }
+
+  return (
+    <Link
+      to="/rooms/$roomId/matches"
+      params={{ roomId }}
+      search={{ openExternalBrowser: 1 }}
+      className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-300 hover:shadow"
+    >
+      {body}
     </Link>
   )
 }

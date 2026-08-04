@@ -2,6 +2,7 @@ import type {
   GameRanking,
   JoinResult,
   MatchSchedule,
+  PublicRoom,
   Room,
   RoomStatus,
   SubmitScoreResult,
@@ -169,14 +170,18 @@ export const roomApi = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
-  /** 条件でルーム一覧を取得する(公開)。 */
+  /**
+   * 条件でルーム一覧を取得する(公開)。
+   * 返るのは `PublicRoom` で **roomId も shareCode も入っていない**(理由は型の説明を参照)。
+   * リンクを張るには `lib/public-room-id.ts` で手元の roomId と `publicId` を突き合わせる。
+   */
   list: (params: RoomListParams = {}) => {
     const qs = new URLSearchParams()
     if (params.status) qs.set('status', params.status)
     if (params.heldFrom) qs.set('heldFrom', params.heldFrom)
     if (params.heldTo) qs.set('heldTo', params.heldTo)
     const q = qs.toString()
-    return request<Room[]>(`/api/v1/rooms${q ? `?${q}` : ''}`)
+    return request<PublicRoom[]>(`/api/v1/rooms${q ? `?${q}` : ''}`)
   },
   get: (roomId: string) => request<Room>(`/api/v1/rooms/${roomId}`),
   /** 共有コードでルームを取得する(短縮URL /r/{code} の解決用)。 */

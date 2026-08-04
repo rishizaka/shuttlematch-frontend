@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronRight, History, Plus } from 'lucide-react'
 import { useRoomList } from '../hooks/queries'
+import { useMyRoomIdByPublicId } from '../hooks/useMyRoomIds'
 import { Card, CardBody } from '../components/ui/Card'
 import { ErrorBlock, LoadingBlock } from '../components/ui/Spinner'
 import { RoomCard } from '../components/room/RoomCard'
 import { jstDayRange } from '../lib/format'
-import type { Room } from '../lib/types'
+import type { PublicRoom } from '../lib/types'
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -15,8 +16,10 @@ function HomePage() {
   // TOP は本日の開催のみ。サーバ側で開催日時を絞り込み、1リクエストで取得する。
   const { from, to } = jstDayRange()
   const today = useRoomList({ heldFrom: from, heldTo: to })
+  // 一覧に roomId は入っていない。自分が作成・参加したルームだけリンクになる。
+  const myRoomIds = useMyRoomIdByPublicId()
 
-  const byHeldAtDesc = (a: Room, b: Room) => (a.heldAt < b.heldAt ? 1 : -1)
+  const byHeldAtDesc = (a: PublicRoom, b: PublicRoom) => (a.heldAt < b.heldAt ? 1 : -1)
   const rooms = today.data ?? []
   const active = rooms.filter((r) => r.status !== 'CLOSED').sort(byHeldAtDesc)
   const closedToday = rooms.filter((r) => r.status === 'CLOSED').sort(byHeldAtDesc)
@@ -61,7 +64,7 @@ function HomePage() {
               <h2 className="text-sm font-semibold text-slate-700">開催中</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {active.map((s) => (
-                  <RoomCard key={s.id} room={s} />
+                  <RoomCard key={s.publicId} room={s} roomId={myRoomIds.get(s.publicId)} />
                 ))}
               </div>
             </section>
@@ -72,7 +75,7 @@ function HomePage() {
               <h2 className="text-sm font-semibold text-slate-700">終了済み</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {closedToday.map((s) => (
-                  <RoomCard key={s.id} room={s} />
+                  <RoomCard key={s.publicId} room={s} roomId={myRoomIds.get(s.publicId)} />
                 ))}
               </div>
             </section>
