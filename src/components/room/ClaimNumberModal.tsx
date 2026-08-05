@@ -5,29 +5,38 @@ import { FREE_SLOT, isClaimableSlot, VISITOR_PLACEHOLDER } from '../../lib/guest
 import { Button } from '../ui/Button'
 
 /**
- * 番号を選んで自分に割り当てるモーダル。
+ * 番号を選んで自分に割り当てるモーダル。人数を指定して作ったルーム(番号だけ)でも、
+ * 受付で名前を集めたルームでも、参加者が自分を名乗るのはこの1枚で行う。
  * <ul>
- * <li>空き枠(番号だけ / 遅刻者・ビジター / フリー)を選ぶと、名前を付けて名簿に入る(rename)。</li>
- * <li>すでに名前がある番号も選べる。この場合は名簿には触れず、この端末の
- *     「自分の番号」として紐付けるだけ(重複可)。間違えて設定しても選び直すだけで
- *     直せるように、番号の指定は排他にしない。</li>
+ * <li>空き枠(番号だけ / 遅刻者・ビジター / フリー)を選び、<b>名前を入れると名簿に載る</b>
+ *     (rename API)。他の参加者からも「N番=誰」が見えるようになる。</li>
+ * <li><b>名前は任意。</b>入れなければ名簿には触れず、この端末が自分の番号を覚えるだけ
+ *     (localStorage)。番号だけで運用したい人はこちら。</li>
+ * <li>すでに名前がある番号も選べる。この場合も名簿は上書きせず紐付けるだけ(重複可)。
+ *     間違えて設定しても選び直すだけで直せるように、番号の指定は排他にしない。</li>
  * </ul>
  */
 export function ClaimNumberModal({
   participants,
+  initialParticipantId,
   pending,
   error,
   onSubmit,
+  onClear,
   onCancel,
 }: {
   participants: Participant[]
+  /** すでに設定済みの番号(あれば初期選択にする)。 */
+  initialParticipantId?: string | null
   pending: boolean
   error?: string | null
   /** name が null のときは名簿を変更せず、この端末の番号の紐付けだけ行う。 */
   onSubmit: (participantId: string, name: string | null) => void
+  /** 設定を解除する(番号なしに戻す)。設定済みのときだけ表示する。 */
+  onClear?: () => void
   onCancel: () => void
 }) {
-  const [participantId, setParticipantId] = useState('')
+  const [participantId, setParticipantId] = useState(initialParticipantId ?? '')
   const [name, setName] = useState('')
 
   if (typeof document === 'undefined') return null
@@ -49,10 +58,13 @@ export function ClaimNumberModal({
     return `（${t}）`
   }
 
+  // 名前を入れたときだけ名簿に載せる。空欄のまま決定した人は「番号だけで使いたい」の
+  // 意思表示なので、勝手に「ゲスト」として名簿に載せない(端末の紐付けだけ行う)。
+  const claimingName = claimable ? name.trim() || null : null
+
   const submit = () => {
     if (!participantId || pending) return
-    // 空き枠: 名前は任意(未入力なら「ゲスト」)。実名入り: 名簿は変えない(null)。
-    onSubmit(participantId, claimable ? name.trim() || 'ゲスト' : null)
+    onSubmit(participantId, claimingName)
   }
 
   return createPortal(
@@ -60,12 +72,12 @@ export function ClaimNumberModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="運営指定の番号で参加"
+      aria-label="自分の番号を設定"
     >
       <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
-        <h2 className="text-lg font-bold text-slate-900">運営指定の番号で参加</h2>
+        <h2 className="text-lg font-bold text-slate-900">あなたの番号は？</h2>
         <p className="mt-1 text-sm text-slate-500">
-          自分の番号を選びます。空き枠なら名前も付けられます。
+          自分の番号を選ぶと、試合表であなたの試合が強調表示されます。
         </p>
 
         {slots.length === 0 ? (
@@ -103,6 +115,11 @@ export function ClaimNumberModal({
                   placeholder="あなたの名前（任意）"
                   className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 />
+                <span className="mt-1 block text-xs font-normal text-slate-500">
+                  {claimingName
+                    ? '名簿に載り、ほかの参加者からも「この番号はあなた」と分かります。'
+                    : '空欄のままでも設定できます。その場合は名簿に載らず、この端末が番号を覚えるだけです。'}
+                </span>
               </label>
             ) : (
               <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
@@ -117,7 +134,12 @@ export function ClaimNumberModal({
         <div className="mt-5 flex items-center gap-2">
           {slots.length > 0 ? (
             <Button className="flex-1" onClick={submit} disabled={!participantId || pending}>
-              {pending ? '設定中…' : claimable ? 'この番号で参加' : 'この番号を自分にする'}
+              {pending ? '設定中…' : claimingName ? 'この名前で参加' : 'この番号にする'}
+            </Button>
+          ) : null}
+          {onClear ? (
+            <Button variant="ghost" onClick={onClear} disabled={pending}>
+              解除
             </Button>
           ) : null}
           <Button variant="ghost" onClick={onCancel} disabled={pending}>

@@ -48,7 +48,6 @@ import { ClaimNumberModal } from '../../components/room/ClaimNumberModal'
 import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { RosterAccordion } from '../../components/room/RosterAccordion'
-import { SelfNumberModal } from '../../components/room/SelfNumberModal'
 import { RenameModal } from '../../components/room/RenameModal'
 import { MatchScheduleList } from '../../components/match/MatchScheduleList'
 import { MatchesSkeleton } from '../../components/match/MatchesSkeleton'
@@ -133,9 +132,8 @@ function MatchesPage() {
   const [addingSets, setAddingSets] = useState(false)
   // 運営メニューの開閉。参加者リストが長くなりがちなので、既定では畳んでおく。
   const [organizerOpen, setOrganizerOpen] = useState(false)
-  const [showSelfModal, setShowSelfModal] = useState(false)
   const [showRenameModal, setShowRenameModal] = useState(false)
-  // 既存の番号(番号だけの枠)に名前を付けて当てはまるモーダルの開閉。
+  // 自分の番号を決めるモーダルの開閉。番号だけの枠を選んで名前を付けることもできる。
   const [showClaimModal, setShowClaimModal] = useState(false)
   // 自分の ParticipantId (localStorage 由来)。参加(join)や番号設定で store が更新されたら
   // 即座に反映されるよう、リアクティブに購読する(useCurrentUser と同じ仕組み)。
@@ -304,10 +302,12 @@ function MatchesPage() {
     )
   }
 
-  // 名前運用(受付モード)か。参加者に非数字の名前が付いていれば受付モードとみなす。
-  const receptionMode = (room?.participants ?? []).some(
-    (p) => p.guestName != null && !/^\d+$/.test(p.guestName.trim()),
-  )
+  // 「受付で作ったルームか、人数を指定して作ったルームか」で導線を分けていた頃の名残として
+  // 参加者の名前から受付モードを推測していたが、推測はやめた。どちらのルームでも参加者は
+  // 同じ1枚(ClaimNumberModal)で自分を名乗り、名前を入れれば名簿に載る(API)、入れなければ
+  // 番号を端末が覚えるだけ(localStorage)。最初の1人が名前を入れた瞬間に画面の作りが
+  // 変わってしまう問題も、これで無くなる。
+  //
   // ParticipantId -> 名前(実名のみ)。番号タップで名前を出すツールチップに使う。
   const nameByParticipantId = new Map<string, string>()
   for (const p of room?.participants ?? []) {
@@ -363,31 +363,6 @@ function MatchesPage() {
         />
       ) : null}
 
-      {showSelfModal ? (
-        <SelfNumberModal
-          participants={room?.participants ?? []}
-          initialNumber={
-            myParticipantId ? indexByParticipantId.get(myParticipantId) ?? null : null
-          }
-          onSubmit={(participantId) => {
-            // DB には送らず localStorage に保存するだけ(重複可)。store 更新で自動反映される。
-            setSelfParticipant(roomId, participantId)
-            setShowSelfModal(false)
-            showToast('自分の番号を設定しました')
-          }}
-          onClear={
-            myParticipantId
-              ? () => {
-                  removeSelfParticipant(roomId)
-                  setShowSelfModal(false)
-                  showToast('自分の番号を解除しました')
-                }
-              : undefined
-          }
-          onCancel={() => setShowSelfModal(false)}
-        />
-      ) : null}
-
       {showRenameModal && myParticipantId ? (
         <RenameModal
           currentName={nameByParticipantId.get(myParticipantId)}
@@ -411,9 +386,19 @@ function MatchesPage() {
       {showClaimModal ? (
         <ClaimNumberModal
           participants={room?.participants ?? []}
+          initialParticipantId={myParticipantId}
           pending={claim.isPending}
           error={claim.isError ? (claim.error as Error).message : null}
           onSubmit={submitClaim}
+          onClear={
+            myParticipantId
+              ? () => {
+                  removeSelfParticipant(roomId)
+                  setShowClaimModal(false)
+                  showToast('自分の番号を解除しました')
+                }
+              : undefined
+          }
           onCancel={() => setShowClaimModal(false)}
         />
       ) : null}
@@ -431,58 +416,41 @@ function MatchesPage() {
               </span>
             ) : null}
           </div>
-          {/* 自分の番号表示。受付モードは参加時に確定するので名前を併記し「変更」は出さない
-              (番号=本人の識別子で、変更は他人へのなりすましになるため)。番号運用は各自の
-              自己申告なので「変更する」を出す。
+          {/* 自分の番号表示。名前を名乗っていれば併記する。名前(名簿=API)と番号(端末=
+              localStorage)は別物なので、変更の導線も分けて出す。
               運営者もプレーヤーとして出るので、参加者と同じ位置に出す。 */}
           {!closed && myParticipantId ? (
             <p className="mt-0.5 text-xs text-slate-500">
               あなた: {indexByParticipantId.get(myParticipantId) ?? '?'}番
-              {receptionMode && nameByParticipantId.get(myParticipantId)
+              {nameByParticipantId.get(myParticipantId)
                 ? ` ・ ${nameByParticipantId.get(myParticipantId)}`
                 : null}
-              {/* 受付モードは自分のニックネーム変更＋番号の訂正、番号運用は番号の変更。 */}
-              {receptionMode ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setShowRenameModal(true)}
-                    className="ml-1.5 font-medium text-brand-600 hover:underline"
-                  >
-                    名前を変更
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowSelfModal(true)}
-                    className="ml-1.5 font-medium text-brand-600 hover:underline"
-                  >
-                    番号を訂正
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowSelfModal(true)}
-                  className="ml-1.5 font-medium text-brand-600 hover:underline"
-                >
-                  変更する
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowRenameModal(true)}
+                className="ml-1.5 font-medium text-brand-600 hover:underline"
+              >
+                {nameByParticipantId.get(myParticipantId) ? '名前を変更' : '名前を入れる'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowClaimModal(true)}
+                className="ml-1.5 font-medium text-brand-600 hover:underline"
+              >
+                番号を変更
+              </button>
             </p>
           ) : null}
         </div>
       </div>
 
-      {/* 自分がまだ未設定の人への誘導。受付モード・番号運用のどちらも同じ1枚の案内を出す。
+      {/* 自分がまだ未設定の人への誘導。どのルームでも同じ1枚の案内・同じ開く先にする。
           遅刻者も新規に番号を増やすのではなく、運営が用意した空き番号を指定して入る。
-          開く先だけが違い、受付モードは「番号を指定」(空き枠なら名前を付けて名簿に入る)、
-          番号運用は「自分の番号を選ぶ」(端末に覚えるだけ)。
-          番号運用では運営者も同じ導線を使う(運営メニューには置かない)。受付モードの
-          運営者には出さない(運営メニューの「自分の番号」を使う)。 */}
-      {!closed && !myParticipantId && (!isOrganizer || !receptionMode) ? (
+          運営者もプレーヤーを兼ねるので同じ導線を使う(運営メニューには置かない)。 */}
+      {!closed && !myParticipantId ? (
         <button
           type="button"
-          onClick={() => (receptionMode ? setShowClaimModal(true) : setShowSelfModal(true))}
+          onClick={() => setShowClaimModal(true)}
           className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
@@ -556,32 +524,8 @@ function MatchesPage() {
           {/* 中身は瞬時に開閉する(高さアニメは付けない)。開閉の合図はシェブロンの回転のみ。 */}
           {organizerOpen ? (
             <div className="divide-y divide-slate-100 border-t border-slate-100">
-              {/* 自分の番号。番号運用ではページ上部(参加者と同じ位置)に出すので、
-                  ここは受付モードのときだけ。受付モードの上部は参加者専用の導線のため。 */}
-              {receptionMode ? (
-                <div className="px-4 py-4 sm:px-5">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1 flex items-center gap-2">
-                        <UserRound className="h-4 w-4 text-slate-400" />
-                        <h3 className="text-sm font-semibold text-slate-800">自分の番号</h3>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        {myParticipantId
-                          ? `${indexByParticipantId.get(myParticipantId) ?? '?'} 番として設定済み。自分の試合が強調表示されます。`
-                          : '未設定です。設定すると自分の試合が強調表示されます。'}
-                      </p>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setShowSelfModal(true)}
-                    >
-                      {myParticipantId ? '変更する' : '設定する'}
-                    </Button>
-                  </div>
-                </div>
-              ) : null}
+              {/* 「自分の番号」はここには置かない。運営者もプレーヤーとして参加者と同じ
+                  ページ上部の導線を使う(以前は受付モードのときだけここにも出していた)。 */}
 
               {/* 参加者の出入り */}
               <div className="px-4 py-4 sm:px-5">

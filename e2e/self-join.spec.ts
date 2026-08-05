@@ -88,14 +88,14 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     await expect(claimPage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
     await expect(claimPage.getByRole('button', { name: /新しく参加/ })).toBeHidden()
     await claimPage.getByRole('button', { name: /自分の番号を入力しましょう/ }).click()
-    const claimDialog = claimPage.getByRole('dialog', { name: '運営指定の番号で参加' })
+    const claimDialog = claimPage.getByRole('dialog', { name: '自分の番号を設定' })
     // 候補には実名入りの番号も並ぶので、「空き」の枠を選ぶ。
     const openOption = claimDialog.locator('option', { hasText: '空き' }).first()
     await claimDialog
       .getByRole('combobox')
       .selectOption((await openOption.getAttribute('value'))!)
     await claimDialog.getByPlaceholder('あなたの名前').fill('あとから')
-    await claimDialog.getByRole('button', { name: 'この番号で参加' }).click()
+    await claimDialog.getByRole('button', { name: 'この名前で参加' }).click()
     await expect(claimPage.getByText(/あなた:\s*\d+番/)).toBeVisible({ timeout: 10_000 })
 
     // 参加者(非運営者)には参加者名簿(番号→名前)が見える。運営者側は名簿を出さない。
@@ -113,14 +113,14 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     await dupPage.goto(`/rooms/${roomId}/matches`)
     await expect(dupPage.getByText('第1セット')).toBeVisible({ timeout: 10_000 })
     await dupPage.getByRole('button', { name: /自分の番号を入力しましょう/ }).click()
-    const dupDialog = dupPage.getByRole('dialog', { name: '運営指定の番号で参加' })
+    const dupDialog = dupPage.getByRole('dialog', { name: '自分の番号を設定' })
     const namedOption = dupDialog.locator('option', { hasText: 'あとから' }).first()
     await dupDialog
       .getByRole('combobox')
       .selectOption((await namedOption.getAttribute('value'))!)
     // 実名枠では名前入力は出ず、名簿を変えない旨の説明が出る。
     await expect(dupDialog.getByText(/名簿はそのまま/)).toBeVisible()
-    await dupDialog.getByRole('button', { name: 'この番号を自分にする' }).click()
+    await dupDialog.getByRole('button', { name: 'この番号にする' }).click()
     await expect(dupPage.getByText(/あなた:\s*\d+番/)).toBeVisible({ timeout: 10_000 })
     // 名簿の名前は上書きされていない(「あとから」のまま)。
     // ヘッダーの「あなた: N番 ・ あとから」にも含まれるので、名簿の行だけを完全一致で見る。
