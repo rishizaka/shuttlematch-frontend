@@ -45,7 +45,7 @@ function PastRoomsPage() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {past.map((s) => (
-            <RoomCard key={s.publicId} room={s} roomId={myRoomIds.get(s.publicId)} />
+            <RoomCard key={s.publicId} room={s} roomId={s.id ?? myRoomIds.get(s.publicId)} />
           ))}
         </div>
       )}

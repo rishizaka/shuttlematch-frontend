@@ -64,7 +64,7 @@ function HomePage() {
               <h2 className="text-sm font-semibold text-slate-700">開催中</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {active.map((s) => (
-                  <RoomCard key={s.publicId} room={s} roomId={myRoomIds.get(s.publicId)} />
+                  <RoomCard key={s.publicId} room={s} roomId={s.id ?? myRoomIds.get(s.publicId)} />
                 ))}
               </div>
             </section>
@@ -75,7 +75,7 @@ function HomePage() {
               <h2 className="text-sm font-semibold text-slate-700">終了済み</h2>
               <div className="grid gap-3 sm:grid-cols-2">
                 {closedToday.map((s) => (
-                  <RoomCard key={s.publicId} room={s} roomId={myRoomIds.get(s.publicId)} />
+                  <RoomCard key={s.publicId} room={s} roomId={s.id ?? myRoomIds.get(s.publicId)} />
                 ))}
               </div>
             </section>

@@ -7,10 +7,13 @@ import { Badge, statusTone } from '../ui/Badge'
 /**
  * 一覧に並ぶルームのカード。
  *
- * `roomId` が渡されたときだけ試合表へのリンクになる。一覧 API は roomId を返さないので、
- * リンクになるのは「作成した」「参加した」などで既にその roomId を知っている端末だけ
- * (照合は `lib/public-room-id.ts`)。知らないルームは、何が開催されているかは見えるが
- * 押せないカードとして並ぶ。中に入るには共有URL(`/r/{shareCode}`)が要る。
+ * `roomId` が渡されたときだけ試合表へのリンクになる。渡せるのは次の2通り。
+ * - 終了したルーム: 一覧 API が roomId を返す(過去の試合表は記録として誰でも見られる)
+ * - 開催中のルーム: 「作成した」「参加した」などで既に roomId を知っている端末だけ
+ *   (照合は `lib/public-room-id.ts`)
+ *
+ * どちらでもない開催中のルームは、何が開催されているかは見えるが押せないカードとして
+ * 並ぶ。中に入るには共有URL(`/r/{shareCode}`)が要る。
  */
 export function RoomCard({ room, roomId }: { room: PublicRoom; roomId?: string | null }) {
   const body = (

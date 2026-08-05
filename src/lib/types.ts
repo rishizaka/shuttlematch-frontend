@@ -65,6 +65,12 @@ export interface Room {
  */
 export interface PublicRoom {
   publicId: string
+  /**
+   * 終了したルームだけ入る。過去の試合表は記録として誰でも見られるようにするため、
+   * サーバーが CLOSED のときだけ roomId を返す(終了後は削除も試合表の変更もできない)。
+   * 開催中のルームでは undefined なので、リンクを張るには publicId の照合が要る。
+   */
+  id?: string
   title: string
   /** ISO-8601 (UTC, 末尾 Z)。 */
   heldAt: string
