@@ -14,7 +14,7 @@
      表紙(hero / 巻末CTA)は常に紺地で固定し、本文は紙地でテーマ追従する。
 
      動きは2種類に分けてある。
-       装飾(表紙の視差・シャトルの軌跡・進捗バー・章ラベル)
+       装飾(表紙の視差・進捗バー・章ラベル)
          … スクロール量に連続追従する。背面なので読書を邪魔しない。
        読む要素(見出し・本文・図表)
          … 画面に入ったら一度だけ .shown が付いて出し切る。以後は動かさない。
@@ -50,7 +50,6 @@
     --line: rgba(190, 210, 240, 0.16);
     --card: rgba(255, 255, 255, 0.05);
 
-    --thread: rgba(237, 187, 78, 0.3);
 
     /* 見出しは明朝。和文の極太ゴシックは字面が大きく詰まって量販店の POP に見える。
        「箔押しのプログラム」の格を出すのは、細めの明朝と広い字間・行間。
@@ -80,7 +79,9 @@
   }
 
   & {
-    margin: 0;
+    /* 縦の margin は指定しない。このページは全面の演出なので、レイアウト(main)の
+       上下 padding を about.tsx 側の -my-6 で打ち消している。ここで margin: 0 と
+       書くとそれを潰してしまい、表紙の上と巻末の下に地の色の帯が残る。 */
     /* 地色は #bg の canvas が全面で描く。ここで色を置くと混ざりを覆ってしまう */
     background: var(--abyss);
     color: var(--ink);
@@ -306,26 +307,9 @@
   }
 
   /* =========================================================
-     本文 — 背面をシャトルの軌跡が縫って降りる
+     本文
      ========================================================= */
   .body-wrap { position: relative; }
-  .thread {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    pointer-events: none;
-    overflow: visible;
-  }
-  .thread path {
-    fill: none;
-    stroke: var(--thread);
-    stroke-width: 1.4;
-    stroke-linecap: round;
-  }
-  .thread .shuttle-body { fill: var(--gold); }
-  .thread .shuttle-glow { fill: var(--gold); opacity: 0.18; }
 
   .set {
     position: relative;
@@ -602,3 +586,12 @@
     70%  { box-shadow: 0 0 0 9px rgba(224,160,32,0); }
     100% { box-shadow: 0 0 0 0 rgba(224,160,32,0); }
   }
+
+/*
+ * このページは全面の演出なので、紺地をヘッダー・フッターに直接つなげる。
+ * 上下(レイアウトの main の padding)は about.tsx 側の -my-6 で打ち消しているが、
+ * サイト共通フッターの mt-10 だけはこちらからしか外せない。
+ * この CSS は about ルートでのみ読み込まれるが、遷移直後に残っても他ページへ
+ * 漏れないよう :has で about のときだけに限定しておく。
+ */
+main:has(.about-stage) + footer { margin-top: 0; }

@@ -20,7 +20,7 @@ export const Route = createFileRoute('/about')({
 })
 
 /**
- * 背景・スクロール連動・シャトルの軌跡をまとめて動かす。
+ * 背景とスクロール連動をまとめて動かす。
  *
  * 素の DOM 操作でよい類の処理(canvas への描画、CSS 変数の書き換え、
  * スクロール量に応じた進行度の反映)なので、React の状態には載せない。
@@ -203,8 +203,6 @@ function startAboutStage(stage: HTMLElement): () => void {
             ? 'rgba(255,253,248,' + (0.35 + paper * 0.5).toFixed(3) + ')'
             : 'rgba(255,255,255,' + (0.05 + paper * 0.06).toFixed(3) + ')',
         );
-        root.setProperty('--thread', 'rgba(' + (paper > 0.5 ? '156,106,12' : '237,187,78') +
-          ',' + (0.3 + paper * 0.12).toFixed(3) + ')');
       }
 
       var smoothstep = function (a: number, b: number, x: number) {
@@ -307,37 +305,6 @@ function startAboutStage(stage: HTMLElement): () => void {
       var currentChapter = '';
 
       var progressBar = stage.querySelector('.progress') as HTMLElement | null;
-      var thread = stage.querySelector('#thread') as SVGSVGElement | null;
-      var threadPath = stage.querySelector('#threadPath') as SVGPathElement | null;
-      var threadTip = stage.querySelector('#threadTip') as SVGCircleElement | null;
-      var threadGlow = stage.querySelector('#threadGlow') as SVGCircleElement | null;
-      var bodyWrap = stage.querySelector('.body-wrap') as HTMLElement | null;
-      var threadLen = 0;
-
-      /* 本文の高さから、左右に蛇行しながら降りる1本のパスを作る。
-         章のあいだを縫うように振らせて、読み進む動線と重ねる。 */
-      function buildThread() {
-        if (!bodyWrap || !threadPath) return;
-        var w = bodyWrap.offsetWidth;
-        var h = bodyWrap.offsetHeight;
-        if (!w || !h || !thread || !threadPath) return;
-        thread.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-        var xs = [0.2, 0.86, 0.16, 0.8, 0.24, 0.72, 0.34];
-        var d = 'M ' + w * xs[0] + ' 0';
-        for (var i = 1; i < xs.length; i++) {
-          var y0 = (h * (i - 1)) / (xs.length - 1);
-          var y1 = (h * i) / (xs.length - 1);
-          var my = (y0 + y1) / 2;
-          d +=
-            ' C ' + w * xs[i - 1] + ' ' + my +
-            ', ' + w * xs[i] + ' ' + my +
-            ', ' + w * xs[i] + ' ' + y1;
-        }
-        threadPath.setAttribute('d', d);
-        threadLen = threadPath.getTotalLength();
-        threadPath.style.strokeDasharray = String(threadLen);
-        threadPath.style.strokeDashoffset = String(threadLen);
-      }
 
       function update() {
         var vh = window.innerHeight;
@@ -364,22 +331,6 @@ function startAboutStage(stage: HTMLElement): () => void {
             p = clamp01((start - r.top) / (start - end));
           }
           it.el.style.setProperty('--p', p.toFixed(4));
-        }
-
-        /* --- シャトルの軌跡: スクロール量ぶんだけ描き進む --- */
-        if (threadLen && bodyWrap && threadPath && threadTip && threadGlow) {
-          var br = bodyWrap.getBoundingClientRect();
-          // 本文が画面中央を通過する量を 0→1 に
-          var tp = clamp01((vh * 0.75 - br.top) / Math.max(br.height, 1));
-          threadPath.style.strokeDashoffset = (threadLen * (1 - tp)).toFixed(2);
-          var pt = threadPath.getPointAtLength(threadLen * tp);
-          var show = tp > 0.001 && tp < 0.999 ? '1' : '0';
-          threadTip.setAttribute('cx', String(pt.x));
-          threadTip.setAttribute('cy', String(pt.y));
-          threadTip.style.opacity = show;
-          threadGlow.setAttribute('cx', String(pt.x));
-          threadGlow.setAttribute('cy', String(pt.y));
-          threadGlow.style.opacity = show === '1' ? '0.18' : '0';
         }
 
         /* --- 章インジケーターの文字を、画面中央に近い章に合わせる --- */
@@ -410,25 +361,12 @@ function startAboutStage(stage: HTMLElement): () => void {
         requestAnimationFrame(function () { queued = false; update(); });
       }
 
-      buildThread();
       if (reduce) {
-        // 動きを減らす設定: 軌跡は全部描いて、先端は末尾に置く
-        if (threadLen && threadPath && threadTip && threadGlow) {
-          threadPath.style.strokeDashoffset = '0';
-          var endPt = threadPath.getPointAtLength(threadLen);
-          threadTip.setAttribute('cx', String(endPt.x));
-          threadTip.setAttribute('cy', String(endPt.y));
-          threadGlow.setAttribute('cx', String(endPt.x));
-          threadGlow.setAttribute('cy', String(endPt.y));
-        }
         if (railLabel) railLabel.textContent = 'ABOUT SHUTTLEMATCH';
       } else {
         update();
         on(window, 'scroll', onScroll, { passive: true });
-        on(window, 'resize', function () { buildThread(); update(); });
-        if ('ResizeObserver' in window && bodyWrap) {
-          new ResizeObserver(function () { buildThread(); update(); }).observe(bodyWrap);
-        }
+        on(window, 'resize', update);
       }
 
       /* =====================================================
@@ -610,13 +548,6 @@ function AboutPage() {
       </header>
 
       <main className="body-wrap">
-
-        <svg className="thread" id="thread" aria-hidden preserveAspectRatio="none">
-          <path id="threadPath" />
-          <circle id="threadGlow" className="shuttle-glow" r="9" />
-          <circle id="threadTip" className="shuttle-body" r="3.2" />
-        </svg>
-
 
         <section className="set sheet" data-chapter="SET 01 — 公平さ">
           <div className="reveal">
