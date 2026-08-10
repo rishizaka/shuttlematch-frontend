@@ -16,7 +16,7 @@ export const OPERATOR_NAME = 'ShuttleMatch 運営'
 export const CONTACT_EMAIL = 'contact@s-match.net'
 
 /** 制定日・最終改定日 (JST)。改定したら必ず更新する。 */
-export const PRIVACY_UPDATED_AT = '2026-07-27'
+export const PRIVACY_UPDATED_AT = '2026-08-10'
 export const TERMS_UPDATED_AT = '2026-07-27'
 
 export type LegalSection = {
@@ -89,7 +89,15 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   {
     heading: '6. アクセス解析',
     paragraphs: [
-      '本ポリシーの最終改定日の時点で、本サービスは Google Analytics 等のアクセス解析ツールを利用していません。将来的に導入する場合は、本ポリシーを改定したうえでお知らせします。',
+      '本サービスでは、どのページがどれだけ閲覧されているかを把握するために Cloudflare Web Analytics を利用しています。',
+      'この解析ツールは Cookie を使用せず、利用者を個人として識別しません。閲覧されたページ、参照元、大まかな国・地域、端末の種別といった統計情報のみを収集し、個々の利用者を追跡することはありません。',
+      'そのため、この解析のために利用者へ同意を求めることはしていません。ブラウザの設定や広告ブロッカーにより計測を拒否することもできますが、その場合でも本サービスの機能は通常どおりご利用いただけます。',
+    ],
+    links: [
+      {
+        label: 'Cloudflare Web Analytics について(英語)',
+        href: 'https://developers.cloudflare.com/web-analytics/',
+      },
     ],
   },
   {
@@ -101,6 +109,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     items: [
       'Amazon Web Services(サーバーおよびコンテンツ配信): 入力された情報およびアクセスログの保管。',
       'Google AdSense(広告配信): 前項に記載の Cookie 等の情報。',
+      'Cloudflare(DNS・アクセス解析): 閲覧されたページや参照元などの統計情報。個人を識別する情報は含まれません。',
       'Expo(プッシュ通知の配信): 通知の宛先となる端末識別用トークンおよび通知の文面。',
     ],
   },

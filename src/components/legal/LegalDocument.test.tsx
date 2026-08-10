@@ -61,3 +61,27 @@ describe('プライバシーポリシーの広告に関する記載', () => {
     )
   })
 })
+
+/**
+ * アクセス解析は Cookie を使わず個人を識別しないことを根拠に同意バナーを出していない。
+ * その根拠がポリシーから消えると「何も告知せず計測している」状態になるので固定しておく。
+ */
+describe('プライバシーポリシーのアクセス解析に関する記載', () => {
+  it('利用しているツールと、Cookie を使わない旨に触れている', () => {
+    render(
+      <LegalDocument
+        title="プライバシーポリシー"
+        updatedAt={PRIVACY_UPDATED_AT}
+        lead={PRIVACY_LEAD}
+        sections={PRIVACY_SECTIONS}
+      />,
+    )
+
+    const body = document.body.textContent ?? ''
+    expect(body).toContain('Cloudflare Web Analytics')
+    expect(body).toContain('Cookie を使用せず')
+    expect(body).toContain('個人として識別しません')
+    // 「解析ツールを利用していません」という以前の記載が残っていないこと
+    expect(body).not.toContain('アクセス解析ツールを利用していません')
+  })
+})
