@@ -59,6 +59,11 @@ jobs:
             package-lock.json
             serve.mjs
           if-no-files-found: error
+          # build → deploy へ受け渡すだけなので、残す意味があるのは実行中の数分だけ。
+          # 既定の90日で溜めると Free プランの artifact 容量(500MB)をすぐ超え、
+          # アップロードが失敗してデプロイごと落ちる(2026-08-10 に発生、3.68GB まで肥大)。
+          # ロールバックは EC2 上の dist.old / serve.mjs.prev で行うので artifact は要らない。
+          retention-days: 1
 
   deploy:
     name: Deploy to EC2
