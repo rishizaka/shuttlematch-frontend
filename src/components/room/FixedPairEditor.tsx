@@ -3,31 +3,47 @@ import { Link2, Plus, X } from 'lucide-react'
 import type { FixedPair, Participant } from '../../lib/types'
 import { useAddFixedPair, useRemoveFixedPair } from '../../hooks/queries'
 import { Button } from '../ui/Button'
+import { ConfirmModal } from '../ui/ConfirmModal'
 import { ErrorBlock } from '../ui/Spinner'
 import { useToast } from '../ui/Toast'
 
 /**
  * 固定ペア(常に同じチームで組む2人)の追加・解除UI。
  * 受付ロビー(初回生成前)と、生成後の参加者管理の両方で使う。
- * onChanged が渡されれば追加/解除の成功時にそれを呼ぶ(生成後の再編成確認など)。
- * 渡されなければ編集側でトーストを出す(生成前)。
+ *
+ * 解除は×を押した時点で確定してしまうと事故になるので、確認モーダルを挟む。
+ * 生成後(onRemoved あり)は「解除する」で解除から未開始セットの再編成まで
+ * 一続きで実行し、全部終わるまでモーダルを閉じない
+ * (解除だけ済んで再編成が漏れ、試合表に古い固定ペアが残るのを防ぐ)。
  */
 export function FixedPairEditor({
   roomId,
   participants,
   fixedPairs = [],
-  onChanged,
+  onAdded,
+  onRemoved,
 }: {
   roomId: string
   participants: Participant[]
   fixedPairs?: FixedPair[]
-  onChanged?: () => void
+  /** 追加が成功したとき。渡されなければ編集側でトーストを出す(生成前)。 */
+  onAdded?: () => void
+  /**
+   * 解除が成功したあとに続けてやること(生成後の再編成)。
+   * 終わるまでモーダルを開いたまま待つので Promise を返すこと。
+   * 渡されなければ編集側でトーストを出す(生成前)。
+   */
+  onRemoved?: () => Promise<unknown>
 }) {
   const addFixedPair = useAddFixedPair(roomId)
   const removeFixedPair = useRemoveFixedPair(roomId)
   const { showToast } = useToast()
   const [pairA, setPairA] = useState('')
   const [pairB, setPairB] = useState('')
+  // 解除の確認中の固定ペア(null なら確認していない)。
+  const [removingPair, setRemovingPair] = useState<FixedPair | null>(null)
+  // 解除〜再編成が終わるまで true。モーダルのボタンを止めるのに使う。
+  const [applying, setApplying] = useState(false)
 
   // 参加者番号(一覧の並び順、1始まり)。固定ペアの表示に使う。
   const numberOf = (participantId: string) =>
@@ -43,11 +59,31 @@ export function FixedPairEditor({
         onSuccess: () => {
           setPairA('')
           setPairB('')
-          if (onChanged) onChanged()
+          if (onAdded) onAdded()
           else showToast('固定ペアを追加しました')
         },
       },
     )
+  }
+
+  // 確認モーダルの「解除する」。解除 → (生成後なら)再編成 まで続けて走らせる。
+  const confirmRemoval = async () => {
+    if (!removingPair) return
+    setApplying(true)
+    try {
+      await removeFixedPair.mutateAsync({
+        participantA: removingPair.participantA,
+        participantB: removingPair.participantB,
+      })
+      if (onRemoved) await onRemoved()
+      else showToast('固定ペアを解除しました')
+    } catch {
+      // 解除・再編成いずれの失敗も、文言は下の ErrorBlock と親が出す。
+      // モーダルは閉じる(開いたままだと後ろのエラーが読めない)。
+    } finally {
+      setApplying(false)
+      setRemovingPair(null)
+    }
   }
 
   return (
@@ -75,17 +111,7 @@ export function FixedPairEditor({
                 className="text-slate-400 hover:text-slate-600 disabled:opacity-50"
                 aria-label="固定ペアを解除"
                 disabled={removeFixedPair.isPending}
-                onClick={() =>
-                  removeFixedPair.mutate(
-                    { participantA: fp.participantA, participantB: fp.participantB },
-                    {
-                      onSuccess: () => {
-                        if (onChanged) onChanged()
-                        else showToast('固定ペアを解除しました')
-                      },
-                    },
-                  )
-                }
+                onClick={() => setRemovingPair(fp)}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -146,6 +172,23 @@ export function FixedPairEditor({
         <div className="mt-2">
           <ErrorBlock message={(removeFixedPair.error as Error).message} />
         </div>
+      ) : null}
+
+      {removingPair ? (
+        <ConfirmModal
+          title="固定ペアを解除しますか？"
+          description={
+            `${numberOf(removingPair.participantA)}番 と ${numberOf(removingPair.participantB)}番 の固定を外します。` +
+            (onRemoved
+              ? '続けて未開始セットを再編成します(開始済みはそのまま)。'
+              : '')
+          }
+          confirmLabel="解除する"
+          cancelLabel="やめる"
+          confirming={applying}
+          onConfirm={() => void confirmRemoval()}
+          onCancel={() => setRemovingPair(null)}
+        />
       ) : null}
     </div>
   )

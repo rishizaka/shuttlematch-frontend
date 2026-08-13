@@ -52,6 +52,14 @@ export function ParticipantManager({
 
   const askReplan = () => setShowReplanConfirm(true)
 
+  // 固定ペアの解除だけは、解除の確認モーダルで「解除する」を押した流れで
+  // 再編成まで済ませる(確認を2回続けて出さないため)。
+  // ゲストの追加・早退・復帰・固定ペアの追加は従来どおり、あとから尋ねる。
+  const replanAfterFixedPairRemoval = async () => {
+    await replan.mutateAsync(undefined)
+    showToast('固定ペアを解除し、未開始セットを再編成しました')
+  }
+
   // 途中参加: 次の空き番号(現在の人数+1)を番号のまま追加する。名前は後から本人が申告できる。
   // 試合生成後は追加をきっかけに再編成モーダルを出す。生成前(試合表がまだ無い)はトーストのみ。
   const addGuest = () => {
@@ -131,7 +139,8 @@ export function ParticipantManager({
         roomId={roomId}
         participants={participants}
         fixedPairs={fixedPairs}
-        onChanged={generated ? askReplan : undefined}
+        onAdded={generated ? askReplan : undefined}
+        onRemoved={generated ? replanAfterFixedPairRemoval : undefined}
       />
 
       {generated ? (
@@ -143,6 +152,9 @@ export function ParticipantManager({
       {add.isError ? <ErrorBlock message={(add.error as Error).message} /> : null}
       {markLeft.isError ? <ErrorBlock message={(markLeft.error as Error).message} /> : null}
       {reactivate.isError ? <ErrorBlock message={(reactivate.error as Error).message} /> : null}
+      {/* 固定ペアの解除に続く再編成が失敗したときの受け皿。解除だけ済んでいる状態なので、
+          黙って閉じると試合表が古いままなのに気付けない。 */}
+      {replan.isError ? <ErrorBlock message={(replan.error as Error).message} /> : null}
 
       {showReplanConfirm ? (
         <ConfirmModal
