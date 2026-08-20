@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Plus, Share2 } from 'lucide-react'
+import { Suspense, lazy, useState } from 'react'
+import { Plus, QrCode, Share2 } from 'lucide-react'
 import type { FixedPair, Participant } from '../../lib/types'
 import {
   useAddParticipant,
@@ -18,6 +18,10 @@ import { ConfirmModal } from '../ui/ConfirmModal'
 import { ErrorBlock } from '../ui/Spinner'
 import { useToast } from '../ui/Toast'
 import { ParticipantList } from './ParticipantList'
+
+// QR の生成ライブラリごと、開いたときに初めて読み込む。
+// 試合表のページは参加者全員が開くので、運営者しか使わないものを既定のバンドルに載せない。
+const QrModal = lazy(() => import('./QrModal'))
 
 /**
  * オーガナイザー向けの参加者管理(番号追加・削除/早退・名前変更)。
@@ -49,6 +53,8 @@ export function ParticipantManager({
   const { showToast } = useToast()
   // ゲスト追加・早退・復帰の後に「未開始セットを再編成しますか？」と確認するモーダルの開閉。
   const [showReplanConfirm, setShowReplanConfirm] = useState(false)
+  // 試合表のURLをQRで見せるモーダルの開閉。
+  const [showQr, setShowQr] = useState(false)
 
   const askReplan = () => setShowReplanConfirm(true)
 
@@ -95,6 +101,12 @@ export function ParticipantManager({
         <Button type="button" size="sm" variant="secondary" onClick={shareLink}>
           <Share2 className="h-4 w-4" />
           試合表を共有
+        </Button>
+        {/* 会場でリンクを送れない相手にはQRで渡す。共有するURLは同じ
+            (短縮URL + openExternalBrowser=1)。 */}
+        <Button type="button" size="sm" variant="secondary" onClick={() => setShowQr(true)}>
+          <QrCode className="h-4 w-4" />
+          QRを表示
         </Button>
         <Button
           type="button"
@@ -155,6 +167,12 @@ export function ParticipantManager({
       {/* 固定ペアの解除に続く再編成が失敗したときの受け皿。解除だけ済んでいる状態なので、
           黙って閉じると試合表が古いままなのに気付けない。 */}
       {replan.isError ? <ErrorBlock message={(replan.error as Error).message} /> : null}
+
+      {showQr ? (
+        <Suspense fallback={null}>
+          <QrModal url={shareUrl} onClose={() => setShowQr(false)} />
+        </Suspense>
+      ) : null}
 
       {showReplanConfirm ? (
         <ConfirmModal

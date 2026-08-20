@@ -60,9 +60,20 @@ export async function quickCreateRoom(
   return res.json()
 }
 
-/** 検証で作ったルームを配下データごと削除する(後始末)。 */
+/**
+ * 検証で作ったルームを配下データごと削除する(後始末)。
+ * 削除には共有コードが要るので、ルームを引いてから消す。
+ */
 export async function deleteRoom(request: APIRequestContext, roomId: string) {
-  await request.delete(`${API_BASE}/api/v1/rooms/${roomId}`).catch(() => {})
+  try {
+    const res = await request.get(`${API_BASE}/api/v1/rooms/${roomId}`)
+    const shareCode = (await res.json()).shareCode as string
+    await request.delete(
+      `${API_BASE}/api/v1/rooms/${roomId}?shareCode=${encodeURIComponent(shareCode)}`,
+    )
+  } catch {
+    // 後始末なので、失敗してもテスト結果は変えない
+  }
 }
 
 /** 現在の試合表(スケジュール)を取得する。UI がレンダするのと同じデータ。 */

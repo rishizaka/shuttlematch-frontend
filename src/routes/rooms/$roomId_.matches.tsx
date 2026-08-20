@@ -120,7 +120,7 @@ function MatchesPage() {
   const addSets = useAddSets(roomId)
   const replan = useReplanFutureSets(roomId)
   const closeRoom = useCloseRoom(roomId)
-  const deleteRoom = useDeleteRoom(roomId)
+  const deleteRoom = useDeleteRoom(roomId, room?.shareCode)
   const claim = useClaimNumber(roomId)
   const rename = useRenameParticipant(roomId)
   const navigate = useNavigate()
@@ -480,16 +480,20 @@ function MatchesPage() {
         </div>
       ) : null}
 
-      {/* 参加者名簿(番号→名前)。運営者は運営メニューの参加者管理で名前を見られるので、
-          ここは非運営者(参加者)向けに表示する。名前運用(受付モード)のときだけ出る。 */}
-      {!isOrganizer ? (
+      {/* 参加者名簿(番号→名前)。名前運用(受付モード)のときだけ出る。
+          運営者には既定では出さない(運営メニューの参加者管理で名前を見られるため)が、
+          終了済みルームでは運営メニューごと消えるので、そのときは運営者にも出す。
+          出さないと運営者だけ番号と名前の対応を確認できなくなる。 */}
+      {!isOrganizer || closed ? (
         <RosterAccordion
           participants={room?.participants ?? []}
           selfParticipantId={myParticipantId}
         />
       ) : null}
 
-      {isOrganizer && !closed ? (
+      {/* 運営メニュー。終了済みでも出す(削除とスクショ用ページは終了後にも要る)。
+          試合表を書き換える操作だけ、中で closed のときに落とす。 */}
+      {isOrganizer ? (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           {/* ヘッダー行は常に表示し、タップでメニュー全体を開閉する。 */}
           <button
@@ -508,7 +512,7 @@ function MatchesPage() {
                 {leftCount > 0 ? `・早退 ${leftCount} 人` : ''}・全 {setCount} セット
               </span>
             </span>
-            {hasLeftParticipant && !organizerOpen ? (
+            {hasLeftParticipant && !organizerOpen && !closed ? (
               <span className="hidden shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 sm:inline-flex">
                 再編成の余地あり
               </span>
@@ -527,6 +531,9 @@ function MatchesPage() {
               {/* 「自分の番号」はここには置かない。運営者もプレーヤーとして参加者と同じ
                   ページ上部の導線を使う(以前は受付モードのときだけここにも出していた)。 */}
 
+              {/* 試合表を書き換える操作。終了済みでは変更できないので出さない。 */}
+              {!closed ? (
+                <>
               {/* 参加者の出入り */}
               <div className="px-4 py-4 sm:px-5">
                 <div className="mb-3 flex items-center gap-2">
@@ -584,6 +591,8 @@ function MatchesPage() {
                   </p>
                 ) : null}
               </div>
+                </>
+              ) : null}
 
               {/* スクショ用ページ */}
               <div className="px-4 py-4 sm:px-5">

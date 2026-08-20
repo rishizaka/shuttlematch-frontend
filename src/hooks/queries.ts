@@ -108,10 +108,15 @@ export function useCloseRoom(roomId: string) {
 }
 
 /** ルームを配下データごと完全に削除する。間違えて作成した場合などに使う。 */
-export function useDeleteRoom(roomId: string) {
+/** ルームを削除する。共有コードは呼び出し側(ルームを取得済みの画面)が渡す。 */
+export function useDeleteRoom(roomId: string, shareCode: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => roomApi.deleteRoom(roomId),
+    mutationFn: () => {
+      // 共有コードが無い状態で叩いても 403 になるだけなので、手前で止めて理由を出す。
+      if (!shareCode) throw new Error("ルームの読み込みが終わっていません");
+      return roomApi.deleteRoom(roomId, shareCode);
+    },
     onSuccess: () => {
       qc.removeQueries({ queryKey: queryKeys.room(roomId) });
       qc.invalidateQueries({ queryKey: queryKeys.roomLists });
