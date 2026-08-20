@@ -1,5 +1,5 @@
 /**
- * シャトポコスキー — 3レーンのゲレンデを滑り降りるダウンヒル。
+ * シャトポコのスキー — 3レーンのゲレンデを滑り降りるダウンヒル。
  *
  * 奥行き z を持たせた擬似3D(透視投影)で、奥から手前へ景色が流れてくる。
  * 曲がる操作はなく、横スワイプで3本のレーンを移り歩くだけ。
@@ -1665,8 +1665,8 @@ export function createShatopokoSkiGame(
     ctx.lineWidth = 6
     ctx.strokeStyle = 'rgba(6,20,44,0.55)'
     ctx.font = '800 26px system-ui, sans-serif'
-    ctx.strokeText('シャトポコスキー', LW / 2, LH * 0.36)
-    ctx.fillText('シャトポコスキー', LW / 2, LH * 0.36)
+    ctx.strokeText('シャトポコのスキー', LW / 2, LH * 0.36)
+    ctx.fillText('シャトポコのスキー', LW / 2, LH * 0.36)
     // ラケットも羽根も見ればわかるので、ここでは目的と操作だけ伝える
     ctx.font = '800 19px system-ui, sans-serif'
     ctx.lineWidth = 5

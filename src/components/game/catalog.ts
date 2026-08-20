@@ -48,7 +48,7 @@ export const GAMES: GameEntry[] = [
     to: '/game/ski',
     icon: '⛷️',
     iconBg: 'from-sky-100 to-indigo-100',
-    name: 'シャトポコスキー',
+    name: 'シャトポコのスキー',
     description: '120秒の一本勝負。3本のコースを横スワイプ、加速して距離をかせげ',
     bestKey: 'shuttlematch:shatopoko-ski:best',
   },

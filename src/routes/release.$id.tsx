@@ -75,6 +75,15 @@ function ReleaseDetailPage() {
                   {paragraph}
                 </p>
               ))}
+              {section.bullets ? (
+                <ul className="list-disc space-y-1.5 pl-5">
+                  {section.bullets.map((bullet, j) => (
+                    <li key={j} className="text-sm leading-relaxed text-slate-700">
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </section>
           ))}
         </CardBody>

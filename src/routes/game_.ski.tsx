@@ -12,7 +12,7 @@ import type { SkiHandle, SkiSnapshot } from '../components/game/shatopokoSki'
 export const Route = createFileRoute('/game_/ski')({
   head: () => ({
     meta: [
-      { title: 'シャトポコスキー — 待ち時間のミニゲーム | ShuttleMatch' },
+      { title: 'シャトポコのスキー — 待ち時間のミニゲーム | ShuttleMatch' },
       {
         name: 'description',
         content:
@@ -111,7 +111,7 @@ function SkiPage() {
   }, [handleGameOver])
 
   const share = async () => {
-    const text = `シャトポコスキーで ${result.score.toLocaleString('ja-JP')} 点とった！⛷️ ${result.distance.toLocaleString('ja-JP')}m × ${result.multiplier.toFixed(2)}倍。きみは超えられる？`
+    const text = `シャトポコのスキーで ${result.score.toLocaleString('ja-JP')} 点とった！⛷️ ${result.distance.toLocaleString('ja-JP')}m × ${result.multiplier.toFixed(2)}倍。きみは超えられる？`
     const url = 'https://s-match.net/game/ski'
     if (navigator.share) {
       try {
@@ -138,7 +138,7 @@ function SkiPage() {
             <ChevronLeft className="h-3.5 w-3.5" />
             ミニゲーム一覧
           </Link>
-          <h1 className="text-xl font-bold text-slate-900">シャトポコスキー</h1>
+          <h1 className="text-xl font-bold text-slate-900">シャトポコのスキー</h1>
           <p className="text-xs text-slate-500">{TIME_LIMIT}秒の一本勝負。横スワイプで移動。</p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
