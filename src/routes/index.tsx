@@ -13,16 +13,27 @@ export const Route = createFileRoute('/')({
 })
 
 function HomePage() {
-  // TOP は本日の開催のみ。サーバ側で開催日時を絞り込み、1リクエストで取得する。
-  const { from, to } = jstDayRange()
-  const today = useRoomList({ heldFrom: from, heldTo: to })
+  // 開催中は日付で絞らず、終了していないルームをすべて出す。
+  // heldAt は作成した時刻で固定され後から直せないので、前日の夜に作って翌日使う
+  // ような場合に「開催中なのに TOP に出ない」ことが起きていた。
+  // 終了済みは本日ぶんだけ(それ以前は /past にある)。
+  const all = useRoomList()
   // 一覧に roomId は入っていない。自分が作成・参加したルームだけリンクになる。
   const myRoomIds = useMyRoomIdByPublicId()
 
   const byHeldAtDesc = (a: PublicRoom, b: PublicRoom) => (a.heldAt < b.heldAt ? 1 : -1)
-  const rooms = today.data ?? []
+  const rooms = all.data ?? []
   const active = rooms.filter((r) => r.status !== 'CLOSED').sort(byHeldAtDesc)
-  const closedToday = rooms.filter((r) => r.status === 'CLOSED').sort(byHeldAtDesc)
+  const { from, to } = jstDayRange()
+  const fromMs = Date.parse(from)
+  const toMs = Date.parse(to)
+  const closedToday = rooms
+    .filter((r) => {
+      if (r.status !== 'CLOSED') return false
+      const heldAt = Date.parse(r.heldAt)
+      return heldAt >= fromMs && heldAt < toMs
+    })
+    .sort(byHeldAtDesc)
 
   return (
     <div className="space-y-8">
@@ -40,21 +51,19 @@ function HomePage() {
         </Link>
       </div>
 
-      {today.isLoading ? (
+      {all.isLoading ? (
         <LoadingBlock />
-      ) : today.error ? (
+      ) : all.error ? (
         <ErrorBlock
-          message={
-            today.error instanceof Error ? today.error.message : '一覧を取得できませんでした'
-          }
-          onRetry={() => void today.refetch()}
+          message={all.error instanceof Error ? all.error.message : '一覧を取得できませんでした'}
+          onRetry={() => void all.refetch()}
         />
       ) : (
         <>
-          {rooms.length === 0 ? (
+          {active.length === 0 && closedToday.length === 0 ? (
             <Card>
               <CardBody>
-                <p className="text-sm text-slate-500">本日のルームはまだありません。</p>
+                <p className="text-sm text-slate-500">開催中のルームはありません。</p>
               </CardBody>
             </Card>
           ) : null}
