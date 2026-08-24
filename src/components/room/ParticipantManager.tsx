@@ -1,9 +1,10 @@
 import { Suspense, lazy, useState } from 'react'
-import { Plus, QrCode, Share2 } from 'lucide-react'
+import { ListChecks, Plus, QrCode, Share2 } from 'lucide-react'
 import type { FixedPair, Participant } from '../../lib/types'
 import {
   useAddParticipant,
   useMarkParticipantLeft,
+  useMarkParticipantsLeft,
   useReactivateParticipant,
   useRemoveParticipant,
   useRenameParticipant,
@@ -47,6 +48,7 @@ export function ParticipantManager({
   const add = useAddParticipant(roomId)
   const remove = useRemoveParticipant(roomId)
   const markLeft = useMarkParticipantLeft(roomId)
+  const markLeftBulk = useMarkParticipantsLeft(roomId)
   const reactivate = useReactivateParticipant(roomId)
   const rename = useRenameParticipant(roomId)
   const replan = useReplanFutureSets(roomId)
@@ -55,8 +57,36 @@ export function ParticipantManager({
   const [showReplanConfirm, setShowReplanConfirm] = useState(false)
   // 試合表のURLをQRで見せるモーダルの開閉。
   const [showQr, setShowQr] = useState(false)
+  // まとめて早退させる複数選択モード。早退を1人押すたびに再編成確認を挟むと、
+  // 何人もまとめて早退させたいときにモーダルを人数ぶん閉じることになるため、
+  // 選んでから1回でまとめて早退させ、再編成の確認も最後に1回だけ出す。
+  const [selecting, setSelecting] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const askReplan = () => setShowReplanConfirm(true)
+
+  const cancelSelecting = () => {
+    setSelecting(false)
+    setSelectedIds(new Set())
+  }
+
+  const toggleSelect = (p: Participant) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(p.id)) next.delete(p.id)
+      else next.add(p.id)
+      return next
+    })
+  }
+
+  const confirmBulkLeave = () => {
+    markLeftBulk.mutate([...selectedIds], {
+      onSuccess: () => {
+        cancelSelecting()
+        askReplan()
+      },
+    })
+  }
 
   // 固定ペアの解除だけは、解除の確認モーダルで「解除する」を押した流れで
   // 再編成まで済ませる(確認を2回続けて出さないため)。
@@ -121,6 +151,32 @@ export function ParticipantManager({
         </Button>
       </div>
 
+      {/* まとめて早退させる複数選択モードの切り替え。1人だけ早退させる操作(既定)の
+          見た目・手順は変えず、必要なときだけ切り替えて使う。在席が2人未満なら
+          まとめる意味が無いので出さない。 */}
+      {generated && participants.filter((p) => p.status !== 'LEFT').length >= 2 ? (
+        <div className="flex items-center justify-end">
+          {selecting ? (
+            <button
+              type="button"
+              onClick={cancelSelecting}
+              className="text-xs font-medium text-slate-500 transition hover:text-slate-800"
+            >
+              キャンセル
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setSelecting(true)}
+              className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 transition hover:text-brand-700"
+            >
+              <ListChecks className="h-3.5 w-3.5" />
+              複数選択
+            </button>
+          )}
+        </div>
+      ) : null}
+
       <ParticipantList
         participants={participants}
         onRemove={generated ? undefined : (p) => remove.mutate(p.id)}
@@ -151,7 +207,25 @@ export function ParticipantManager({
                 ? (rename.variables as { participantId: string }).participantId
                 : null
         }
+        selecting={selecting}
+        selectedIds={selectedIds}
+        onToggleSelect={toggleSelect}
       />
+
+      {/* 選んだ人数ぶんをまとめて早退にするバー。1人も選んでいない間は出さない。 */}
+      {selecting && selectedIds.size > 0 ? (
+        <div className="flex items-center justify-between gap-3 rounded-xl bg-brand-50 px-3 py-2.5">
+          <span className="text-sm font-semibold text-brand-900">
+            {selectedIds.size}人を選択中
+          </span>
+          <Button size="sm" onClick={confirmBulkLeave} disabled={markLeftBulk.isPending}>
+            {markLeftBulk.isPending ? '処理中…' : '早退にする'}
+          </Button>
+        </div>
+      ) : null}
+      {markLeftBulk.isError ? (
+        <ErrorBlock message={(markLeftBulk.error as Error).message} />
+      ) : null}
 
       {/* 固定ペア: 常に同じチームで組む2人を設定する。見た目は変わらず生成ロジックだけが守る。 */}
       <FixedPairEditor

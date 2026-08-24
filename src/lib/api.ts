@@ -245,6 +245,17 @@ export const roomApi = {
     request<Room>(`/api/v1/rooms/${roomId}/participants/${participantId}/leave`, {
       method: 'POST',
     }),
+  /**
+   * 複数人をまとめて早退にする。1回の読み込み・保存で反映するため、
+   * markParticipantLeft を選んだ人数ぶん並行で呼ぶより安全
+   * (backend が集約を丸ごと差分保存する都合上、同じルームへの同時書き込みで
+   * 片方が失われうる)。
+   */
+  markParticipantsLeft: (roomId: string, participantIds: string[]) =>
+    request<Room>(`/api/v1/rooms/${roomId}/participants/leave-bulk`, {
+      method: 'POST',
+      body: JSON.stringify({ participantIds }),
+    }),
   /** 復帰(在席状態を ACTIVE に)。 */
   reactivateParticipant: (roomId: string, participantId: string) =>
     request<Room>(`/api/v1/rooms/${roomId}/participants/${participantId}/reactivate`, {

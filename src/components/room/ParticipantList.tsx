@@ -31,6 +31,9 @@ export function ParticipantList({
   onMakeFree,
   onUnfree,
   updatingId,
+  selecting = false,
+  selectedIds,
+  onToggleSelect,
 }: {
   participants: Participant[]
   /** 指定すると各行に削除ボタンを表示する (オーガナイザー用・生成前)。 */
@@ -45,6 +48,13 @@ export function ParticipantList({
   /** 指定するとフリー枠に「フリーを解除」(番号だけの枠に戻す)を表示する。 */
   onUnfree?: (participant: Participant) => void
   updatingId?: string | null
+  /**
+   * まとめて早退させるための複数選択モード。true の間は行ごとの操作ボタンを隠し、
+   * 在席者にだけチェックボックスを出す(誤操作を避けるため、選択と個別操作は同時に出さない)。
+   */
+  selecting?: boolean
+  selectedIds?: ReadonlySet<string>
+  onToggleSelect?: (participant: Participant) => void
 }) {
   if (participants.length === 0) {
     return <p className="py-4 text-sm text-slate-500">まだ参加者がいません。</p>
@@ -62,6 +72,20 @@ export function ParticipantList({
                 (left ? 'text-slate-400' : 'text-slate-800')
               }
             >
+              {selecting ? (
+                left ? (
+                  // 早退中は選べない。位置だけ揃えるための空のスペーサー。
+                  <span className="h-4 w-4 shrink-0" aria-hidden />
+                ) : (
+                  <input
+                    type="checkbox"
+                    checked={selectedIds?.has(p.id) ?? false}
+                    onChange={() => onToggleSelect?.(p)}
+                    aria-label={`${i + 1}番を選択`}
+                    className="h-4 w-4 shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                  />
+                )
+              ) : null}
               <span
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 tabular-nums"
                 aria-hidden
@@ -75,67 +99,70 @@ export function ParticipantList({
               {left ? <Badge tone="slate">早退</Badge> : null}
             </span>
 
-            <span className="flex shrink-0 items-center gap-2">
-              {onReactivate && left ? (
-                <button
-                  type="button"
-                  onClick={() => onReactivate(p)}
-                  disabled={updatingId === p.id}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 transition hover:text-brand-700 disabled:opacity-40"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  復帰
-                </button>
-              ) : null}
-              {/* フリーにする: 番号とユーザーの紐付けを解き、誰でも入れる枠として残す。 */}
-              {onMakeFree && canMakeFree(p) ? (
-                <button
-                  type="button"
-                  onClick={() => onMakeFree(p)}
-                  disabled={updatingId === p.id}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition hover:text-slate-800 disabled:opacity-40"
-                >
-                  <Unlink className="h-3.5 w-3.5" />
-                  フリー
-                </button>
-              ) : null}
-              {/* フリーを解除: 番号だけの枠に戻す(フリーにするの逆)。こちらも在席のまま
-                  試合表の枠は変わらないので、再編成は不要。 */}
-              {onUnfree && isFreeSlot(p) ? (
-                <button
-                  type="button"
-                  onClick={() => onUnfree(p)}
-                  disabled={updatingId === p.id}
-                  aria-label={`${i + 1}番のフリーを解除`}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition hover:text-slate-800 disabled:opacity-40"
-                >
-                  <Undo2 className="h-3.5 w-3.5" />
-                  解除
-                </button>
-              ) : null}
-              {onMarkLeft && !left ? (
-                <button
-                  type="button"
-                  onClick={() => onMarkLeft(p)}
-                  disabled={updatingId === p.id}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition hover:text-slate-800 disabled:opacity-40"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  早退
-                </button>
-              ) : null}
-              {onRemove ? (
-                <button
-                  type="button"
-                  onClick={() => onRemove(p)}
-                  disabled={removingId === p.id}
-                  aria-label={`${i + 1}番 を削除`}
-                  className="text-slate-400 transition hover:text-red-600 disabled:opacity-40"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              ) : null}
-            </span>
+            {/* 選択モード中は個別の操作ボタンを隠す(選択に集中させる。誤タップも防ぐ)。 */}
+            {selecting ? null : (
+              <span className="flex shrink-0 items-center gap-2">
+                {onReactivate && left ? (
+                  <button
+                    type="button"
+                    onClick={() => onReactivate(p)}
+                    disabled={updatingId === p.id}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-brand-600 transition hover:text-brand-700 disabled:opacity-40"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    復帰
+                  </button>
+                ) : null}
+                {/* フリーにする: 番号とユーザーの紐付けを解き、誰でも入れる枠として残す。 */}
+                {onMakeFree && canMakeFree(p) ? (
+                  <button
+                    type="button"
+                    onClick={() => onMakeFree(p)}
+                    disabled={updatingId === p.id}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition hover:text-slate-800 disabled:opacity-40"
+                  >
+                    <Unlink className="h-3.5 w-3.5" />
+                    フリー
+                  </button>
+                ) : null}
+                {/* フリーを解除: 番号だけの枠に戻す(フリーにするの逆)。こちらも在席のまま
+                    試合表の枠は変わらないので、再編成は不要。 */}
+                {onUnfree && isFreeSlot(p) ? (
+                  <button
+                    type="button"
+                    onClick={() => onUnfree(p)}
+                    disabled={updatingId === p.id}
+                    aria-label={`${i + 1}番のフリーを解除`}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition hover:text-slate-800 disabled:opacity-40"
+                  >
+                    <Undo2 className="h-3.5 w-3.5" />
+                    解除
+                  </button>
+                ) : null}
+                {onMarkLeft && !left ? (
+                  <button
+                    type="button"
+                    onClick={() => onMarkLeft(p)}
+                    disabled={updatingId === p.id}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition hover:text-slate-800 disabled:opacity-40"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    早退
+                  </button>
+                ) : null}
+                {onRemove ? (
+                  <button
+                    type="button"
+                    onClick={() => onRemove(p)}
+                    disabled={removingId === p.id}
+                    aria-label={`${i + 1}番 を削除`}
+                    className="text-slate-400 transition hover:text-red-600 disabled:opacity-40"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </span>
+            )}
           </li>
         )
       })}

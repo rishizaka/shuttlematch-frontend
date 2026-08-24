@@ -242,6 +242,18 @@ export function useMarkParticipantLeft(roomId: string) {
   });
 }
 
+/** 複数人をまとめて早退にする (運営者操作)。1回の保存で反映する。 */
+export function useMarkParticipantsLeft(roomId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (participantIds: string[]) =>
+      roomApi.markParticipantsLeft(roomId, participantIds),
+    onSuccess: (room) => {
+      qc.setQueryData(queryKeys.room(roomId), room);
+    },
+  });
+}
+
 /** 復帰 (運営者操作)。在席状態を ACTIVE に戻す。 */
 export function useReactivateParticipant(roomId: string) {
   const qc = useQueryClient();
