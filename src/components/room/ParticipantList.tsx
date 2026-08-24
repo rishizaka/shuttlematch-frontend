@@ -1,4 +1,4 @@
-import { LogOut, RotateCcw, Trash2, Unlink } from 'lucide-react'
+import { LogOut, RotateCcw, Trash2, Undo2, Unlink } from 'lucide-react'
 import type { Participant } from '../../lib/types'
 import { FREE_SLOT } from '../../lib/guests'
 import { Badge } from '../ui/Badge'
@@ -17,6 +17,11 @@ export function canMakeFree(p: Participant): boolean {
   return p.guestName?.trim() !== FREE_SLOT
 }
 
+/** 現在フリー枠になっている在席者か。「フリーを解除」を出してよいかの判定に使う。 */
+export function isFreeSlot(p: Participant): boolean {
+  return p.status !== 'LEFT' && p.guestName?.trim() === FREE_SLOT
+}
+
 export function ParticipantList({
   participants,
   onRemove,
@@ -24,6 +29,7 @@ export function ParticipantList({
   onMarkLeft,
   onReactivate,
   onMakeFree,
+  onUnfree,
   updatingId,
 }: {
   participants: Participant[]
@@ -36,6 +42,8 @@ export function ParticipantList({
   onReactivate?: (participant: Participant) => void
   /** 指定すると在席者に「フリーにする」(番号とユーザーの紐付け解除)を表示する。 */
   onMakeFree?: (participant: Participant) => void
+  /** 指定するとフリー枠に「フリーを解除」(番号だけの枠に戻す)を表示する。 */
+  onUnfree?: (participant: Participant) => void
   updatingId?: string | null
 }) {
   if (participants.length === 0) {
@@ -89,6 +97,20 @@ export function ParticipantList({
                 >
                   <Unlink className="h-3.5 w-3.5" />
                   フリー
+                </button>
+              ) : null}
+              {/* フリーを解除: 番号だけの枠に戻す(フリーにするの逆)。こちらも在席のまま
+                  試合表の枠は変わらないので、再編成は不要。 */}
+              {onUnfree && isFreeSlot(p) ? (
+                <button
+                  type="button"
+                  onClick={() => onUnfree(p)}
+                  disabled={updatingId === p.id}
+                  aria-label={`${i + 1}番のフリーを解除`}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition hover:text-slate-800 disabled:opacity-40"
+                >
+                  <Undo2 className="h-3.5 w-3.5" />
+                  解除
                 </button>
               ) : null}
               {onMarkLeft && !left ? (

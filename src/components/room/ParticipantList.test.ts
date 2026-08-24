@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canMakeFree } from './ParticipantList'
+import { canMakeFree, isFreeSlot } from './ParticipantList'
 import { FREE_SLOT } from '../../lib/guests'
 import type { Participant } from '../../lib/types'
 
@@ -29,5 +29,21 @@ describe('canMakeFree', () => {
     expect(canMakeFree(guest(FREE_SLOT))).toBe(false)
     expect(canMakeFree(guest('田中', { status: 'LEFT' }))).toBe(false)
     expect(canMakeFree(guest('1', { status: 'LEFT' }))).toBe(false)
+  })
+})
+
+describe('isFreeSlot', () => {
+  it('フリー枠(在席)には「解除」を出す', () => {
+    expect(isFreeSlot(guest(FREE_SLOT))).toBe(true)
+  })
+
+  it('フリーでない枠には出さない', () => {
+    expect(isFreeSlot(guest('1'))).toBe(false)
+    expect(isFreeSlot(guest('田中'))).toBe(false)
+    expect(isFreeSlot(guest(null))).toBe(false)
+  })
+
+  it('早退中のフリー枠には出さない(復帰してから解除する)', () => {
+    expect(isFreeSlot(guest(FREE_SLOT, { status: 'LEFT' }))).toBe(false)
   })
 })

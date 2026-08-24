@@ -135,6 +135,13 @@ export function ParticipantManager({
             { onSuccess: () => showToast('フリー枠にしました') },
           )
         }
+        // フリーの逆。番号だけの枠に戻す(番号は一覧の並び順=表示されている番号と揃える)。
+        onUnfree={(p) =>
+          rename.mutate(
+            { participantId: p.id, name: String(participants.findIndex((x) => x.id === p.id) + 1) },
+            { onSuccess: () => showToast('フリーを解除しました') },
+          )
+        }
         updatingId={
           markLeft.isPending
             ? (markLeft.variables as string)
