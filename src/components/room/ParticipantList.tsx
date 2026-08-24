@@ -1,17 +1,19 @@
 import { LogOut, RotateCcw, Trash2, Unlink } from 'lucide-react'
 import type { Participant } from '../../lib/types'
 import { FREE_SLOT } from '../../lib/guests'
-import { isUnclaimedGuestName } from '../../lib/format'
 import { Badge } from '../ui/Badge'
 
 /**
- * 「フリーにする」(番号とユーザーの紐付けを解く) を出してよい枠か。
- * 人数を指定して作成したルームの参加者は番号だけで誰とも紐付いていないため、
- * 解くものが無く操作の意味がない。早退中と既にフリーの枠にも出さない。
+ * 「フリーにする」を出してよい在席枠か。
+ *
+ * 番号のまま(まだ誰も名乗っていない)の枠にも出す。人数を指定して作ったルームでも
+ * 各自が ClaimNumberModal で自分の番号を選べるため、番号だけの枠にも「この枠は
+ * 今のところ誰も来ない」という意思表示に意味がある。フリーにしても在席のまま
+ * (試合表の枠は変わらない)なので、早退と違って再編成は不要。
+ * 早退中と、既にフリーの枠には出さない(解くものが無い)。
  */
 export function canMakeFree(p: Participant): boolean {
   if (p.status === 'LEFT') return false
-  if (isUnclaimedGuestName(p)) return false
   return p.guestName?.trim() !== FREE_SLOT
 }
 
