@@ -2,6 +2,7 @@ import {
   HeadContent,
   Scripts,
   createRootRouteWithContext,
+  useRouterState,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -10,7 +11,7 @@ import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 import { Header } from '../components/layout/Header'
 import { Footer } from '../components/layout/Footer'
 import { ToastProvider } from '../components/ui/Toast'
-import { SITE_JSON_LD, defaultOgMeta } from '../lib/og'
+import { SITE_JSON_LD, SITE_ORIGIN, defaultOgMeta } from '../lib/og'
 import { ADSENSE_CLIENT_ID } from '../lib/ads'
 import { WEB_ANALYTICS_TOKEN } from '../lib/analytics'
 
@@ -44,10 +45,16 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // 正規URL。同じ中身が www・CloudFront の既定ドメイン・EC2 の IP でも 200 で返るため、
+  // どこを見に来られても評価が s-match.net に集まるように宣言しておく。
+  // クエリは落とす(?openExternalBrowser=1 が付いた URL を別ページ扱いさせない)。
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+
   return (
     <html lang="ja">
       <head>
         <HeadContent />
+        <link rel="canonical" href={`${SITE_ORIGIN}${pathname}`} />
         {/* 構造化データ。検索結果で「何をする道具か」を機械可読で伝える。
             サイト全体の情報なので全ページの head に置く(ページ固有の情報は入れない)。 */}
         <script
