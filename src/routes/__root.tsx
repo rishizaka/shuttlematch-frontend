@@ -10,7 +10,7 @@ import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 import { Header } from '../components/layout/Header'
 import { Footer } from '../components/layout/Footer'
 import { ToastProvider } from '../components/ui/Toast'
-import { defaultOgMeta } from '../lib/og'
+import { SITE_JSON_LD, defaultOgMeta } from '../lib/og'
 import { ADSENSE_CLIENT_ID } from '../lib/ads'
 import { WEB_ANALYTICS_TOKEN } from '../lib/analytics'
 
@@ -27,7 +27,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'ShuttleMatch — バドミントンの試合表をかんたん作成・共有' },
+      // ページ側で head を持たないルート(ログインなど)の既定。
+      { title: 'ShuttleMatch — バドミントンの試合表・ダブルスの組み合わせ作成' },
       ...defaultOgMeta(),
     ],
     links: [
@@ -47,6 +48,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="ja">
       <head>
         <HeadContent />
+        {/* 構造化データ。検索結果で「何をする道具か」を機械可読で伝える。
+            サイト全体の情報なので全ページの head に置く(ページ固有の情報は入れない)。 */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_JSON_LD) }}
+        />
         {/* AdSense のサイト確認・広告配信スクリプト。全ページの head に置く必要がある
             (Google が所有権確認のためにクロールする)。本番ビルドでだけ読み込む
             (import.meta.env.DEV は Vite がビルド時に静的展開するので、ここで判定を

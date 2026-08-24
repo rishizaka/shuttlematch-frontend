@@ -21,7 +21,42 @@ export function shareOrigin(): string {
 }
 
 export const SITE_NAME = 'ShuttleMatch'
-export const SITE_DESCRIPTION = 'バドミントンの試合表をかんたん作成・共有'
+export const SITE_DESCRIPTION =
+  'バドミントン練習会のダブルスの組み合わせ(乱数表)を自動で作成・共有'
+
+/**
+ * サイト全体の構造化データ(JSON-LD)。全ページの head に入れる。
+ *
+ * 検索エンジンに「無料で使えるバドミントン向けのウェブアプリ」であることを機械可読で渡す。
+ * ページ固有の情報は入れない(全ページに同じものが出るため)。
+ */
+export const SITE_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_ORIGIN}/#website`,
+      url: SITE_ORIGIN,
+      name: SITE_NAME,
+      description: SITE_DESCRIPTION,
+      inLanguage: 'ja',
+    },
+    {
+      '@type': 'WebApplication',
+      '@id': `${SITE_ORIGIN}/#app`,
+      url: SITE_ORIGIN,
+      name: SITE_NAME,
+      applicationCategory: 'SportsApplication',
+      operatingSystem: 'Web',
+      inLanguage: 'ja',
+      description:
+        'バドミントン練習会のダブルスの組み合わせ(乱数表)を自動で作って共有できるウェブアプリ。出場回数は公平、同じ顔ぶれで固まらないように混ぜます。テニスなど4人1組で回す練習にも使えます。',
+      // 無料であることは検索結果にも出る要素なので明示する
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' },
+      isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+    },
+  ],
+}
 
 /** サイト共通の OGP / Twitter カードメタタグ(ルートに置く)。画像は使わない。 */
 export function defaultOgMeta() {

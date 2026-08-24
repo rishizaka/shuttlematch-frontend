@@ -9,6 +9,21 @@ import { jstDayRange } from '../lib/format'
 import type { PublicRoom } from '../lib/types'
 
 export const Route = createFileRoute('/')({
+  // TOP は検索の入口なので、ルート既定のメタに任せず、何をする道具なのかを書く。
+  // 「乱数表」「ダブルスの組み合わせ」は、この道具を探している人が実際に打つ言葉。
+  head: () => ({
+    meta: [
+      {
+        title:
+          'ShuttleMatch — バドミントンの乱数表・ダブルスの組み合わせを自動作成',
+      },
+      {
+        name: 'description',
+        content:
+          'バドミントン練習会のダブルスの組み合わせ(乱数表)を自動で作って共有できる無料ツール。出場回数は公平、同じ顔ぶれで固まらないように混ぜます。テニスなど4人1組で回す練習にも使えます。',
+      },
+    ],
+  }),
   component: HomePage,
 })
 
@@ -102,6 +117,46 @@ function HomePage() {
           </div>
         </>
       )}
+
+      <SiteIntro />
     </div>
+  )
+}
+
+/**
+ * 検索から来た人に「これは何をする道具か」を伝える説明。
+ *
+ * 毎回使う運営者にとってはルーム一覧だけが用なので、いちばん下に小さく置く。
+ * 文字を減らすと検索の受け皿にならないため、量は保ちつつ密度を下げてある。
+ */
+function SiteIntro() {
+  return (
+    <section className="border-t border-slate-100 pt-6 text-sm leading-relaxed text-slate-500">
+      <h2 className="text-base font-semibold text-slate-700">
+        バドミントンのダブルスの組み合わせを、自動で作って共有できます
+      </h2>
+      <p className="mt-2">
+        練習会で使う「乱数表」（誰と誰が同じコートに入るかの表）を、人数とコート数を入れるだけで作ります。
+        紙に手で書いたり、前回の表を使い回したりする必要はありません。
+        できた試合表はリンクやQRコードで配れるので、参加者は自分がいつ・どのコートに入るかを各自のスマホで見られます。
+      </p>
+      <h3 className="mt-5 font-semibold text-slate-700">回数は公平に、顔ぶれは混ぜて</h3>
+      <p className="mt-2">
+        出場回数の差は常に1回以内に収まります。
+        そのうえで「また同じ4人」にならないよう、誰と同じコートに入ったかを記録しながら組み合わせを選びます。
+        遅刻・早退・途中参加があっても、まだ始めていないセットだけを組み直せます。
+      </p>
+      <h3 className="mt-5 font-semibold text-slate-700">テニスなど他の競技でも</h3>
+      <p className="mt-2">
+        組み合わせの作り方は「4人で1コートを回す」ことだけを前提にしているので、
+        テニスのダブルス練習など、同じ形で回す競技にもそのまま使えます。
+        画面の言葉はバドミントン向けですが、番号とコートで運用するぶんには競技を選びません。
+      </p>
+      <p className="mt-5">
+        <Link to="/about" className="font-medium text-brand-600 hover:underline">
+          仕組みをもっと詳しく見る
+        </Link>
+      </p>
+    </section>
   )
 }

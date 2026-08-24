@@ -7,6 +7,18 @@ import { RoomCard } from '../components/room/RoomCard'
 import type { PublicRoom } from '../lib/types'
 
 export const Route = createFileRoute('/past')({
+  // 指定しないとルート既定(TOPと同じ)になり、中身の違うページに同じ title と
+  // description が並ぶ。
+  head: () => ({
+    meta: [
+      { title: '過去の開催 — バドミントン練習会の試合表の記録 | ShuttleMatch' },
+      {
+        name: 'description',
+        content:
+          'これまでに ShuttleMatch で作られたバドミントン練習会の試合表(ダブルスの組み合わせ)の記録です。終了した試合表は誰でも見られます。',
+      },
+    ],
+  }),
   component: PastRoomsPage,
 })
 
