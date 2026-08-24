@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { MatchCard } from './MatchCard'
+import { FREE_SLOT } from '../../lib/guests'
 import type { Match } from '../../lib/types'
 
 const match: Match = {
@@ -67,5 +68,32 @@ describe('MatchCard', () => {
     expect(screen.getByLabelText('4番').className).toContain('bg-accent-500')
     // 他のチップはゴールドにならない。
     expect(screen.getByLabelText('1番').className).not.toContain('bg-accent-500')
+  })
+
+  it('フリーの枠はティールで塗り、番号の下に「フリー」と表示する(タップ不要)', () => {
+    const names = new Map([['p1', FREE_SLOT]])
+    render(
+      <MatchCard match={match} indexByParticipantId={indexes} nameByParticipantId={names} />,
+    )
+    expect(screen.getByLabelText('1番 フリー').className).toContain('border-teal-300')
+    // 既に見えているので、タップして開くツールチップは無い(冗長になるため)。
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText('1番 フリー'))
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+    // 他のチップには影響しない。
+    expect(screen.getByLabelText('4番').className).not.toContain('border-teal-300')
+  })
+
+  it('フリーの枠が終了済みセットでは、色を落とした終了済み用の見た目になる', () => {
+    const names = new Map([['p1', FREE_SLOT]])
+    render(
+      <MatchCard
+        match={match}
+        indexByParticipantId={indexes}
+        nameByParticipantId={names}
+        finished
+      />,
+    )
+    expect(screen.getByLabelText('1番 フリー').className).toContain('border-teal-100')
   })
 })

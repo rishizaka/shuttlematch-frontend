@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Match } from '../../lib/types'
+import { FREE_SLOT } from '../../lib/guests'
 
 /**
  * 参加者番号のチップ。試合表は番号で運用する。名前(ニックネーム)が付いている場合は
  * 番号をタップするとツールチップで名前を表示する。自分(self)はゴールドで強調。
+ *
+ * 運営者が「フリー」にした枠はティールで塗り、数字の下に小さく「フリー」と添える
+ * (タップしないと分からないのを解消するため)。色だけだと初見の人に意味が伝わらず、
+ * 文字だけだと列の高さが不揃いになるので、両方を組み合わせている。
  */
 function PlayerChip({
   index,
@@ -38,14 +43,42 @@ function PlayerChip({
     }
   }, [open])
 
-  // 自分はロゴのゴールドの塗り+濃紺文字で示す。他は白地+枠線でシンプルに番号だけ。
+  const free = name === FREE_SLOT
+
+  // 自分はロゴのゴールドの塗り+濃紺文字。フリーはティール(在席のまま「今は誰も
+  // いない」ことを示す、自分/通常/終了済みのどれとも被らない色)。他は白地+枠線。
   const chip = self
     ? 'bg-accent-500 text-brand-900'
-    : finished
-      ? 'border border-slate-200 bg-white text-slate-400'
-      : 'border border-slate-300 bg-white text-slate-700 shadow-sm'
+    : free
+      ? finished
+        ? 'border border-teal-100 bg-teal-50/60 text-teal-300'
+        : 'border border-teal-300 bg-teal-50 text-teal-700'
+      : finished
+        ? 'border border-slate-200 bg-white text-slate-400'
+        : 'border border-slate-300 bg-white text-slate-700 shadow-sm'
   const base =
     'flex h-7 w-7 select-none items-center justify-center rounded-full text-xs font-semibold tabular-nums '
+
+  // フリーは色とラベルで既に示せているので、タップの名前ツールチップ(「フリー」を
+  // もう一度表示するだけ)は出さない。ラベルぶん縦に伸びるのはこの枠だけ。
+  if (free) {
+    return (
+      <span className="flex flex-col items-center gap-0.5">
+        <span aria-label={index != null ? `${index}番 フリー` : 'フリー'} className={base + chip}>
+          {index ?? '?'}
+        </span>
+        <span
+          aria-hidden
+          className={
+            'text-[8.5px] font-medium leading-none tracking-wide ' +
+            (finished ? 'text-teal-200' : 'text-teal-500')
+          }
+        >
+          フリー
+        </span>
+      </span>
+    )
+  }
 
   // 名前が無ければ従来どおり非インタラクティブなチップ。
   if (!name) {
@@ -118,14 +151,21 @@ export function MatchCard({
       : 'text-slate-500'
 
   // 枠なしの1行。コートは「1コ」の短縮ラベルで最小幅にする。
+  // フリーの枠は下にラベルが付いて縦に伸びるため、行はどちらも上揃え(items-start)にする。
+  // コート番号側は h-7(チップと同じ28px)で高さを固定し、その中で中央揃えにすることで、
+  // フリーのラベル分だけ行が伸びても「1コ」の位置が引きずられないようにしている。
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-start gap-2">
       {match.courtNumber != null ? (
-        <span className={'w-7 shrink-0 select-none text-[10px] font-bold ' + courtColor}>
+        <span
+          className={
+            'flex h-7 w-7 shrink-0 select-none items-center text-[10px] font-bold ' + courtColor
+          }
+        >
           <span className="text-sm tabular-nums">{match.courtNumber}</span>コ
         </span>
       ) : null}
-      <span className={'flex items-center gap-1.5' + (finished ? ' opacity-60' : '')}>
+      <span className={'flex items-start gap-1.5' + (finished ? ' opacity-60' : '')}>
         {players.map((id, i) => (
           <PlayerChip
             key={`${id}-${i}`}
