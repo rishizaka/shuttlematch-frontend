@@ -21,8 +21,11 @@ export function shareOrigin(): string {
 }
 
 export const SITE_NAME = 'ShuttleMatch'
+// 「乱数表」を先に出す。「組み合わせ表」も検索でよく使われる表記なので併記する。
+// 「自動作成」は誰でも名乗れる一般的な文言なので、狙って先頭には置かない
+// (TOP ページの head と同じ考え方。src/routes/index.tsx のコメント参照)。
 export const SITE_DESCRIPTION =
-  'バドミントン練習会のダブルスの組み合わせ(乱数表)を自動で作成・共有'
+  'バドミントンの乱数表(ダブルスの組み合わせ表)を作って共有'
 
 /**
  * サイト全体の構造化データ(JSON-LD)。全ページの head に入れる。
