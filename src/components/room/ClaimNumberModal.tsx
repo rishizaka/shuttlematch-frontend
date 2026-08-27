@@ -41,10 +41,14 @@ export function ClaimNumberModal({
 
   if (typeof document === 'undefined') return null
 
-  // 番号(並び順)。在席していれば実名入りの番号も候補にする(名簿は上書きしない)。
+  // 番号(並び順)。実名入りの番号も候補にする(名簿は上書きしない)。
+  // 早退中も候補から外さない。試合表には早退中も番号が見えているのに、ここで消えると
+  // 「自分の番号が無い」ように見えてしまう(復帰したい本人が名乗れなくなる)。
+  // 早退の解除(在席に戻す・未開始セットへの再編成)は運営者の「復帰」操作のままで、
+  // ここでの選択・命名はそれとは独立に行える。
   const numberOf = new Map<string, number>()
   participants.forEach((p, i) => numberOf.set(p.id, i + 1))
-  const slots = participants.filter((p) => p.status === 'ACTIVE')
+  const slots = participants
 
   const selected = slots.find((p) => p.id === participantId)
   // 空き枠なら名前を付けて名簿に入る。実名入りなら端末の紐付けのみ。
@@ -52,10 +56,14 @@ export function ClaimNumberModal({
 
   const slotLabel = (p: Participant): string => {
     const t = p.guestName?.trim() ?? ''
-    if (t === VISITOR_PLACEHOLDER) return '（遅刻者・ビジター）'
-    if (t === FREE_SLOT) return '（フリー）'
-    if (!t || /^\d+$/.test(t)) return '（空き）'
-    return `（${t}）`
+    const base = (() => {
+      if (t === VISITOR_PLACEHOLDER) return '遅刻者・ビジター'
+      if (t === FREE_SLOT) return 'フリー'
+      if (!t || /^\d+$/.test(t)) return null
+      return t
+    })()
+    if (p.status === 'LEFT') return base ? `（早退中・${base}）` : '（早退中）'
+    return base ? `（${base}）` : '（空き）'
   }
 
   // 名前を入れたときだけ名簿に載せる。空欄のまま決定した人は「番号だけで使いたい」の
