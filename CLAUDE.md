@@ -61,8 +61,14 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
   （このドメインは他にメールを使っていないので競合しない）。疎通は `dig +short MX s-match.net`
   で `mx.cloudflare.net` 系が3件返ることで確認できる。
 - AdSense のクライアント ID・スロット ID は `src/lib/ads.ts`。サイト確認用スクリプトは
-  `__root.tsx` の head に本番ビルドでだけ載る（`import.meta.env.DEV` で分岐。Vite が
-  ビルド時に静的展開するので env の設定忘れで開発サーバーに載ることはない）。
+  `__root.tsx` の `useEffect` でマウント後に `document.head` へ動的に足す（本番ビルドでだけ。
+  `import.meta.env.PROD` で分岐。Vite がビルド時に静的展開するので env の設定忘れで
+  開発サーバーに載ることはない）。**JSX(SSR/ハイドレーション対象)には置いていない** —
+  2026-08-27、AdSense のスクリプト自身が早いタイミングで `<head>` を書き換えることがあり、
+  React が SSR した内容と食い違って hydration mismatch(React error #418)を起こすのを
+  確認したため。原因の DOM 差分そのものは特定できていないが、AdSense タグの有無だけを
+  切り替えて再現/非再現をローカルで複数回確認済み。マウント後に素の DOM 操作で足せば、
+  React はこのタグの存在を最初から知らない(hydrate 対象外)ので衝突しない。
   `public/ads.txt` は設置済み（`google.com, pub-<ID>, DIRECT, f08c47fec0942fa0`。
   `ca-pub-` の数字部分がそのまま `pub-` になる、同一の値）。
 - **未了**: `ADSENSE_SLOT_ID` が未設定。AdSense 管理画面で `/game` 用の表示広告ユニットを

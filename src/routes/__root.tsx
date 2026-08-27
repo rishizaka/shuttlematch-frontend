@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   HeadContent,
   Scripts,
@@ -50,6 +51,25 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   // クエリは落とす(?openExternalBrowser=1 が付いた URL を別ページ扱いさせない)。
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
+  // AdSense のスクリプトは JSX(SSR/ハイドレーション対象)に置かず、マウント後に
+  // 素の DOM 操作で <head> に足す。AdSense 自身のスクリプトが早いタイミングで
+  // 自分のタグまわりの <head> を書き換えることがあり、React が SSR した内容と
+  // 食い違って hydration mismatch(React error #418)を起こすのを確認したため
+  // (2026-08-27 調査。ローカルで AdSense タグの有無だけを切り替えて再現/非再現を
+  // 複数回確認済み、原因の DOM 差分そのものは特定できていない)。
+  // ここに置けば React はこのタグの存在を最初から知らない(hydrate 対象外な)ので、
+  // AdSense が何をしても React 側とは衝突しない。サイト確認・クロールに要る
+  // 「<head> にタグが存在すること」は、マウント直後に足す形でも満たせる。
+  useEffect(() => {
+    if (!import.meta.env.PROD) return
+    if (document.querySelector('script[src*="pagead2.googlesyndication.com"]')) return
+    const script = document.createElement('script')
+    script.async = true
+    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`
+    script.crossOrigin = 'anonymous'
+    document.head.appendChild(script)
+  }, [])
+
   return (
     <html lang="ja">
       <head>
@@ -61,19 +81,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_JSON_LD) }}
         />
-        {/* AdSense のサイト確認・広告配信スクリプト。全ページの head に置く必要がある
-            (Google が所有権確認のためにクロールする)。本番ビルドでだけ読み込む
-            (import.meta.env.DEV は Vite がビルド時に静的展開するので、ここで判定を
-            忘れても開発サーバーに実広告のスクリプトが載ることはない)。
+        {/* AdSense のサイト確認・広告配信スクリプトは、下の useEffect で
+            マウント後に足す(理由はそこのコメントを参照)。
             広告そのものは /game の AdSlot にしか出さない(Auto ads は使わない方針、
             AdSense 管理画面でも Auto ads は無効のままにすること)。 */}
-        {import.meta.env.PROD ? (
-          <script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
-            crossOrigin="anonymous"
-          />
-        ) : null}
         {/* Cloudflare Web Analytics。Cookie を使わず個人を識別しないので同意バナーは不要
             (プライバシーポリシーには利用している旨を書いてある)。本番かつトークンが
             設定されているときだけ読み込む — 開発・E2E のアクセスを数えないため。
