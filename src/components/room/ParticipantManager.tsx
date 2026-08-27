@@ -6,6 +6,7 @@ import {
   useMarkParticipantLeft,
   useMarkParticipantsLeft,
   useReactivateParticipant,
+  useReactivateParticipants,
   useRemoveParticipant,
   useRenameParticipant,
   useReplanFutureSets,
@@ -50,6 +51,7 @@ export function ParticipantManager({
   const markLeft = useMarkParticipantLeft(roomId)
   const markLeftBulk = useMarkParticipantsLeft(roomId)
   const reactivate = useReactivateParticipant(roomId)
+  const reactivateBulk = useReactivateParticipants(roomId)
   const rename = useRenameParticipant(roomId)
   const replan = useReplanFutureSets(roomId)
   const { showToast } = useToast()
@@ -57,9 +59,11 @@ export function ParticipantManager({
   const [showReplanConfirm, setShowReplanConfirm] = useState(false)
   // 試合表のURLをQRで見せるモーダルの開閉。
   const [showQr, setShowQr] = useState(false)
-  // まとめて早退させる複数選択モード。早退を1人押すたびに再編成確認を挟むと、
-  // 何人もまとめて早退させたいときにモーダルを人数ぶん閉じることになるため、
-  // 選んでから1回でまとめて早退させ、再編成の確認も最後に1回だけ出す。
+  // まとめて早退・まとめて復帰させる複数選択モード。1人ずつ押すたびに再編成確認を
+  // 挟むと、何人もまとめて操作したいときにモーダルを人数ぶん閉じることになるため、
+  // 選んでから1回でまとめて処理し、再編成の確認も最後に1回だけ出す。
+  // 早退と復帰は逆の操作なので、選択は在席・早退中のどちらか一方に固定する
+  // (ParticipantList 側が最初の1件の状態でそれ以外をグレーアウトする)。
   const [selecting, setSelecting] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
@@ -79,13 +83,23 @@ export function ParticipantManager({
     })
   }
 
-  const confirmBulkLeave = () => {
-    markLeftBulk.mutate([...selectedIds], {
-      onSuccess: () => {
-        cancelSelecting()
-        askReplan()
-      },
-    })
+  // 選択中の在席状態から、バーに出す操作を決める。1件も選んでいなければ null。
+  const bulkAction: 'leave' | 'reactivate' | null =
+    selectedIds.size === 0
+      ? null
+      : participants.find((p) => selectedIds.has(p.id))?.status === 'LEFT'
+        ? 'reactivate'
+        : 'leave'
+  const bulkPending = markLeftBulk.isPending || reactivateBulk.isPending
+
+  const confirmBulkAction = () => {
+    const ids = [...selectedIds]
+    const onSuccess = () => {
+      cancelSelecting()
+      askReplan()
+    }
+    if (bulkAction === 'reactivate') reactivateBulk.mutate(ids, { onSuccess })
+    else markLeftBulk.mutate(ids, { onSuccess })
   }
 
   // 固定ペアの解除だけは、解除の確認モーダルで「解除する」を押した流れで
@@ -151,10 +165,12 @@ export function ParticipantManager({
         </Button>
       </div>
 
-      {/* まとめて早退させる複数選択モードの切り替え。1人だけ早退させる操作(既定)の
-          見た目・手順は変えず、必要なときだけ切り替えて使う。在席が2人未満なら
-          まとめる意味が無いので出さない。 */}
-      {generated && participants.filter((p) => p.status !== 'LEFT').length >= 2 ? (
+      {/* まとめて早退・まとめて復帰させる複数選択モードの切り替え。1人だけ操作する
+          既定の見た目・手順は変えず、必要なときだけ切り替えて使う。在席・早退中の
+          どちらも2人未満ならまとめる意味が無いので出さない。 */}
+      {generated &&
+      (participants.filter((p) => p.status !== 'LEFT').length >= 2 ||
+        participants.filter((p) => p.status === 'LEFT').length >= 2) ? (
         <div className="flex items-center justify-end">
           {selecting ? (
             <button
@@ -212,19 +228,25 @@ export function ParticipantManager({
         onToggleSelect={toggleSelect}
       />
 
-      {/* 選んだ人数ぶんをまとめて早退にするバー。1人も選んでいない間は出さない。 */}
+      {/* 選んだ人数ぶんをまとめて早退/復帰にするバー。1人も選んでいない間は出さない。
+          ボタンの文言は選択中の在席状態で決まる(ParticipantList 側が選択を
+          在席・早退中のどちらかに固定しているので、選んでいれば必ずどちらかになる)。 */}
       {selecting && selectedIds.size > 0 ? (
         <div className="flex items-center justify-between gap-3 rounded-xl bg-brand-50 px-3 py-2.5">
           <span className="text-sm font-semibold text-brand-900">
             {selectedIds.size}人を選択中
+            {bulkAction === 'reactivate' ? '(復帰)' : '(早退)'}
           </span>
-          <Button size="sm" onClick={confirmBulkLeave} disabled={markLeftBulk.isPending}>
-            {markLeftBulk.isPending ? '処理中…' : '早退にする'}
+          <Button size="sm" onClick={confirmBulkAction} disabled={bulkPending}>
+            {bulkPending ? '処理中…' : bulkAction === 'reactivate' ? '復帰にする' : '早退にする'}
           </Button>
         </div>
       ) : null}
       {markLeftBulk.isError ? (
         <ErrorBlock message={(markLeftBulk.error as Error).message} />
+      ) : null}
+      {reactivateBulk.isError ? (
+        <ErrorBlock message={(reactivateBulk.error as Error).message} />
       ) : null}
 
       {/* 固定ペア: 常に同じチームで組む2人を設定する。見た目は変わらず生成ロジックだけが守る。 */}

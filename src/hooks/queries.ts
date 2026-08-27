@@ -266,6 +266,18 @@ export function useReactivateParticipant(roomId: string) {
   });
 }
 
+/** 複数人をまとめて復帰させる (運営者操作)。1回の保存で反映する。 */
+export function useReactivateParticipants(roomId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (participantIds: string[]) =>
+      roomApi.reactivateParticipants(roomId, participantIds),
+    onSuccess: (room) => {
+      qc.setQueryData(queryKeys.room(roomId), room);
+    },
+  });
+}
+
 // ---- Match ----
 
 export function useMatches(

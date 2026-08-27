@@ -261,6 +261,12 @@ export const roomApi = {
     request<Room>(`/api/v1/rooms/${roomId}/participants/${participantId}/reactivate`, {
       method: 'POST',
     }),
+  /** 複数人をまとめて復帰させる。markParticipantsLeft と同じ理由で一括APIを使う。 */
+  reactivateParticipants: (roomId: string, participantIds: string[]) =>
+    request<Room>(`/api/v1/rooms/${roomId}/participants/reactivate-bulk`, {
+      method: 'POST',
+      body: JSON.stringify({ participantIds }),
+    }),
 }
 
 // ---- Match ----

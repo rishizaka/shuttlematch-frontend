@@ -68,10 +68,39 @@ describe('ParticipantList (複数選択モード)', () => {
     )
     // 個別の早退ボタンは選択モード中は出ない。
     expect(screen.queryByText('早退', { selector: 'button *' })).not.toBeInTheDocument()
-    // 在席者(1番・2番)にはチェックボックス、早退中(3番)には出ない。
+    // 早退中(3番)にもチェックボックスは出る(まとめて復帰にも使うため)。
+    // まだ何も選んでいないので、在席・早退中のどちらも押せる。
     expect(screen.getByLabelText('1番を選択')).toBeInTheDocument()
     expect(screen.getByLabelText('2番を選択')).toBeInTheDocument()
-    expect(screen.queryByLabelText('3番を選択')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('3番を選択')).toBeInTheDocument()
+    expect(screen.getByLabelText('3番を選択')).not.toBeDisabled()
+  })
+
+  it('在席者を1人選ぶと、早退中の行は選べなくなる(逆も同様)', () => {
+    render(
+      <ParticipantList
+        participants={participants}
+        selecting
+        selectedIds={new Set(['p1'])}
+        onToggleSelect={() => {}}
+      />,
+    )
+    expect(screen.getByLabelText('2番を選択')).not.toBeDisabled()
+    expect(screen.getByLabelText('3番を選択')).toBeDisabled()
+  })
+
+  it('早退中を1人選ぶと、在席者の行は選べなくなる', () => {
+    render(
+      <ParticipantList
+        participants={participants}
+        selecting
+        selectedIds={new Set(['p3'])}
+        onToggleSelect={() => {}}
+      />,
+    )
+    expect(screen.getByLabelText('1番を選択')).toBeDisabled()
+    expect(screen.getByLabelText('2番を選択')).toBeDisabled()
+    expect(screen.getByLabelText('3番を選択')).not.toBeDisabled()
   })
 
   it('選択モードでないときは今まで通り個別ボタンを出し、チェックボックスは出ない', () => {

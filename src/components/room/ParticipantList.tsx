@@ -49,8 +49,14 @@ export function ParticipantList({
   onUnfree?: (participant: Participant) => void
   updatingId?: string | null
   /**
-   * まとめて早退させるための複数選択モード。true の間は行ごとの操作ボタンを隠し、
-   * 在席者にだけチェックボックスを出す(誤操作を避けるため、選択と個別操作は同時に出さない)。
+   * まとめて早退・まとめて復帰させるための複数選択モード。true の間は行ごとの
+   * 操作ボタンを隠し、チェックボックスを出す(誤操作を避けるため、選択と個別操作は
+   * 同時に出さない)。
+   *
+   * 早退にする/復帰にするは逆の操作なので、在席と早退中を混ぜて選ぶと
+   * どちらの操作か決まらない。そこで、最初にチェックした1件の在席状態を見て、
+   * それ以外の状態の行は選べなくする(グレーアウト)。1件も選んでいなければ
+   * どちらの状態も選べる。
    */
   selecting?: boolean
   selectedIds?: ReadonlySet<string>
@@ -60,10 +66,16 @@ export function ParticipantList({
     return <p className="py-4 text-sm text-slate-500">まだ参加者がいません。</p>
   }
 
+  // 選択中の在席状態(在席/早退中)。1件も選んでいなければ null(どちらも選べる)。
+  const lockedStatus = selecting
+    ? (participants.find((p) => selectedIds?.has(p.id))?.status ?? null)
+    : null
+
   return (
     <ul className="divide-y divide-slate-100">
       {participants.map((p, i) => {
         const left = p.status === 'LEFT'
+        const locked = lockedStatus !== null && lockedStatus !== p.status
         return (
           <li key={p.id} className="flex items-center justify-between gap-3 py-2.5">
             <span
@@ -73,18 +85,14 @@ export function ParticipantList({
               }
             >
               {selecting ? (
-                left ? (
-                  // 早退中は選べない。位置だけ揃えるための空のスペーサー。
-                  <span className="h-4 w-4 shrink-0" aria-hidden />
-                ) : (
-                  <input
-                    type="checkbox"
-                    checked={selectedIds?.has(p.id) ?? false}
-                    onChange={() => onToggleSelect?.(p)}
-                    aria-label={`${i + 1}番を選択`}
-                    className="h-4 w-4 shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
-                  />
-                )
+                <input
+                  type="checkbox"
+                  checked={selectedIds?.has(p.id) ?? false}
+                  disabled={locked}
+                  onChange={() => onToggleSelect?.(p)}
+                  aria-label={`${i + 1}番を選択`}
+                  className="h-4 w-4 shrink-0 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-30"
+                />
               ) : null}
               <span
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 tabular-nums"
