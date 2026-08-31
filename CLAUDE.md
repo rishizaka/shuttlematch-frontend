@@ -84,34 +84,34 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 
 **CI/CD（GitHub Actions）**
 - `build`: Node22 で `npm ci` → `typecheck` → `vitest` → `build`。main への push と PR で発火。
-  `dist.tgz` と **production の `node_modules.tgz`** を artifact 化。
+  `dist.tgz` を artifact 化。
 - `deploy`: **main への push のときだけ**実行（PR では走らない）。`concurrency` で直列化。
-  - `dist` を差し替え → `systemctl restart` → health check（最大120秒リトライ）
-  - **失敗したら `dist.old` / `serve.mjs.prev` / `node_modules.old` へ自動ロールバック**
+  - `dist` を差し替え → VPS上で `npm ci --omit=dev` → `systemctl restart` → health check（最大120秒リトライ）
+  - **失敗したら `dist.old` / `serve.mjs.prev` へ自動ロールバック**
   - 最後に `https://s-match.net/` が 200 を返すか確認。
-- **依存(node_modules)は runner 側で用意する。** EC2 はメモリ 912MB で backend が約半分を
-  使っており、そこで `npm ci` を走らせると backend を OOM で巻き込む。**EC2 上で npm ci しないこと。**
-- node_modules は 200MB 超あるため、`package-lock.json` の sha256 を EC2 と比較し、
-  **変わったときだけ転送**する（通常のデプロイは dist のみで数秒）。
-- **SSH の到達性**: EC2 の 22番は自宅IP(`14.8.61.161/32`)にしか開いていない。runner は
-  GitHub OIDC で IAM ロール `github-actions-shuttlematch-deploy` を AssumeRole し、
-  自分の IP を /32 で SG に一時追加 → 完了後（失敗時も `if: always()`）必ず revoke する。
-  **22番を常時開放しない設計なので、この仕組みを外さないこと。**
-- Secrets: `EC2_HOST` / `EC2_SSH_KEY`（frontend 専用 ed25519 鍵。EC2 の authorized_keys に
-  `github-actions-deploy-frontend@shuttlematch` として登録済み）/ `AWS_ROLE_ARN` / `EC2_SG_ID`。
+- **依存(node_modules)はVPS上で `npm ci` する。** EC2時代(メモリ912MB)はrunner側でnode_modulesを
+  ビルドして転送する必要があったが、**VPS(2GB)はメモリに余裕があるので毎回VPS上でnpm ciしてよい**
+  （2026-08-31 AWS→VPS移行で単純化。数秒で終わる）。
+- **SSH の到達性**: さくらのVPSはSSHを常時開けたまま（鍵認証のみ・パスワード認証は無効化済み）。
+  EC2時代のようなIP一時開放・OIDC AssumeRoleの仕組みは不要になった。
+- Secrets: `VPS_HOST` / `VPS_SSH_KEY`（frontend 専用 ed25519 鍵。VPS の authorized_keys に
+  `github-actions-deploy-frontend@shuttlematch-vps` として登録済み）。
 - **E2E は CI に入れていない**（本番にルームを作る副作用があるため）。リリース後の確認は
   手元から `npm run e2e:prod` を実行する。
 
 **本番環境**
-- EC2 インスタンス `shuttlematch-app`（`3.113.92.223`, ap-northeast-1, t3.micro）
-- SSH: `ssh -i ~/.ssh/shuttlematch-key.pem ec2-user@3.113.92.223`（passwordless sudo 可）
+- さくらのVPS `160.16.52.211`（東京第2ゾーン、2GB、Ubuntu 24.04 LTS）
+- SSH: `ssh -i ~/.ssh/shuttlematch-vps-key ubuntu@160.16.52.211`（sudoはNOPASSWD設定済み）
 - 公開URL: **https://s-match.net**（および `https://www.s-match.net`）
-  - CloudFront `E2ZAQ39VPHE72R`（`d1yeqpydnk6epr.cloudfront.net`）が TLS を終端し、
-    `/api/*` を backend(8080)、それ以外を frontend(3000) に振り分ける。
-  - DNS は **Cloudflare**（レジストラも Cloudflare）。apex と `www` を CloudFront へ CNAME、
-    **Proxy は DNS only（グレー雲）**。オレンジ雲にすると二重CDNになるので変更しないこと。
-  - 証明書は ACM(us-east-1) の DNS 検証。検証用 CNAME を消すと自動更新に失敗するので残しておく。
-  - オリジン直: `http://3.113.92.223:3000`（nginx なし、node が `0.0.0.0:3000` で直接公開。backend は 8080）
+  - **Cloudflare Tunnel**（`cloudflared`、トンネル名`shuttlematch`）がTLSを終端しVPSの3000番(frontend)へ
+    振り分ける。`serve.mjs`が`/api/*`をさらに8080番(backend)へ中継するので、
+    CloudFront時代と同じく同一オリジンでAPIを叩ける。設定は `/etc/cloudflared/config.yml`。
+  - DNS は **Cloudflare**（レジストラも Cloudflare）。apex と `www` はトンネルへ**CNAME + オレンジ雲
+    （Proxied）**（2026-08-31以前はCloudFront併用のためDNS onlyだったが、Tunnel経由に必要なので
+    **今はオレンジ雲が正**。以前の「オレンジ雲にするな」の注意書きは逆になった）。
+  - 証明書はCloudflareのUniversal SSLが自動管理(ACMのDNS検証は不要になった)。
+  - オリジン直: `http://160.16.52.211:3000`。ただしVPSのufwがSSH以外の inbound を全て閉じているため、
+    実際には Tunnel(アウトバウンド接続)経由でしか到達できない。
 - systemd: `shuttlematch-frontend.service`（WorkingDir `~/frontend`、`node serve.mjs` → srvx で `dist/server/server.js` を SSR + `dist/client` を静的配信、PORT 3000）
 
 **手順（frontend のコードを変更したとき）**
@@ -121,24 +121,25 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 cd ~/Develop/shuttlematch-frontend
 fnm exec --using=22 npm run build            # dist/ を生成（server/ と client/）
 
-# 2. EC2 へ転送し、現行 dist を dist.old にローテートして差し替え
-KEY=~/.ssh/shuttlematch-key.pem; HOST=3.113.92.223
+# 2. VPS へ転送し、現行 dist を dist.old にローテートして差し替え
+KEY=~/.ssh/shuttlematch-vps-key; HOST=160.16.52.211
 tar czf /tmp/sm-dist.tgz -C dist .
-scp -i "$KEY" /tmp/sm-dist.tgz ec2-user@$HOST:/tmp/sm-dist.tgz
-ssh -i "$KEY" ec2-user@$HOST '
+scp -i "$KEY" /tmp/sm-dist.tgz ubuntu@$HOST:/tmp/sm-dist.tgz
+ssh -i "$KEY" ubuntu@$HOST '
   set -e; cd ~/frontend
   rm -rf dist.old; mv dist dist.old; mkdir dist
   tar xzf /tmp/sm-dist.tgz -C dist'
 
 # 3. 再起動 & 確認
-ssh -i "$KEY" ec2-user@$HOST '
+ssh -i "$KEY" ubuntu@$HOST '
   sudo systemctl restart shuttlematch-frontend
   sleep 3
   systemctl is-active shuttlematch-frontend
   curl -s -o /dev/null -w "HTTP %{http_code}\n" http://localhost:3000/'
 ```
 
-- 依存（package.json）を変更していなければ EC2 の `node_modules` は据え置きでよい。変更した場合は転送後に `cd ~/frontend && npm ci` が必要。
+- 依存（package.json）を変更していなければ VPS の `node_modules` は据え置きでよい。変更した場合は転送後に `cd ~/frontend && npm ci` が必要。
 - **ロールバック**: `ssh ... 'sudo systemctl stop shuttlematch-frontend; cd ~/frontend; rm -rf dist; mv dist.old dist; sudo systemctl start shuttlematch-frontend'`
 
 backend のデプロイ手順は `shuttlematch`（backend）リポジトリの CLAUDE.md を参照。
+移行の経緯・落とし穴は `shuttlematch` リポジトリの `migration/README.md` を参照。
