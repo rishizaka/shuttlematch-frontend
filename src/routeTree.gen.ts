@@ -19,6 +19,7 @@ import { Route as GuideRouteImport } from './routes/guide'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GuideIndexRouteImport } from './routes/guide.index'
 import { Route as RoomsRoomIdRouteImport } from './routes/rooms/$roomId'
 import { Route as ReleaseIdRouteImport } from './routes/release.$id'
 import { Route as RCodeRouteImport } from './routes/r.$code'
@@ -82,6 +83,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const GuideIndexRoute = GuideIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GuideRoute,
 } as any)
 const RoomsRoomIdRoute = RoomsRoomIdRouteImport.update({
   id: '/rooms/$roomId',
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
+  '/guide/': typeof GuideIndexRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
   '/rooms/$roomId/matches/print': typeof RoomsRoomIdMatchesPrintRoute
@@ -178,7 +185,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/game': typeof GameRoute
-  '/guide': typeof GuideRouteWithChildren
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
   '/privacy': typeof PrivacyRoute
@@ -195,6 +201,7 @@ export interface FileRoutesByTo {
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
+  '/guide': typeof GuideIndexRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
   '/rooms/$roomId/matches/print': typeof RoomsRoomIdMatchesPrintRoute
@@ -221,6 +228,7 @@ export interface FileRoutesById {
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
+  '/guide/': typeof GuideIndexRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId_/matches': typeof RoomsRoomIdMatchesRoute
   '/rooms/$roomId_/matches_/print': typeof RoomsRoomIdMatchesPrintRoute
@@ -248,6 +256,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/release/$id'
     | '/rooms/$roomId'
+    | '/guide/'
     | '/organizer/rooms/new'
     | '/rooms/$roomId/matches'
     | '/rooms/$roomId/matches/print'
@@ -256,7 +265,6 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/game'
-    | '/guide'
     | '/login'
     | '/past'
     | '/privacy'
@@ -273,6 +281,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/release/$id'
     | '/rooms/$roomId'
+    | '/guide'
     | '/organizer/rooms/new'
     | '/rooms/$roomId/matches'
     | '/rooms/$roomId/matches/print'
@@ -298,6 +307,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/release/$id'
     | '/rooms/$roomId'
+    | '/guide/'
     | '/organizer/rooms/new'
     | '/rooms/$roomId_/matches'
     | '/rooms/$roomId_/matches_/print'
@@ -400,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guide/': {
+      id: '/guide/'
+      path: '/'
+      fullPath: '/guide/'
+      preLoaderRoute: typeof GuideIndexRouteImport
+      parentRoute: typeof GuideRoute
+    }
     '/rooms/$roomId': {
       id: '/rooms/$roomId'
       path: '/rooms/$roomId'
@@ -496,10 +513,12 @@ declare module '@tanstack/react-router' {
 
 interface GuideRouteChildren {
   GuideIdRoute: typeof GuideIdRoute
+  GuideIndexRoute: typeof GuideIndexRoute
 }
 
 const GuideRouteChildren: GuideRouteChildren = {
   GuideIdRoute: GuideIdRoute,
+  GuideIndexRoute: GuideIndexRoute,
 }
 
 const GuideRouteWithChildren = GuideRoute._addFileChildren(GuideRouteChildren)
