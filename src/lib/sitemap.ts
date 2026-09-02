@@ -1,4 +1,5 @@
 import { GAMES } from '../components/game/catalog'
+import { GUIDES } from './guides'
 import { RELEASES } from './releases'
 
 /** 公開サイトのオリジン。sitemap は絶対URLでなければならない。 */
@@ -32,6 +33,13 @@ export function sitemapEntries(buildDate: string): Entry[] {
     { path: '/past', priority: 0.6, changefreq: 'daily' },
     { path: '/game', priority: 0.8, changefreq: 'monthly' },
     ...GAMES.map((g): Entry => ({ path: g.to, priority: 0.7, changefreq: 'monthly' })),
+    { path: '/guide', priority: 0.8, changefreq: 'monthly' },
+    ...GUIDES.map((g): Entry => ({
+      path: `/guide/${g.id}`,
+      lastmod: g.date,
+      priority: 0.7,
+      changefreq: 'monthly',
+    })),
     { path: '/releases', lastmod: latestRelease, priority: 0.6, changefreq: 'weekly' },
     ...RELEASES.map((r): Entry => ({
       path: `/release/${r.id}`,

@@ -752,6 +752,11 @@ function AboutPage() {
           <p className="imprint">
             <span>SHUTTLEMATCH</span><span>バドミントンの試合表を、公平に</span><span>SPRING BOOT / REACT</span>
           </p>
+          <div className="cta-row reveal" style={{ marginTop: '1rem' }}>
+            <Link className="btn btn-outline" to="/guide">
+              試合表の作り方ガイドを見る
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

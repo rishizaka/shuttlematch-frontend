@@ -164,6 +164,10 @@ function SiteIntro() {
         <Link to="/about" className="font-medium text-brand-600 hover:underline">
           仕組みをもっと詳しく見る
         </Link>
+        <span className="mx-2 text-slate-300">|</span>
+        <Link to="/guide" className="font-medium text-brand-600 hover:underline">
+          試合表の作り方ガイドを見る
+        </Link>
       </p>
     </section>
   )

@@ -15,6 +15,7 @@ import { Route as ReleasesRouteImport } from './routes/releases'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PastRouteImport } from './routes/past'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -22,6 +23,7 @@ import { Route as RoomsRoomIdRouteImport } from './routes/rooms/$roomId'
 import { Route as ReleaseIdRouteImport } from './routes/release.$id'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as JoinRoomIdRouteImport } from './routes/join.$roomId'
+import { Route as GuideIdRouteImport } from './routes/guide.$id'
 import { Route as GameSkiRouteImport } from './routes/game_.ski'
 import { Route as GameRainRouteImport } from './routes/game_.rain'
 import { Route as GameFlickRouteImport } from './routes/game_.flick'
@@ -61,6 +63,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GameRoute = GameRouteImport.update({
   id: '/game',
   path: '/game',
@@ -95,6 +102,11 @@ const JoinRoomIdRoute = JoinRoomIdRouteImport.update({
   id: '/join/$roomId',
   path: '/join/$roomId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const GuideIdRoute = GuideIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => GuideRoute,
 } as any)
 const GameSkiRoute = GameSkiRouteImport.update({
   id: '/game_/ski',
@@ -141,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/game': typeof GameRoute
+  '/guide': typeof GuideRouteWithChildren
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
   '/privacy': typeof PrivacyRoute
@@ -152,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/game/flick': typeof GameFlickRoute
   '/game/rain': typeof GameRainRoute
   '/game/ski': typeof GameSkiRoute
+  '/guide/$id': typeof GuideIdRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
@@ -164,6 +178,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/game': typeof GameRoute
+  '/guide': typeof GuideRouteWithChildren
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
   '/privacy': typeof PrivacyRoute
@@ -175,6 +190,7 @@ export interface FileRoutesByTo {
   '/game/flick': typeof GameFlickRoute
   '/game/rain': typeof GameRainRoute
   '/game/ski': typeof GameSkiRoute
+  '/guide/$id': typeof GuideIdRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
@@ -188,6 +204,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/game': typeof GameRoute
+  '/guide': typeof GuideRouteWithChildren
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
   '/privacy': typeof PrivacyRoute
@@ -199,6 +216,7 @@ export interface FileRoutesById {
   '/game_/flick': typeof GameFlickRoute
   '/game_/rain': typeof GameRainRoute
   '/game_/ski': typeof GameSkiRoute
+  '/guide/$id': typeof GuideIdRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
@@ -213,6 +231,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/game'
+    | '/guide'
     | '/login'
     | '/past'
     | '/privacy'
@@ -224,6 +243,7 @@ export interface FileRouteTypes {
     | '/game/flick'
     | '/game/rain'
     | '/game/ski'
+    | '/guide/$id'
     | '/join/$roomId'
     | '/r/$code'
     | '/release/$id'
@@ -236,6 +256,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/game'
+    | '/guide'
     | '/login'
     | '/past'
     | '/privacy'
@@ -247,6 +268,7 @@ export interface FileRouteTypes {
     | '/game/flick'
     | '/game/rain'
     | '/game/ski'
+    | '/guide/$id'
     | '/join/$roomId'
     | '/r/$code'
     | '/release/$id'
@@ -259,6 +281,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/game'
+    | '/guide'
     | '/login'
     | '/past'
     | '/privacy'
@@ -270,6 +293,7 @@ export interface FileRouteTypes {
     | '/game_/flick'
     | '/game_/rain'
     | '/game_/ski'
+    | '/guide/$id'
     | '/join/$roomId'
     | '/r/$code'
     | '/release/$id'
@@ -283,6 +307,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   GameRoute: typeof GameRoute
+  GuideRoute: typeof GuideRouteWithChildren
   LoginRoute: typeof LoginRoute
   PastRoute: typeof PastRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -347,6 +372,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/game': {
       id: '/game'
       path: '/game'
@@ -395,6 +427,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/join/$roomId'
       preLoaderRoute: typeof JoinRoomIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/guide/$id': {
+      id: '/guide/$id'
+      path: '/$id'
+      fullPath: '/guide/$id'
+      preLoaderRoute: typeof GuideIdRouteImport
+      parentRoute: typeof GuideRoute
     }
     '/game_/ski': {
       id: '/game_/ski'
@@ -455,10 +494,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface GuideRouteChildren {
+  GuideIdRoute: typeof GuideIdRoute
+}
+
+const GuideRouteChildren: GuideRouteChildren = {
+  GuideIdRoute: GuideIdRoute,
+}
+
+const GuideRouteWithChildren = GuideRoute._addFileChildren(GuideRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   GameRoute: GameRoute,
+  GuideRoute: GuideRouteWithChildren,
   LoginRoute: LoginRoute,
   PastRoute: PastRoute,
   PrivacyRoute: PrivacyRoute,

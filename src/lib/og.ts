@@ -103,6 +103,22 @@ export function releaseOgMeta(
 }
 
 /**
+ * ハウツー記事(/guide/{id})の OGP メタタグ。
+ * リリースノートと同じ考え方だが、記事は見出し画像を持たないので og:image は出さない。
+ */
+export function guideOgMeta(guide: { id: string; title: string; summary: string }) {
+  const title = `${guide.title} | ${SITE_NAME}`
+  return [
+    { title },
+    { name: 'description', content: guide.summary },
+    { property: 'og:type', content: 'article' },
+    { property: 'og:title', content: title },
+    { property: 'og:description', content: guide.summary },
+    { property: 'og:url', content: `${SITE_ORIGIN}/guide/${guide.id}` },
+  ]
+}
+
+/**
  * ルーム系ページの動的 OGP メタタグ。
  * クローラーは JS を実行しないため、route の loader で取得した room を
  * head() から渡して SSR の HTML に含めること。
