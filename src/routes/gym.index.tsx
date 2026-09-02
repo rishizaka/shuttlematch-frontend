@@ -22,7 +22,9 @@ export const Route = createFileRoute('/gym/')({
 function GymListPage() {
   return (
     <div className="space-y-6">
-      <Breadcrumbs items={[{ label: 'TOP', to: '/' }, { label: '体育館レビュー' }]} />
+      <Breadcrumbs
+        items={[{ label: 'ダブルス・組み合わせのShuttleMatch', to: '/' }, { label: '体育館レビュー' }]}
+      />
 
       <div>
         <h1 className="text-2xl font-bold text-slate-900">体育館レビュー</h1>

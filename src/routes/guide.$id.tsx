@@ -25,7 +25,11 @@ function GuideDetailPage() {
   return (
     <div className="space-y-6">
       <Breadcrumbs
-        items={[{ label: 'TOP', to: '/' }, { label: '使い方ガイド', to: '/guide' }, { label: guide.title }]}
+        items={[
+          { label: 'ダブルス・組み合わせのShuttleMatch', to: '/' },
+          { label: '使い方ガイド', to: '/guide' },
+          { label: guide.title },
+        ]}
       />
 
       <div>

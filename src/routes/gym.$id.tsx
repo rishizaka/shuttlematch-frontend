@@ -25,7 +25,11 @@ function GymDetailPage() {
   return (
     <div className="space-y-6">
       <Breadcrumbs
-        items={[{ label: 'TOP', to: '/' }, { label: '体育館レビュー', to: '/gym' }, { label: gym.name }]}
+        items={[
+          { label: 'ダブルス・組み合わせのShuttleMatch', to: '/' },
+          { label: '体育館レビュー', to: '/gym' },
+          { label: gym.name },
+        ]}
       />
 
       <div>
