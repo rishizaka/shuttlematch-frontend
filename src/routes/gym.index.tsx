@@ -1,12 +1,13 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ChevronRight, MapPin } from 'lucide-react'
+import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { GYMS, formatGymDate } from '../lib/gyms'
 
 export const Route = createFileRoute('/gym/')({
   head: () => ({
     meta: [
-      { title: 'バドミントンが使える体育館レビュー一覧 | ShuttleMatch' },
+      { title: 'バドミントンダブルスが使える体育館レビュー一覧 | ShuttleMatch' },
       {
         name: 'description',
         content:
@@ -21,6 +22,8 @@ export const Route = createFileRoute('/gym/')({
 function GymListPage() {
   return (
     <div className="space-y-6">
+      <Breadcrumbs items={[{ label: 'TOP', to: '/' }, { label: '体育館レビュー' }]} />
+
       <div>
         <h1 className="text-2xl font-bold text-slate-900">体育館レビュー</h1>
         <p className="text-sm text-slate-500">

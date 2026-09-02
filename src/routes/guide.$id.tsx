@@ -1,5 +1,6 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { guideOgMeta } from '../lib/og'
 import { findGuide, formatGuideDate } from '../lib/guides'
@@ -23,13 +24,9 @@ function GuideDetailPage() {
   const guide = Route.useLoaderData()
   return (
     <div className="space-y-6">
-      <Link
-        to="/guide"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        ガイド一覧へ
-      </Link>
+      <Breadcrumbs
+        items={[{ label: 'TOP', to: '/' }, { label: '使い方ガイド', to: '/guide' }, { label: guide.title }]}
+      />
 
       <div>
         <time dateTime={guide.date} className="text-sm text-slate-500">

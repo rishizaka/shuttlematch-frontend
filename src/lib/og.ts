@@ -120,7 +120,7 @@ export function guideOgMeta(guide: { id: string; title: string; summary: string 
 
 /** 体育館レビュー(/gym/{id})の OGP メタタグ。guideOgMeta と同じ考え方。 */
 export function gymOgMeta(gym: { id: string; name: string; prefecture: string; city: string; summary: string }) {
-  const title = `${gym.name}(${gym.prefecture}${gym.city})でバドミントン | ${SITE_NAME}`
+  const title = `${gym.name}(${gym.prefecture}${gym.city})でバドミントンダブルス | ${SITE_NAME}`
   return [
     { title },
     { name: 'description', content: gym.summary },

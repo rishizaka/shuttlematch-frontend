@@ -48,7 +48,7 @@ export const GYMS: GymReview[] = [
     courtCount: 3,
     officialUrl: 'https://www.city.chiyoda.lg.jp/shisetsu/bunka/parkside.html',
     summary:
-      '秋葉原駅・岩本町駅から歩ける4Fの体育室でバドミントンコート3面。広々とした空間で照明・床の状態も良く、都内の学校・コミュニティ系施設の中でも上位クラスの使い心地です。',
+      '秋葉原駅・岩本町駅から歩ける4Fの体育室でバドミントンダブルスのコートが3面。広々とした空間で照明・床の状態も良く、都内の学校・コミュニティ系施設の中でも上位クラスの使い心地です。',
     sections: [
       {
         paragraphs: [
@@ -77,7 +77,7 @@ export const GYMS: GymReview[] = [
       {
         heading: 'こんな人におすすめ',
         paragraphs: [
-          '秋葉原・岩本町周辺で、広めのスペースを使って練習会をしたい人におすすめです。コート3面なので、12人前後の練習会にも対応できます。',
+          '秋葉原・岩本町周辺で、広めのスペースを使ってバドミントンダブルスの練習会をしたい人におすすめです。コート3面なので、12人前後の練習会にも対応できます。',
         ],
       },
     ],
@@ -93,7 +93,7 @@ export const GYMS: GymReview[] = [
     courtCount: 2,
     officialUrl: 'https://www.city.chiyoda.lg.jp/shisetsu/bunka/shoheidomu.html',
     summary:
-      '秋葉原駅・末広町駅から歩ける4Fの体育室でバドミントンコート2面。都心にしては料金がリーズナブルで、更衣室・お手洗いも同じフロアにある千代田区の施設です。',
+      '秋葉原駅・末広町駅から歩ける4Fの体育室でバドミントンダブルスのコートが2面。都心にしては料金がリーズナブルで、更衣室・お手洗いも同じフロアにある千代田区の施設です。',
     sections: [
       {
         paragraphs: [

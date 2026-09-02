@@ -1,5 +1,6 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { ArrowLeft, ExternalLink, MapPin, Train } from 'lucide-react'
+import { ExternalLink, MapPin, Train } from 'lucide-react'
+import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { gymOgMeta } from '../lib/og'
 import { findGym, formatGymDate } from '../lib/gyms'
@@ -23,13 +24,9 @@ function GymDetailPage() {
   const gym = Route.useLoaderData()
   return (
     <div className="space-y-6">
-      <Link
-        to="/gym"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        体育館レビュー一覧へ
-      </Link>
+      <Breadcrumbs
+        items={[{ label: 'TOP', to: '/' }, { label: '体育館レビュー', to: '/gym' }, { label: gym.name }]}
+      />
 
       <div>
         <time dateTime={gym.date} className="text-sm text-slate-500">

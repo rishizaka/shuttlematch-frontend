@@ -1,5 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
+import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { GUIDES, formatGuideDate } from '../lib/guides'
 
@@ -23,6 +24,8 @@ export const Route = createFileRoute('/guide/')({
 function GuidePage() {
   return (
     <div className="space-y-6">
+      <Breadcrumbs items={[{ label: 'TOP', to: '/' }, { label: '使い方ガイド' }]} />
+
       <div>
         <h1 className="text-2xl font-bold text-slate-900">使い方ガイド</h1>
         <p className="text-sm text-slate-500">
