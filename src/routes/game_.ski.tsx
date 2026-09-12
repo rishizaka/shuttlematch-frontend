@@ -3,6 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, Crown, RotateCcw, Share2 } from 'lucide-react'
 import { TIME_LIMIT, createShatopokoSkiGame, skiLevelOf } from '../components/game/shatopokoSki'
 import { AdSlot } from '../components/game/AdSlot'
+import { GameGuide } from '../components/game/GameGuide'
 import { GameOverRanking } from '../components/game/GameOverRanking'
 import { RankingModal } from '../components/game/RankingModal'
 import { useToast } from '../components/ui/Toast'
@@ -228,7 +229,20 @@ function SkiPage() {
         </p>
       ) : null}
 
-      <AdSlot />
+      <GameGuide
+        howTo={[
+          'シャトポコがゲレンデを滑り降ります。コースは縦に3本、横スワイプ(パソコンなら←→キー)で隣のコースへ移るだけで、曲がる操作もブレーキもありません。',
+          '持ち時間は120秒。スコアは「滑った距離 × 倍率」で、金の羽根を1枚拾うごとに倍率が0.01ずつ上がります。距離だけ伸ばしても羽根だけ集めても伸びないので、速く滑りながら拾うのが最大化のコツです。',
+          '転ばずに滑り続けると自然に加速し、ラケットに当たると「スマッシュ」で一段加速(羽根5枚ぶんの加点つき)します。ジャンプ台に乗ると羽根がひらいて宙に浮き、飛んでいる間は無敵で空中の羽根も拾えます。',
+          '岩や立木にぶつかると転倒し、積み上げた速さがすべて0に戻ります。起き上がった直後はしばらく無敵なので、転んだあとは落ち着いて次のコースを選べます。距離600mごとにレベルが上がり、コースがせばまってお邪魔が増えます。',
+        ]}
+        tips={[
+          '前方には岩や立木が現れますが、3本すべてがふさがることはありません。焦って早めに避けず、確実に空いているコースを選びましょう。',
+          '速さに上限はないので、転ばずに滑り続けて距離をかせぎつつ、無理のない範囲でラケットと羽根を拾いにいくのが伸びます。',
+          '転んでもそこで終わりではありません。速度は失いますが、無敵時間のうちに立て直せば120秒ぶん粘れます。攻めて損をするより、粘って距離を積み上げる方が結果的に伸びることも多いです。',
+          'ジャンプ台は「乗るだけ」でも得ですが、飛んだ先に羽根が並んでいます。空中では横移動も効くので、着地点をずらして羽根を拾いにいきましょう。',
+        ]}
+      />
 
       <AdSlot />
 
