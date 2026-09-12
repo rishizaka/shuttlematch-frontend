@@ -2,6 +2,7 @@ import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { ExternalLink, MapPin, Train } from 'lucide-react'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
+import { CreateRoomCta } from '../components/ui/CreateRoomCta'
 import { gymOgMeta } from '../lib/og'
 import { findGym, formatGymDate } from '../lib/gyms'
 
@@ -92,6 +93,8 @@ function GymDetailPage() {
           ))}
         </CardBody>
       </Card>
+
+      <CreateRoomCta />
     </div>
   )
 }

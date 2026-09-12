@@ -2,6 +2,7 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { ChevronRight, MapPin } from 'lucide-react'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
+import { CreateRoomCta } from '../components/ui/CreateRoomCta'
 import { GYMS, formatGymDate } from '../lib/gyms'
 
 export const Route = createFileRoute('/gym/')({
@@ -33,6 +34,8 @@ function GymListPage() {
         </p>
       </div>
 
+      <CreateRoomCta />
+
       <div className="space-y-3">
         {GYMS.map((gym) => (
           <Link key={gym.id} to="/gym/$id" params={{ id: gym.id }} className="block">
@@ -56,6 +59,12 @@ function GymListPage() {
           </Link>
         ))}
       </div>
+
+      <p className="border-t border-slate-100 pt-4 text-sm">
+        <Link to="/guide" className="font-medium text-brand-600 hover:underline">
+          使い方ガイドも見る
+        </Link>
+      </p>
     </div>
   )
 }

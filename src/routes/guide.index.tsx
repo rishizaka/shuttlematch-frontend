@@ -2,6 +2,7 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
+import { CreateRoomCta } from '../components/ui/CreateRoomCta'
 import { GUIDES, formatGuideDate } from '../lib/guides'
 
 export const Route = createFileRoute('/guide/')({
@@ -31,9 +32,15 @@ function GuidePage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">使い方ガイド</h1>
         <p className="text-sm text-slate-500">
-          バドミントンの試合表・ダブルスの組み方に関する読み物です。
+          バドミントンの試合表・ダブルスの組み方に関する読み物です。ShuttleMatch自体が
+          どんなツールかは<Link to="/about" className="font-medium text-brand-600 hover:underline">
+            サービス紹介
+          </Link>
+          でまとめています。
         </p>
       </div>
+
+      <CreateRoomCta />
 
       <div className="space-y-3">
         {GUIDES.map((guide) => (

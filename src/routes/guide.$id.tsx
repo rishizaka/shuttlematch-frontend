@@ -1,7 +1,7 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { Plus } from 'lucide-react'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
+import { CreateRoomCta } from '../components/ui/CreateRoomCta'
 import { guideOgMeta } from '../lib/og'
 import { findGuide, formatGuideDate } from '../lib/guides'
 
@@ -65,20 +65,7 @@ function GuideDetailPage() {
         </CardBody>
       </Card>
 
-      <Card className="border-brand-200 bg-brand-50">
-        <CardBody className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm font-medium text-brand-800">
-            試合表はShuttleMatchで無料ですぐ作れます。
-          </p>
-          <Link
-            to="/organizer/rooms/new"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
-          >
-            <Plus className="h-4 w-4" />
-            ルームを作成
-          </Link>
-        </CardBody>
-      </Card>
+      <CreateRoomCta />
     </div>
   )
 }
