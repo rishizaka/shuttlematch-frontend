@@ -1,6 +1,6 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { ArrowLeft } from 'lucide-react'
 import { Badge } from '../components/ui/Badge'
+import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { releaseOgMeta } from '../lib/og'
 import { findRelease, formatReleaseDate } from '../lib/releases'
@@ -31,13 +31,13 @@ function ReleaseDetailPage() {
   const release = Route.useLoaderData()
   return (
     <div className="space-y-6">
-      <Link
-        to="/releases"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-600 hover:underline"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        リリースノート一覧へ
-      </Link>
+      <Breadcrumbs
+        items={[
+          { label: 'ダブルス・組み合わせのShuttleMatch', to: '/' },
+          { label: 'リリースノート', to: '/releases' },
+          { label: release.title },
+        ]}
+      />
 
       <div>
         <div className="flex flex-wrap items-center gap-2">

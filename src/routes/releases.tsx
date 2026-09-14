@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { Badge } from '../components/ui/Badge'
+import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { cn } from '../lib/cn'
 import { RELEASES, formatReleaseDate } from '../lib/releases'
@@ -29,6 +30,10 @@ const TAG_TONES: Record<ReleaseTag, 'brand' | 'blue' | 'amber'> = {
 function ReleasesPage() {
   return (
     <div className="space-y-6">
+      <Breadcrumbs
+        items={[{ label: 'ダブルス・組み合わせのShuttleMatch', to: '/' }, { label: 'リリースノート' }]}
+      />
+
       <div>
         <h1 className="text-2xl font-bold text-slate-900">リリースノート</h1>
         <p className="text-sm text-slate-500">ShuttleMatch の新機能・改善のお知らせです。</p>

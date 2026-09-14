@@ -6,7 +6,9 @@ import { SITE_ORIGIN } from '../../lib/og'
  * 中間の項目はサイト内の固定パスにしか張らない(型安全なLinkのtoで表現できる範囲に絞る)。
  * 最後の項目は現在地なのでリンクを持たない。
  */
-export type BreadcrumbItem = { label: string; to: '/' | '/guide' | '/gym' } | { label: string }
+export type BreadcrumbItem =
+  | { label: string; to: '/' | '/guide' | '/gym' | '/releases' }
+  | { label: string }
 
 /**
  * パンくずナビゲーション + BreadcrumbList構造化データ。
