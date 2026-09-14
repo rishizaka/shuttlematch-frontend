@@ -113,12 +113,20 @@ export function getSelfParticipant(roomId: string): SelfParticipant | null {
   return readRaw<SelfParticipant | null>(SELF_PREFIX + roomId, null)
 }
 
-// 番号の切り替えは常に「別の番号を選び直す」形で行い、紐付けを空にする操作は無い
-// (切り替えると元の番号は自動で番号の表示に戻るので、解除は不要)。そのため
-// setSelfParticipant の上書きだけがあり、対になる remove は無い。
+// 番号の切り替えは基本「別の番号を選び直す」形で行い、紐付けを空にする操作は無い
+// (切り替えると元の番号は自動で番号の表示に戻るので、解除は不要)。
+// 例外は「早退する」(自分の番号をフリーにして端末の紐付けも解く)で、こちらは
+// 選び直す先が無いので removeSelfParticipant を使う。
 export function setSelfParticipant(roomId: string, participantId: string) {
   if (isBrowser()) {
     window.localStorage.setItem(SELF_PREFIX + roomId, JSON.stringify({ participantId }))
+  }
+  emit()
+}
+
+export function removeSelfParticipant(roomId: string) {
+  if (isBrowser()) {
+    window.localStorage.removeItem(SELF_PREFIX + roomId)
   }
   emit()
 }

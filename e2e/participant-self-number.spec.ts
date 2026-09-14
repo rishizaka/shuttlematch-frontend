@@ -78,3 +78,42 @@ test('参加者: 番号を選び間違えて名前を入れたあと、名前を
     await deleteRoom(request, roomId)
   }
 })
+
+// 参加者が自分で押す「早退する」: 番号をフリーにして端末の紐付けを解く軽量操作。
+// 運営者の早退(status=LEFT・再編成)とは別物で、出場・セット構成は変わらない。
+test('参加者: 早退するボタンで自分の番号がフリーになり、端末の紐付けが解ける', async ({
+  page,
+  request,
+}) => {
+  const room = await quickCreateRoom(request, { participantCount: 10, courtCount: 2 })
+  const roomId: string = room.id
+  try {
+    await page.goto(`/rooms/${roomId}/matches`)
+
+    // 6番として「はなこ」を名乗る。
+    await page.getByRole('button', { name: /自分の番号を入力しましょう/ }).click()
+    const dialog = page.getByRole('dialog', { name: '自分の番号を設定' })
+    const sixth = dialog.locator('option', { hasText: /^6番/ }).first()
+    await dialog.getByRole('combobox').selectOption((await sixth.getAttribute('value'))!)
+    await dialog.getByPlaceholder('あなたの名前（任意）').fill('はなこ')
+    await dialog.getByRole('button', { name: 'この名前で参加' }).click()
+    await expect(page.getByText(/あなた:\s*6番\s*・\s*はなこ/)).toBeVisible()
+
+    // 早退する → 確認 → フリーになる。
+    await page.getByRole('button', { name: '早退する' }).click()
+    await page.getByRole('dialog', { name: '早退しますか？' }).getByRole('button', { name: '早退する' }).click()
+
+    // 「あなた:」表示が消え、未設定の note が戻ってくる(端末の紐付けが解けた)。
+    await expect(page.getByText(/あなた:\s*6番/)).toBeHidden()
+    await expect(page.getByRole('button', { name: /自分の番号を入力しましょう/ })).toBeVisible()
+
+    // 名簿上は6番がフリーになり、在席(status=ACTIVE)のまま・人数も変わらない。
+    const after = await (await request.get(`/api/v1/rooms/${roomId}`)).json()
+    expect(after.participants).toHaveLength(10)
+    const six = after.participants[5]
+    expect(six.guestName).toBe('フリー')
+    expect(six.status).toBe('ACTIVE')
+  } finally {
+    await deleteRoom(request, roomId)
+  }
+})

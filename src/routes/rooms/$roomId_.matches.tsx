@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ListPlus,
   Lock,
+  LogOut,
   Minus,
   Plus,
   Camera,
@@ -34,9 +35,11 @@ import {
   addRoomId,
   getSelfParticipant,
   setSelfParticipant,
+  removeSelfParticipant,
   removeRoomId,
   subscribe,
 } from '../../lib/local-store'
+import { FREE_SLOT } from '../../lib/guests'
 import { ConfirmModal } from '../../components/ui/ConfirmModal'
 import { roomOgMeta } from '../../lib/og'
 import { Card, CardBody } from '../../components/ui/Card'
@@ -133,6 +136,9 @@ function MatchesPage() {
   // 自分の番号を決める・名前を変更するモーダルの開閉。番号だけの枠を選んで名前を付ける
   // ことも、既に名乗っている番号の名前だけ変えることもできる(下の submitClaim 参照)。
   const [showClaimModal, setShowClaimModal] = useState(false)
+  // 「早退する」の確認モーダルの開閉。自分の番号がフリーになり端末の紐付けも解けるので、
+  // 誤タップで即実行されないよう確認を挟む。
+  const [confirmingLeave, setConfirmingLeave] = useState(false)
   // 自分の ParticipantId (localStorage 由来)。参加(join)や番号設定で store が更新されたら
   // 即座に反映されるよう、リアクティブに購読する(useCurrentUser と同じ仕組み)。
   const selfParticipantId = useSyncExternalStore(
@@ -181,6 +187,11 @@ function MatchesPage() {
     }
     return null
   }, [room, user, selfParticipantId])
+
+  // 早退ボタンは「まだ在席している自分」にだけ出す(既に早退中ならもう出す意味が無い。
+  // フリーにする操作は早退中の枠には使えない=ParticipantList.canMakeFree と同じ条件)。
+  const myParticipantActive =
+    room?.participants.find((p) => p.id === myParticipantId)?.status !== 'LEFT'
 
   // アクティブ(進行中)なセット = 最も新しい開始時刻を持つセット。
   const activeSetNumber = useMemo(() => {
@@ -350,6 +361,23 @@ function MatchesPage() {
     )
   }
 
+  // 参加者自身が押す「早退する」。運営者の早退(status=LEFT、未開始セットから除外して
+  // 再編成)とは別物の軽量な操作: 自分の番号をフリーにして(名簿はそのまま在席・出場も
+  // 変わらない)、端末との紐付けだけ解く。代わりに来た人が同じ番号を名乗れるようにする。
+  const submitLeave = () => {
+    if (!myParticipantId) return
+    rename.mutate(
+      { participantId: myParticipantId, name: FREE_SLOT },
+      {
+        onSuccess: () => {
+          removeSelfParticipant(roomId)
+          setConfirmingLeave(false)
+          showToast('早退しました。あなたの番号はフリーになりました')
+        },
+      },
+    )
+  }
+
   return (
     // 最下部の「セットを追加」「ルームを終了」が画面の端に来ると押しにくいので、
     // 下に余白を確保しておく。
@@ -387,6 +415,17 @@ function MatchesPage() {
         />
       ) : null}
 
+      {confirmingLeave && myParticipantId ? (
+        <ConfirmModal
+          title="早退しますか？"
+          description={`あなたの${indexByParticipantId.get(myParticipantId) ?? '?'}番は「フリー」になり、代わりに来た人が同じ番号を名乗れるようになります。この端末との紐付けも解除されます。`}
+          confirmLabel="早退する"
+          confirming={rename.isPending}
+          onConfirm={submitLeave}
+          onCancel={() => setConfirmingLeave(false)}
+        />
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link to="/" className="text-sm text-brand-600 hover:underline">
@@ -403,6 +442,9 @@ function MatchesPage() {
           {/* 自分の番号表示。名前を名乗っていれば併記する。「名前を変更」は番号の選び直し
               も兼ねる(ClaimNumberModal を再利用、submitClaim 参照)。番号を選び間違えて
               違う番号に実名を入れてしまっても、選び直せば元の番号は番号の表示に戻る。
+              「早退する」は運営者の早退(未開始セットから除外・再編成)とは別の軽量操作。
+              自分の番号をフリーにして紐付けを解くだけで、出場やセット構成は変わらない
+              (submitLeave 参照)。既に早退中なら出さない(myParticipantActive)。
               運営者もプレーヤーとして出るので、参加者と同じ位置に出す。 */}
           {!closed && myParticipantId ? (
             <p className="mt-0.5 text-xs text-slate-500">
@@ -417,6 +459,16 @@ function MatchesPage() {
               >
                 {nameByParticipantId.get(myParticipantId) ? '名前を変更' : '名前を入れる'}
               </button>
+              {myParticipantActive ? (
+                <button
+                  type="button"
+                  onClick={() => setConfirmingLeave(true)}
+                  className="ml-1.5 inline-flex items-center gap-0.5 font-medium text-slate-500 hover:text-slate-800"
+                >
+                  <LogOut className="h-3 w-3" />
+                  早退する
+                </button>
+              ) : null}
             </p>
           ) : null}
         </div>
