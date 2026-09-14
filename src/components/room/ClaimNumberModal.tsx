@@ -13,31 +13,41 @@ import { Button } from '../ui/Button'
  * <li><b>名前は任意。</b>入れなければ名簿には触れず、この端末が自分の番号を覚えるだけ
  *     (localStorage)。番号だけで運用したい人はこちら。</li>
  * <li>すでに名前がある番号も選べる。この場合も名簿は上書きせず紐付けるだけ(重複可)。
- *     間違えて設定しても選び直すだけで直せるように、番号の指定は排他にしない。</li>
+ *     間違えて設定しても選び直すだけで直せるように、番号の指定は排他にしない。
+ *     選び直して違う番号に切り替えたときは、呼び出し側(ルーム画面の submitClaim)が
+ *     直前の番号を番号の表示に戻す。このモーダル自身に「解除」操作は無い
+ *     (選び直しだけで元の状態に戻るので不要)。</li>
+ * <li><b>自分が今すでに名乗っている番号だけは例外</b>で、実名入りでも名前欄を出す
+ *     (現在の名前を初期値にする)。「名前を変更」ボタンもこのモーダルを開くので、
+ *     自分の名前のタイプミス修正が名前欄なしでは行えなくなってしまうため。</li>
  * </ul>
  */
 export function ClaimNumberModal({
   participants,
-  initialParticipantId,
+  myParticipantId,
   pending,
   error,
   onSubmit,
-  onClear,
   onCancel,
 }: {
   participants: Participant[]
-  /** すでに設定済みの番号(あれば初期選択にする)。 */
-  initialParticipantId?: string | null
+  /** 今すでに自分が名乗っている番号(あれば初期選択にし、実名入りでも名前欄を出す)。 */
+  myParticipantId?: string | null
   pending: boolean
   error?: string | null
   /** name が null のときは名簿を変更せず、この端末の番号の紐付けだけ行う。 */
   onSubmit: (participantId: string, name: string | null) => void
-  /** 設定を解除する(番号なしに戻す)。設定済みのときだけ表示する。 */
-  onClear?: () => void
   onCancel: () => void
 }) {
-  const [participantId, setParticipantId] = useState(initialParticipantId ?? '')
-  const [name, setName] = useState('')
+  const [participantId, setParticipantId] = useState(myParticipantId ?? '')
+  // 自分が今すでに名乗っている番号に、さらに実名が付いているなら(=名前を変更)、
+  // 今の名前を初期値にする。タイプミス修正のたびに全部打ち直さずに済むように。
+  // 番号のまま(まだ名乗っていない)なら空欄からにする("3" のような番号表示を
+  // 名前欄に出してしまわないよう isClaimableSlot で弾く)。
+  const [name, setName] = useState(() => {
+    const mine = participants.find((p) => p.id === myParticipantId)
+    return mine && !isClaimableSlot(mine.guestName) ? (mine.guestName ?? '') : ''
+  })
 
   if (typeof document === 'undefined') return null
 
@@ -52,7 +62,10 @@ export function ClaimNumberModal({
 
   const selected = slots.find((p) => p.id === participantId)
   // 空き枠なら名前を付けて名簿に入る。実名入りなら端末の紐付けのみ。
-  const claimable = selected ? isClaimableSlot(selected.guestName) : true
+  // ただし自分が今すでに名乗っている番号は、実名入りでも自分の名前の編集として扱う。
+  const claimable = selected
+    ? isClaimableSlot(selected.guestName) || selected.id === myParticipantId
+    : true
 
   const slotLabel = (p: Participant): string => {
     const t = p.guestName?.trim() ?? ''
@@ -143,11 +156,6 @@ export function ClaimNumberModal({
           {slots.length > 0 ? (
             <Button className="flex-1" onClick={submit} disabled={!participantId || pending}>
               {pending ? '設定中…' : claimingName ? 'この名前で参加' : 'この番号にする'}
-            </Button>
-          ) : null}
-          {onClear ? (
-            <Button variant="ghost" onClick={onClear} disabled={pending}>
-              解除
             </Button>
           ) : null}
           <Button variant="ghost" onClick={onCancel} disabled={pending}>

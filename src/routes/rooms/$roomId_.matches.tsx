@@ -34,7 +34,6 @@ import {
   addRoomId,
   getSelfParticipant,
   setSelfParticipant,
-  removeSelfParticipant,
   removeRoomId,
   subscribe,
 } from '../../lib/local-store'
@@ -48,7 +47,6 @@ import { ClaimNumberModal } from '../../components/room/ClaimNumberModal'
 import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { RosterAccordion } from '../../components/room/RosterAccordion'
-import { RenameModal } from '../../components/room/RenameModal'
 import { MatchScheduleList } from '../../components/match/MatchScheduleList'
 import { MatchesSkeleton } from '../../components/match/MatchesSkeleton'
 import { SetStartAnnouncement } from '../../components/match/SetStartAnnouncement'
@@ -132,8 +130,8 @@ function MatchesPage() {
   const [addingSets, setAddingSets] = useState(false)
   // 運営メニューの開閉。参加者リストが長くなりがちなので、既定では畳んでおく。
   const [organizerOpen, setOrganizerOpen] = useState(false)
-  const [showRenameModal, setShowRenameModal] = useState(false)
-  // 自分の番号を決めるモーダルの開閉。番号だけの枠を選んで名前を付けることもできる。
+  // 自分の番号を決める・名前を変更するモーダルの開閉。番号だけの枠を選んで名前を付ける
+  // ことも、既に名乗っている番号の名前だけ変えることもできる(下の submitClaim 参照)。
   const [showClaimModal, setShowClaimModal] = useState(false)
   // 自分の ParticipantId (localStorage 由来)。参加(join)や番号設定で store が更新されたら
   // 即座に反映されるよう、リアクティブに購読する(useCurrentUser と同じ仕組み)。
@@ -316,7 +314,20 @@ function MatchesPage() {
     }
   }
 
-  const submitClaim =(participantId: string, name: string | null) => {
+  const submitClaim = (participantId: string, name: string | null) => {
+    // 切り替え前に自分が名乗っていた番号。別の番号に切り替えるときだけ、間違えて
+    // 入力した名前を番号の表示(「3」なら "3")に戻す。名簿に実名が残ったまま
+    // 端末だけ切り替わると、誰も紐付いていない実名が名簿に浮いてしまうため
+    // (簡易版で番号を選び間違えたときに起きていた不具合)。
+    const previousParticipantId = myParticipantId
+    const revertPrevious = () => {
+      if (!previousParticipantId || previousParticipantId === participantId) return
+      if (!nameByParticipantId.has(previousParticipantId)) return
+      const number = indexByParticipantId.get(previousParticipantId)
+      if (number == null) return
+      rename.mutate({ participantId: previousParticipantId, name: String(number) })
+    }
+
     // 実名入りの番号を選んだ場合(name=null)は名簿に触れず、端末の紐付けだけ行う。
     // 番号の指定は排他にしない(重複可)。間違えても選び直すだけで直せるようにする。
     if (name === null) {
@@ -324,6 +335,7 @@ function MatchesPage() {
       addRoomId(roomId)
       setShowClaimModal(false)
       showToast('自分の番号を設定しました')
+      revertPrevious()
       return
     }
     claim.mutate(
@@ -332,6 +344,7 @@ function MatchesPage() {
         onSuccess: () => {
           setShowClaimModal(false)
           showToast(`${name}として参加しました`)
+          revertPrevious()
         },
       },
     )
@@ -363,42 +376,13 @@ function MatchesPage() {
         />
       ) : null}
 
-      {showRenameModal && myParticipantId ? (
-        <RenameModal
-          currentName={nameByParticipantId.get(myParticipantId)}
-          pending={rename.isPending}
-          error={rename.isError ? (rename.error as Error).message : null}
-          onSubmit={(newName) =>
-            rename.mutate(
-              { participantId: myParticipantId, name: newName },
-              {
-                onSuccess: () => {
-                  setShowRenameModal(false)
-                  showToast('名前を変更しました')
-                },
-              },
-            )
-          }
-          onCancel={() => setShowRenameModal(false)}
-        />
-      ) : null}
-
       {showClaimModal ? (
         <ClaimNumberModal
           participants={room?.participants ?? []}
-          initialParticipantId={myParticipantId}
+          myParticipantId={myParticipantId}
           pending={claim.isPending}
           error={claim.isError ? (claim.error as Error).message : null}
           onSubmit={submitClaim}
-          onClear={
-            myParticipantId
-              ? () => {
-                  removeSelfParticipant(roomId)
-                  setShowClaimModal(false)
-                  showToast('自分の番号を解除しました')
-                }
-              : undefined
-          }
           onCancel={() => setShowClaimModal(false)}
         />
       ) : null}
@@ -416,8 +400,9 @@ function MatchesPage() {
               </span>
             ) : null}
           </div>
-          {/* 自分の番号表示。名前を名乗っていれば併記する。名前(名簿=API)と番号(端末=
-              localStorage)は別物なので、変更の導線も分けて出す。
+          {/* 自分の番号表示。名前を名乗っていれば併記する。「名前を変更」は番号の選び直し
+              も兼ねる(ClaimNumberModal を再利用、submitClaim 参照)。番号を選び間違えて
+              違う番号に実名を入れてしまっても、選び直せば元の番号は番号の表示に戻る。
               運営者もプレーヤーとして出るので、参加者と同じ位置に出す。 */}
           {!closed && myParticipantId ? (
             <p className="mt-0.5 text-xs text-slate-500">
@@ -427,17 +412,10 @@ function MatchesPage() {
                 : null}
               <button
                 type="button"
-                onClick={() => setShowRenameModal(true)}
-                className="ml-1.5 font-medium text-brand-600 hover:underline"
-              >
-                {nameByParticipantId.get(myParticipantId) ? '名前を変更' : '名前を入れる'}
-              </button>
-              <button
-                type="button"
                 onClick={() => setShowClaimModal(true)}
                 className="ml-1.5 font-medium text-brand-600 hover:underline"
               >
-                番号を変更
+                {nameByParticipantId.get(myParticipantId) ? '名前を変更' : '名前を入れる'}
               </button>
             </p>
           ) : null}

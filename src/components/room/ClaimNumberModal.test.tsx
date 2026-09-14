@@ -31,17 +31,18 @@ describe('ClaimNumberModal', () => {
     expect(options).toContain('2番（早退中）')
   })
 
-  it('早退中で実名が付いている番号は、早退中と名前を併記し、既に名前が付いている旨を出す(名簿は上書きしない)', () => {
+  it('他人の実名が付いている番号を選ぶと、早退中と名前を併記し、既に名前が付いている旨を出す(名簿は上書きしない)', () => {
+    // まだ自分は誰も名乗っていない(myParticipantId 無し)状態で、実名入りの枠を選ぶ。
     const participants = [guest('p1', '田中', { status: 'LEFT' })]
     render(
       <ClaimNumberModal
         participants={participants}
-        initialParticipantId="p1"
         pending={false}
         onSubmit={() => {}}
         onCancel={() => {}}
       />,
     )
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'p1' } })
     expect(screen.getByText('1番（早退中・田中）')).toBeInTheDocument()
     expect(screen.getByText(/「田中」さんの名前が付いています/)).toBeInTheDocument()
   })
@@ -52,7 +53,7 @@ describe('ClaimNumberModal', () => {
     render(
       <ClaimNumberModal
         participants={participants}
-        initialParticipantId="p1"
+        myParticipantId="p1"
         pending={false}
         onSubmit={onSubmit}
         onCancel={() => {}}
@@ -63,5 +64,21 @@ describe('ClaimNumberModal', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'この名前で参加' }))
     expect(onSubmit).toHaveBeenCalledWith('p1', 'たろう')
+  })
+
+  it('自分が今名乗っている番号は、実名入りでも名前欄を出し、今の名前を初期値にする(名前を変更)', () => {
+    const participants = [guest('p1', 'たろう')]
+    render(
+      <ClaimNumberModal
+        participants={participants}
+        myParticipantId="p1"
+        pending={false}
+        onSubmit={() => {}}
+        onCancel={() => {}}
+      />,
+    )
+    // 「実名が付いています」の案内文ではなく、現在の名前が入った入力欄が出る。
+    expect(screen.queryByText(/さんの名前が付いています/)).not.toBeInTheDocument()
+    expect(screen.getByPlaceholderText('あなたの名前（任意）')).toHaveValue('たろう')
   })
 })
