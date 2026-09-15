@@ -140,3 +140,38 @@ test('参加者: 早退するボタンで自分の番号がフリーになり、
     await deleteRoom(request, roomId)
   }
 })
+
+// QuickJoinBanner の「参加する」が失敗する(=本当に空き枠が無い)ときの保険。
+// 念のため、従来の番号選択(自分の番号を入力しましょう)も併せて出す。
+test('参加者: 参加するが失敗したら、念のため番号を選ぶ導線も出す', async ({ page, request }) => {
+  const room = await quickCreateRoom(request, { participantCount: 4, courtCount: 1 })
+  const roomId: string = room.id
+  try {
+    // 4人全員に実名を付け、空き枠を無くす(フリーでも遅刻者ビジターでもない状態)。
+    for (const p of room.participants) {
+      await request.post(`${API_BASE}/api/v1/rooms/${roomId}/participants/${p.id}/rename`, {
+        data: { name: `person-${p.id.slice(0, 4)}` },
+      })
+    }
+
+    await page.goto(`/rooms/${roomId}/matches`)
+
+    // QuickJoinBanner は出るが、押しても空きが無いのでエラーになる。
+    const joinButton = page.getByRole('button', { name: '参加する' })
+    await expect(joinButton).toBeVisible()
+    await joinButton.click()
+    await expect(page.getByRole('alert')).toBeVisible()
+
+    // 念のため、従来の番号選択の導線も出る(空きが無くても既存の番号を選び直せる)。
+    const note = page.getByRole('button', { name: /自分の番号を入力しましょう/ })
+    await expect(note).toBeVisible()
+    await note.click()
+    const dialog = page.getByRole('dialog', { name: '自分の番号を設定' })
+    const first = dialog.locator('option').nth(1)
+    await dialog.getByRole('combobox').selectOption((await first.getAttribute('value'))!)
+    await dialog.getByRole('button', { name: 'この番号にする' }).click()
+    await expect(page.getByText(/あなた:\s*1番/)).toBeVisible()
+  } finally {
+    await deleteRoom(request, roomId)
+  }
+})

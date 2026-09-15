@@ -486,41 +486,50 @@ function MatchesPage() {
           簡易作成ルームで1セット目が始まる前なら「参加する」で自動採番(QuickJoinBanner)、
           それ以外(受付モード・1セット目開始後)は従来通り番号を選ばせる
           (遅刻者も運営が用意した空き番号を指定して入る)。
+          QuickJoinBanner が失敗した(空き枠が本当に無かった等)ときは、念のため
+          従来の番号選択(番号を入力しましょう)も併せて出す。 claimNextFreeSlot は
+          フリー・遅刻者ビジター枠まで対象にしているので基本は成立するはずだが、
+          万一の抜け漏れに備えた保険。
           運営者もプレーヤーを兼ねるので同じ導線を使う(運営メニューには置かない)。 */}
       {!closed && !myParticipantId ? (
-        showQuickJoin ? (
-          <QuickJoinBanner
-            pending={claimNext.isPending}
-            error={claimNext.isError ? (claimNext.error as Error).message : null}
-            onSubmit={(name) =>
-              claimNext.mutate(name, {
-                onSuccess: (result) => showToast(`${result.number}番として参加しました`),
-              })
-            }
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowClaimModal(true)}
-            className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-              <UserRound className="h-4.5 w-4.5" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold text-amber-900">
-                自分の番号を入力しましょう
+        <>
+          {showQuickJoin ? (
+            <QuickJoinBanner
+              pending={claimNext.isPending}
+              error={claimNext.isError ? (claimNext.error as Error).message : null}
+              onSubmit={(name) =>
+                claimNext.mutate(name, {
+                  onSuccess: (result) => showToast(`${result.number}番として参加しました`),
+                })
+              }
+            />
+          ) : null}
+          {!showQuickJoin || claimNext.isError ? (
+            <button
+              type="button"
+              onClick={() => setShowClaimModal(true)}
+              className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                <UserRound className="h-4.5 w-4.5" />
               </span>
-              <span className="block text-xs text-amber-700">
-                設定すると、自分が出る試合が強調表示されて見やすくなります。
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-amber-900">
+                  自分の番号を入力しましょう
+                </span>
+                <span className="block text-xs text-amber-700">
+                  {showQuickJoin
+                    ? '空いている番号や既に名前の付いた番号から選べます。'
+                    : '設定すると、自分が出る試合が強調表示されて見やすくなります。'}
+                </span>
               </span>
-            </span>
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
-              <Plus className="h-4 w-4" />
-              入力
-            </span>
-          </button>
-        )
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
+                <Plus className="h-4 w-4" />
+                入力
+              </span>
+            </button>
+          ) : null}
+        </>
       ) : null}
 
       {closed ? (
