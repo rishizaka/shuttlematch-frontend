@@ -19,6 +19,7 @@ import {
 import {
   queryKeys,
   useAddSets,
+  useClaimNextParticipant,
   useClaimNumber,
   useRenameParticipant,
   useCloseRoom,
@@ -47,6 +48,7 @@ import { Button } from '../../components/ui/Button'
 import { ErrorBlock } from '../../components/ui/Spinner'
 import { useToast } from '../../components/ui/Toast'
 import { ClaimNumberModal } from '../../components/room/ClaimNumberModal'
+import { QuickJoinBanner } from '../../components/room/QuickJoinBanner'
 import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { RosterAccordion } from '../../components/room/RosterAccordion'
@@ -123,6 +125,7 @@ function MatchesPage() {
   const closeRoom = useCloseRoom(roomId)
   const deleteRoom = useDeleteRoom(roomId, room?.shareCode)
   const claim = useClaimNumber(roomId)
+  const claimNext = useClaimNextParticipant(roomId)
   const rename = useRenameParticipant(roomId)
   const navigate = useNavigate()
   const [addCount, setAddCount] = useState(3)
@@ -205,6 +208,11 @@ function MatchesPage() {
     }
     return active
   }, [schedule])
+
+  // 簡易作成ルームで、1セット目が始まる前だけ「参加する」の自動採番導線を出す。
+  // 受付モードは生成直後(1セット目前)でも番号を選ぶ導線のままにする(既に名前入りの
+  // 早退中の枠などへ選び直したい場合があり、自動採番だけでは足りないため)。
+  const showQuickJoin = !closed && activeSetNumber === null && !!room?.quickCreated
 
   // セットの開始を検知して知らせる (ポーリングによる他端末からの反映でも気付けるように)。
   // 自分で開始ボタンを押した場合はトースト、他端末からの検知は全画面アナウンス。
@@ -474,31 +482,45 @@ function MatchesPage() {
         </div>
       </div>
 
-      {/* 自分がまだ未設定の人への誘導。どのルームでも同じ1枚の案内・同じ開く先にする。
-          遅刻者も新規に番号を増やすのではなく、運営が用意した空き番号を指定して入る。
+      {/* 自分がまだ未設定の人への誘導。
+          簡易作成ルームで1セット目が始まる前なら「参加する」で自動採番(QuickJoinBanner)、
+          それ以外(受付モード・1セット目開始後)は従来通り番号を選ばせる
+          (遅刻者も運営が用意した空き番号を指定して入る)。
           運営者もプレーヤーを兼ねるので同じ導線を使う(運営メニューには置かない)。 */}
       {!closed && !myParticipantId ? (
-        <button
-          type="button"
-          onClick={() => setShowClaimModal(true)}
-          className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-            <UserRound className="h-4.5 w-4.5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-amber-900">
-              自分の番号を入力しましょう
+        showQuickJoin ? (
+          <QuickJoinBanner
+            pending={claimNext.isPending}
+            error={claimNext.isError ? (claimNext.error as Error).message : null}
+            onSubmit={(name) =>
+              claimNext.mutate(name, {
+                onSuccess: (result) => showToast(`${result.number}番として参加しました`),
+              })
+            }
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowClaimModal(true)}
+            className="flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-left transition hover:bg-amber-100"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+              <UserRound className="h-4.5 w-4.5" />
             </span>
-            <span className="block text-xs text-amber-700">
-              設定すると、自分が出る試合が強調表示されて見やすくなります。
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold text-amber-900">
+                自分の番号を入力しましょう
+              </span>
+              <span className="block text-xs text-amber-700">
+                設定すると、自分が出る試合が強調表示されて見やすくなります。
+              </span>
             </span>
-          </span>
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
-            <Plus className="h-4 w-4" />
-            入力
-          </span>
-        </button>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-sm font-semibold text-amber-700">
+              <Plus className="h-4 w-4" />
+              入力
+            </span>
+          </button>
+        )
       ) : null}
 
       {closed ? (
@@ -513,11 +535,14 @@ function MatchesPage() {
       {/* 参加者名簿(番号→名前)。名前運用(受付モード)のときだけ出る。
           運営者には既定では出さない(運営メニューの参加者管理で名前を見られるため)が、
           終了済みルームでは運営メニューごと消えるので、そのときは運営者にも出す。
-          出さないと運営者だけ番号と名前の対応を確認できなくなる。 */}
+          出さないと運営者だけ番号と名前の対応を確認できなくなる。
+          QuickJoinBanner(参加する)を出す間は forceVisible で強制表示する。
+          押す前でも、今何人参加しているか見えていてよいため。 */}
       {!isOrganizer || closed ? (
         <RosterAccordion
           participants={room?.participants ?? []}
           selfParticipantId={myParticipantId}
+          forceVisible={showQuickJoin}
         />
       ) : null}
 

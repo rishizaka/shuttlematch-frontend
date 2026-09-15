@@ -6,13 +6,18 @@ import type { Participant } from '../../lib/types'
  * 参加者名簿(番号→名前)のアコーディオン。
  * 受付モードのように名前が付いているときだけ表示し、番号運用(名前=番号)のときは出さない。
  * 番号だけの試合表で「誰が何番か」を確認するための一覧。
+ *
+ * 例外は forceVisible: 1セット目が始まる前の簡易作成ルーム(QuickJoinBanner)では、
+ * まだ誰も名乗っていなくても「今何人参加しているか」を見せたいので表示を強制する。
  */
 export function RosterAccordion({
   participants,
   selfParticipantId,
+  forceVisible = false,
 }: {
   participants: Participant[]
   selfParticipantId?: string | null
+  forceVisible?: boolean
 }) {
   const [open, setOpen] = useState(false)
 
@@ -20,7 +25,7 @@ export function RosterAccordion({
   const hasRealNames = participants.some(
     (p) => p.guestName != null && !/^\d+$/.test(p.guestName.trim()),
   )
-  if (!hasRealNames) return null
+  if (!hasRealNames && !forceVisible) return null
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">

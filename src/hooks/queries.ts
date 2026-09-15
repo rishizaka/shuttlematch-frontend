@@ -141,6 +141,23 @@ export function useJoinRoom(roomId: string) {
 }
 
 /**
+ * 簡易作成ルームの「番号のまま」の枠に、一番若い空き番号で自動参加する(名前は任意)。
+ * useJoinRoom と同じ形(participantId・番号・room を受け取り、自分として localStore に保存する)
+ * だが、参加者を新規作成するのではなく既存の空き番号枠に割り当てる点が違う。
+ */
+export function useClaimNextParticipant(roomId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => roomApi.claimNext(roomId, name),
+    onSuccess: (result) => {
+      setSelfParticipant(roomId, result.participantId);
+      qc.setQueryData(queryKeys.room(roomId), result.room);
+      addRoomId(roomId);
+    },
+  });
+}
+
+/**
  * 番号だけの枠に名前を付けて自分に割り当てる(遅刻者が既存の番号に当てはまる)。
  * rename 後、その participantId を自分として localStore に保存する。
  */

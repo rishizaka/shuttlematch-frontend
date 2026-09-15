@@ -53,6 +53,11 @@ export interface Room {
   participants: Participant[]
   /** 固定ペア(常に同じチームで組む2人)の一覧。 */
   fixedPairs: FixedPair[]
+  /**
+   * 簡易作成(人数を指定してその場で番号参加者+試合表を作る)ルームか。
+   * 1セット目が始まる前の参加導線(QuickJoinBanner か番号選択か)の出し分けに使う。
+   */
+  quickCreated: boolean
 }
 
 /**

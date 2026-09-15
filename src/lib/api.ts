@@ -225,6 +225,15 @@ export const roomApi = {
       method: 'POST',
       body: JSON.stringify({ name }),
     }),
+  /**
+   * 簡易作成ルームの「番号のまま」の枠に、一番若い空き番号で自動参加する(名前は任意)。
+   * 同時に複数人が押しても、サーバー側でそれぞれ別の番号が割り当てられる。
+   */
+  claimNext: (roomId: string, name: string) =>
+    request<JoinResult>(`/api/v1/rooms/${roomId}/participants/claim-next`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
   /** 参加者の名前(ニックネーム)を変更する。番号だけの枠に後から名前を付けるのに使う。 */
   renameParticipant: (roomId: string, participantId: string, name: string) =>
     request<Room>(`/api/v1/rooms/${roomId}/participants/${participantId}/rename`, {
