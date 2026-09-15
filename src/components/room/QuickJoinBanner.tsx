@@ -45,7 +45,7 @@ export function QuickJoinBanner({
             if (e.key === 'Enter') submit()
           }}
           placeholder="あなたの名前（任意）"
-          className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className="min-w-0 flex-1 rounded-lg border border-amber-300 bg-white px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
         />
         <Button type="button" onClick={submit} disabled={pending}>
           {pending ? '参加中…' : '参加する'}
