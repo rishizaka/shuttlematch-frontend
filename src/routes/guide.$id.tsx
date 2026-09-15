@@ -3,7 +3,7 @@ import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { CreateRoomCta } from '../components/ui/CreateRoomCta'
 import { guideOgMeta } from '../lib/og'
-import { findGuide, formatGuideDate } from '../lib/guides'
+import { GUIDES, findGuide, formatGuideDate } from '../lib/guides'
 
 export const Route = createFileRoute('/guide/$id')({
   // データは同梱の静的配列なので loader は同期。存在しない id は 404 として扱う。
@@ -22,6 +22,9 @@ export const Route = createFileRoute('/guide/$id')({
 /** ハウツー記事の詳細ページ。 */
 function GuideDetailPage() {
   const guide = Route.useLoaderData()
+  const related = (guide.relatedGuideIds ?? [])
+    .map((id) => GUIDES.find((g) => g.id === id))
+    .filter((g) => g != null)
   return (
     <div className="space-y-6">
       <Breadcrumbs
@@ -64,6 +67,34 @@ function GuideDetailPage() {
           ))}
         </CardBody>
       </Card>
+
+      {related.length > 0 || guide.showGymLink ? (
+        <Card>
+          <CardBody className="space-y-2 py-4">
+            <h2 className="text-sm font-semibold text-slate-800">関連記事</h2>
+            <ul className="space-y-1.5">
+              {related.map((g) => (
+                <li key={g.id}>
+                  <Link
+                    to="/guide/$id"
+                    params={{ id: g.id }}
+                    className="text-sm font-medium text-brand-600 hover:underline"
+                  >
+                    {g.title}
+                  </Link>
+                </li>
+              ))}
+              {guide.showGymLink ? (
+                <li>
+                  <Link to="/gym" className="text-sm font-medium text-brand-600 hover:underline">
+                    体育館レビュー一覧
+                  </Link>
+                </li>
+              ) : null}
+            </ul>
+          </CardBody>
+        </Card>
+      ) : null}
 
       <CreateRoomCta />
     </div>
