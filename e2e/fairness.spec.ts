@@ -101,13 +101,11 @@ test('偏りなし(10人2コート): 早退・遅刻・再編成しても公平'
       await startDialog.getByRole('button', { name: /開始|はい/ }).click()
     }
 
-    // 10番を早退させ、再編成する。
+    // 10番を早退させる。未開始セットの再編成はサーバー側が同じ操作の中で自動で行うため、
+    // (以前あった)「再編成しますか？」の確認は出ない。
     await openOrganizerMenu(page)
     await page.getByRole('button', { name: '早退' }).last().click()
-    const replan1 = page.getByRole('dialog', { name: '試合表を再編成しますか？' })
-    await expect(replan1).toBeVisible()
-    await replan1.getByRole('button', { name: 'はい' }).click()
-    await expect(page.getByText('未開始セットを再編成しました')).toBeVisible()
+    await expect(page.getByText(/早退にしました/)).toBeVisible()
 
     // 遅刻(ゲスト追加=11番)して再編成する。
     await openOrganizerMenu(page)

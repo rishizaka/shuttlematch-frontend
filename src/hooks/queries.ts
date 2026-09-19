@@ -247,7 +247,11 @@ export function useRemoveParticipant(roomId: string) {
   });
 }
 
-/** 早退 (運営者操作)。在席状態を LEFT にする。未開始セットの再編成で反映される。 */
+/**
+ * 早退 (運営者操作)。在席状態を LEFT にする。
+ * backend が同じ操作の中で未開始セットも自動で組み直すので(MarkParticipantLeftUseCase)、
+ * 試合表のキャッシュも合わせて無効化し、次の描画で組み直し後の内容を取りに行く。
+ */
 export function useMarkParticipantLeft(roomId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -255,11 +259,12 @@ export function useMarkParticipantLeft(roomId: string) {
       roomApi.markParticipantLeft(roomId, participantId),
     onSuccess: (room) => {
       qc.setQueryData(queryKeys.room(roomId), room);
+      qc.invalidateQueries({ queryKey: queryKeys.matches(roomId) });
     },
   });
 }
 
-/** 複数人をまとめて早退にする (運営者操作)。1回の保存で反映する。 */
+/** 複数人をまとめて早退にする (運営者操作)。1回の保存で反映する。未開始セットも自動で組み直る。 */
 export function useMarkParticipantsLeft(roomId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -267,6 +272,7 @@ export function useMarkParticipantsLeft(roomId: string) {
       roomApi.markParticipantsLeft(roomId, participantIds),
     onSuccess: (room) => {
       qc.setQueryData(queryKeys.room(roomId), room);
+      qc.invalidateQueries({ queryKey: queryKeys.matches(roomId) });
     },
   });
 }

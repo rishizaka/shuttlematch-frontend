@@ -94,17 +94,31 @@ export function ParticipantManager({
 
   const confirmBulkAction = () => {
     const ids = [...selectedIds]
-    const onSuccess = () => {
-      cancelSelecting()
-      askReplan()
+    if (bulkAction === 'reactivate') {
+      // 復帰は未開始セットへの反映が任意(戻すだけでは自動でローテーションに
+      // 組み込まれない)なので、従来通りここで再編成を尋ねる。
+      reactivateBulk.mutate(ids, {
+        onSuccess: () => {
+          cancelSelecting()
+          askReplan()
+        },
+      })
+    } else {
+      // 早退はサーバー側が同じ操作の中で未開始セットも自動で組み直す
+      // (MarkParticipantLeftUseCase 参照)ので、ここで尋ね直す必要は無い。
+      markLeftBulk.mutate(ids, {
+        onSuccess: () => {
+          cancelSelecting()
+          showToast('早退にしました(未開始セットも自動で組み直しました)')
+        },
+      })
     }
-    if (bulkAction === 'reactivate') reactivateBulk.mutate(ids, { onSuccess })
-    else markLeftBulk.mutate(ids, { onSuccess })
   }
 
   // 固定ペアの解除だけは、解除の確認モーダルで「解除する」を押した流れで
   // 再編成まで済ませる(確認を2回続けて出さないため)。
-  // ゲストの追加・早退・復帰・固定ペアの追加は従来どおり、あとから尋ねる。
+  // ゲストの追加・復帰・固定ペアの追加は従来どおり、あとから尋ねる。
+  // 早退はサーバー側が自動で再編成するので、この一覧には含まれない。
   const replanAfterFixedPairRemoval = async () => {
     await replan.mutateAsync(undefined)
     showToast('固定ペアを解除し、未開始セットを再編成しました')
@@ -197,7 +211,16 @@ export function ParticipantManager({
         participants={participants}
         onRemove={generated ? undefined : (p) => remove.mutate(p.id)}
         removingId={remove.isPending ? (remove.variables as string) : null}
-        onMarkLeft={generated ? (p) => markLeft.mutate(p.id, { onSuccess: askReplan }) : undefined}
+        onMarkLeft={
+          generated
+            ? (p) =>
+                // 早退はサーバー側が同じ操作の中で未開始セットも自動で組み直すので、
+                // ここで再編成を尋ね直す必要は無い(MarkParticipantLeftUseCase 参照)。
+                markLeft.mutate(p.id, {
+                  onSuccess: () => showToast('早退にしました(未開始セットも自動で組み直しました)'),
+                })
+            : undefined
+        }
         onReactivate={
           generated ? (p) => reactivate.mutate(p.id, { onSuccess: askReplan }) : undefined
         }
@@ -260,7 +283,8 @@ export function ParticipantManager({
 
       {generated ? (
         <p className="text-xs text-slate-400">
-          ゲストの追加・早退・復帰・固定ペアの変更は「未開始セットを再編成」で試合表に反映されます。
+          早退は自動で未開始セットに反映されます。ゲストの追加・復帰・固定ペアの追加は
+          「未開始セットを再編成」で試合表に反映されます。
         </p>
       ) : null}
 
