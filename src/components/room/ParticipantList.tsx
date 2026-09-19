@@ -1,6 +1,6 @@
 import { LogOut, RotateCcw, Trash2, Undo2, Unlink } from 'lucide-react'
 import type { Participant } from '../../lib/types'
-import { FREE_SLOT } from '../../lib/guests'
+import { FREE_SLOT, displayGuestName } from '../../lib/guests'
 import { Badge } from '../ui/Badge'
 
 /**
@@ -100,9 +100,12 @@ export function ParticipantList({
               >
                 {i + 1}
               </span>
-              {/* 受付モードなど名前が付いていれば名前を表示。番号運用(名前=番号)なら「ゲスト」。 */}
+              {/* 受付モードなど名前が付いていれば名前を表示。番号のまま(未クレーム)なら
+                  「空き」。「ゲスト」は表示上のプレースホルダではなく、名前を空欄で
+                  「参加する」を押した人の実際の guestName なので、番号のままの枠と
+                  混同しないよう分けて表示する(displayGuestName 参照)。 */}
               <span className={'truncate ' + (left ? 'line-through' : '')}>
-                {p.guestName && !/^\d+$/.test(p.guestName.trim()) ? p.guestName : 'ゲスト'}
+                {displayGuestName(p.guestName)}
               </span>
               {left ? <Badge tone="slate">早退</Badge> : null}
             </span>

@@ -22,3 +22,19 @@ export function isClaimableSlot(guestName: string | null | undefined): boolean {
   const t = guestName.trim()
   return /^\d+$/.test(t) || t === VISITOR_PLACEHOLDER || t === FREE_SLOT
 }
+
+/**
+ * 名簿に出す表示名。番号のまま(まだ誰も名乗っていない)なら「空き」と表示する。
+ * <p>
+ * 「参加する」(QuickJoinBanner)は名前を空欄で押すと実際に guestName="ゲスト" として
+ * 保存される。番号のままの未クレーム枠をここで「ゲスト」と表示してしまうと、
+ * 「本当は誰かが名乗らずに参加した(guestName="ゲスト")」のか「まだ誰もこの番号を
+ * 選んでいない(番号のまま)」のかが運営者から見分けられなくなる
+ * (2026-09 に「2番が埋まらずゲストのまま」という報告があり、実際には見分けが
+ * つかなかっただけ、というのがこの関数を作った経緯)。
+ */
+export function displayGuestName(guestName: string | null | undefined): string {
+  const t = guestName?.trim() ?? ''
+  if (!t || /^\d+$/.test(t)) return '空き'
+  return t
+}
