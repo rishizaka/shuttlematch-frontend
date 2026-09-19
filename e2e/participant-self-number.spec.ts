@@ -25,7 +25,7 @@ test('参加者: 1セット目前は「参加する」導線になり、押し�
     await expect(roster).toBeVisible()
     await expect(roster).toContainText('10人')
 
-    await page.getByPlaceholder('あなたの名前（任意）').fill('たろう')
+    await page.getByPlaceholder('あなたの名前').fill('たろう')
     await joinButton.click()
 
     // 一番若い1番が割り当たる。
@@ -33,6 +33,33 @@ test('参加者: 1セット目前は「参加する」導線になり、押し�
 
     const after = await (await request.get(`/api/v1/rooms/${roomId}`)).json()
     expect(after.participants[0].guestName).toBe('たろう')
+  } finally {
+    await deleteRoom(request, roomId)
+  }
+})
+
+// 名前は必須。空欄のまま押すと、送信されずに案内が出るだけで留まる
+// (「番号のまま」の枠と、実際に空欄で参加した guestName="ゲスト" の人が
+// 見分けづらくなる混乱を避けるため、2026-09 に必須化した)。
+test('参加者: 「参加する」は名前が空だと送信されず、案内が出る', async ({ page, request }) => {
+  const room = await quickCreateRoom(request, { participantCount: 4, courtCount: 1 })
+  const roomId: string = room.id
+  try {
+    await page.goto(`/rooms/${roomId}/matches`)
+
+    const joinButton = page.getByRole('button', { name: '参加する' })
+    await expect(joinButton).toBeVisible()
+    await joinButton.click()
+
+    await expect(page.getByText('名前を入力してください。')).toBeVisible()
+    // まだ誰も参加していない(全員番号のまま)。
+    const after = await (await request.get(`/api/v1/rooms/${roomId}`)).json()
+    expect(after.participants.map((p: { guestName: string }) => p.guestName)).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+    ])
   } finally {
     await deleteRoom(request, roomId)
   }
@@ -77,7 +104,7 @@ test('参加者: 名前を変更で違う番号に選び直すと、元の番号
     await page.goto(`/rooms/${roomId}/matches`)
 
     // 参加する → 一番若い1番が割り当たる。
-    await page.getByPlaceholder('あなたの名前（任意）').fill('たろう')
+    await page.getByPlaceholder('あなたの名前').fill('たろう')
     await page.getByRole('button', { name: '参加する' }).click()
     await expect(page.getByText(/あなた:\s*1番\s*・\s*たろう/)).toBeVisible()
 
@@ -114,7 +141,7 @@ test('参加者: 早退するボタンで自分の番号がフリーになり、
     await page.goto(`/rooms/${roomId}/matches`)
 
     // 参加する → 一番若い1番として「はなこ」を名乗る。
-    await page.getByPlaceholder('あなたの名前（任意）').fill('はなこ')
+    await page.getByPlaceholder('あなたの名前').fill('はなこ')
     await page.getByRole('button', { name: '参加する' }).click()
     await expect(page.getByText(/あなた:\s*1番\s*・\s*はなこ/)).toBeVisible()
 
@@ -156,9 +183,10 @@ test('参加者: 参加するが失敗したら、念のため番号を選ぶ導
 
     await page.goto(`/rooms/${roomId}/matches`)
 
-    // QuickJoinBanner は出るが、押しても空きが無いのでエラーになる。
+    // QuickJoinBanner は出るが、名前を入れて押しても空きが無いのでエラーになる。
     const joinButton = page.getByRole('button', { name: '参加する' })
     await expect(joinButton).toBeVisible()
+    await page.getByPlaceholder('あなたの名前').fill('だれか')
     await joinButton.click()
     await expect(page.getByRole('alert')).toBeVisible()
 

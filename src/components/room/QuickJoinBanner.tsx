@@ -10,6 +10,10 @@ import { ErrorBlock } from '../ui/Spinner'
  * 分かりやすい。番号は押した順(サーバー側の行ロックで原子的)に一番若い空き番号が
  * 割り当たるので、同時に何人押しても取り合いにならない。1セット目が始まったら、
  * 従来通り番号を選ぶ導線(ClaimNumberModal)に切り替わる。
+ * <p>
+ * 名前は必須。以前は空欄でも「ゲスト」として参加できたが、そうすると「番号のまま
+ * (誰も参加していない)」枠と実際に空欄で参加した人(guestName="ゲスト")が運営者
+ * から見分けづらくなる混乱が起きたため、必須にしてある(server 側も同様に必須)。
  */
 export function QuickJoinBanner({
   pending,
@@ -21,9 +25,17 @@ export function QuickJoinBanner({
   onSubmit: (name: string) => void
 }) {
   const [name, setName] = useState('')
+  // 送信ボタンを押す前は出さない(初期表示から赤い注意書きが見えると威圧的なため)。
+  const [touched, setTouched] = useState(false)
 
+  const trimmed = name.trim()
   const submit = () => {
-    if (!pending) onSubmit(name)
+    if (pending) return
+    if (!trimmed) {
+      setTouched(true)
+      return
+    }
+    onSubmit(trimmed)
   }
 
   return (
@@ -40,17 +52,22 @@ export function QuickJoinBanner({
           type="text"
           value={name}
           maxLength={30}
+          required
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') submit()
           }}
-          placeholder="あなたの名前（任意）"
+          placeholder="あなたの名前"
+          aria-invalid={touched && !trimmed}
           className="min-w-0 flex-1 rounded-lg border border-amber-300 bg-white px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
         />
         <Button type="button" onClick={submit} disabled={pending}>
           {pending ? '参加中…' : '参加する'}
         </Button>
       </div>
+      {touched && !trimmed ? (
+        <p className="mt-1.5 text-xs font-medium text-red-600">名前を入力してください。</p>
+      ) : null}
       {error ? (
         <div className="mt-2">
           <ErrorBlock message={error} />
