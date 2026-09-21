@@ -6,7 +6,10 @@ import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Field, Input } from '../components/ui/Field'
 
-export const Route = createFileRoute('/signup')({ component: SignupPage })
+export const Route = createFileRoute('/signup')({
+  head: () => ({ meta: [{ name: 'robots', content: 'noindex,follow' }] }),
+  component: SignupPage,
+})
 
 function SignupPage() {
   const router = useRouter()

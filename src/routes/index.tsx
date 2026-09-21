@@ -58,15 +58,22 @@ function HomePage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">ルーム</h1>
-          <p className="text-sm text-slate-500">練習会ごとにルームを作って試合表を共有します。</p>
+          {/* title だけでなく、画面で最初に読める h1 にも検索する人の言葉を置く。
+              「組み合わせ表を作る」という目的を先に示すことで、初めて来た人にも
+              ここが開催中ルームの一覧だけではなく、作成ツールであることが伝わる。 */}
+          <h1 className="text-2xl font-bold text-slate-900">
+            バドミントンのダブルス組み合わせ表を無料で作成
+          </h1>
+          <p className="text-sm text-slate-500">
+            人数とコート数を入れるだけ。作った試合表はリンクとQRコードで共有できます。
+          </p>
         </div>
         <Link
           to="/organizer/rooms/new"
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
         >
           <Plus className="h-4 w-4" />
-          ルームを作成
+          組み合わせ表を作る
         </Link>
       </div>
 

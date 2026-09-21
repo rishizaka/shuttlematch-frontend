@@ -75,10 +75,14 @@ export const Route = createFileRoute('/rooms/$roomId_/matches')({
   // og:image は足さず、twitter:card も設定しない。
   // (twitter:card=summary を付けると画像枠を要求され、og:image が無いときに
   //  サイトアイコン(favicon)をサムネイルとして拾われてノイズになる)
-  head: ({ loaderData, params }) =>
-    loaderData
-      ? { meta: roomOgMeta(loaderData, `/rooms/${params.roomId}/matches`, '試合表') }
-      : {},
+  head: ({ loaderData, params }) => {
+    // 共有用の試合表は練習会ごとに増え、公開していても検索流入の着地点には向かない。
+    // 個別ページをインデックスさせず、検索評価はTOP・ガイド・サービス紹介に集約する。
+    const robots = { name: 'robots', content: 'noindex,follow' }
+    return loaderData
+      ? { meta: [...roomOgMeta(loaderData, `/rooms/${params.roomId}/matches`, '試合表'), robots] }
+      : { meta: [robots] }
+  },
   // ルーム一覧などから遷移してきて loader を待つあいだ。初回表示(SSR)の待ちは
   // コンポーネント側の MatchesSkeleton が受け持つ。
   pendingComponent: () => <MatchesSkeleton />,

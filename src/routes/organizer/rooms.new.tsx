@@ -10,6 +10,9 @@ import { Button } from '../../components/ui/Button'
 import { Field, Input } from '../../components/ui/Field'
 
 export const Route = createFileRoute('/organizer/rooms/new')({
+  // 作成フォームは検索の着地点ではない。検索結果には、使い方まで説明しているTOPや
+  // ガイドを出し、ここはそこから遷移した人だけが使えるようにする。
+  head: () => ({ meta: [{ name: 'robots', content: 'noindex,follow' }] }),
   component: NewRoomPage,
 })
 

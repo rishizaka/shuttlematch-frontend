@@ -5,6 +5,8 @@ import { groupMatchesBySet } from '../../components/match/MatchScheduleList'
 import type { Match } from '../../lib/types'
 
 export const Route = createFileRoute('/rooms/$roomId_/matches_/print')({
+  // 印刷専用の番号表は共有URLの派生であり、検索結果に出す内容ではない。
+  head: () => ({ meta: [{ name: 'robots', content: 'noindex,follow' }] }),
   component: PrintPage,
 })
 

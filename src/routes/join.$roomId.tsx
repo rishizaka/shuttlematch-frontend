@@ -9,7 +9,11 @@ import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { ErrorBlock, LoadingBlock } from '../components/ui/Spinner'
 
-export const Route = createFileRoute('/join/$roomId')({ component: JoinPage })
+export const Route = createFileRoute('/join/$roomId')({
+  // 招待ごとに固有の参加ページが作られるため、検索結果には出さない。
+  head: () => ({ meta: [{ name: 'robots', content: 'noindex,follow' }] }),
+  component: JoinPage,
+})
 
 /**
  * 招待リンク用の公開参加ページ。ログイン不要で「参加する」を押すと

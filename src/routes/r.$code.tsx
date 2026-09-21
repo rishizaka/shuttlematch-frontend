@@ -7,6 +7,8 @@ import { isNetworkError, roomApi } from '../lib/api'
  * loader で解決するため SSR(クローラー含む)でもリダイレクトが効く。
  */
 export const Route = createFileRoute('/r/$code')({
+  // 短縮URLは共有用のリダイレクトで、独立した検索結果を持たせない。
+  head: () => ({ meta: [{ name: 'robots', content: 'noindex,follow' }] }),
   loader: async ({ params }) => {
     const room = await roomApi.getByCode(params.code)
     throw redirect({
