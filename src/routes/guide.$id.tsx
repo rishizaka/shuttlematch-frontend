@@ -2,8 +2,8 @@ import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { CreateRoomCta } from '../components/ui/CreateRoomCta'
-import { guideOgMeta } from '../lib/og'
-import { GUIDES, findGuide, formatGuideDate } from '../lib/guides'
+import { guideOgMeta, SITE_NAME, SITE_ORIGIN } from '../lib/og'
+import { GUIDE_AUTHOR, GUIDES, findGuide, formatGuideDate } from '../lib/guides'
 
 export const Route = createFileRoute('/guide/$id')({
   // データは同梱の静的配列なので loader は同期。存在しない id は 404 として扱う。
@@ -27,6 +27,23 @@ function GuideDetailPage() {
     .filter((g) => g != null)
   return (
     <div className="space-y-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Article',
+            headline: guide.title,
+            description: guide.summary,
+            datePublished: guide.date,
+            dateModified: guide.date,
+            inLanguage: 'ja',
+            mainEntityOfPage: `${SITE_ORIGIN}/guide/${guide.id}`,
+            author: { '@type': 'Organization', name: GUIDE_AUTHOR, url: `${SITE_ORIGIN}/about` },
+            publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_ORIGIN },
+          }),
+        }}
+      />
       <Breadcrumbs
         items={[
           { label: 'ダブルス・組み合わせのShuttleMatch', to: '/' },
@@ -40,6 +57,12 @@ function GuideDetailPage() {
           {formatGuideDate(guide.date)}
         </time>
         <h1 className="mt-2 text-2xl font-bold leading-snug text-slate-900">{guide.title}</h1>
+        <p className="mt-2 text-xs text-slate-500">
+          執筆:{' '}
+          <Link to="/about" className="font-medium text-brand-600 hover:underline">
+            {GUIDE_AUTHOR}
+          </Link>
+        </p>
       </div>
 
       <Card>

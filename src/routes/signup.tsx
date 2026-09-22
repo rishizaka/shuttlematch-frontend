@@ -91,9 +91,6 @@ function SignupPage() {
           </p>
         </CardBody>
       </Card>
-      <p className="mt-3 text-center text-xs text-slate-400">
-        ※ 認証 (Cognito) は導入準備中のため、現状は簡易的なアカウント作成です。
-      </p>
     </div>
   )
 }

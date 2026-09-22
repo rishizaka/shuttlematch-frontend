@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from '@tanstack/react-router'
-import { Gamepad2, History, Home, Info, Megaphone, Menu, X } from 'lucide-react'
+import { BookOpen, Gamepad2, History, Home, Info, MapPin, Megaphone, Menu, Plus, X } from 'lucide-react'
 
 /**
- * サイト共通ヘッダー。ロゴとハンバーガーメニューのみ。
+ * サイト共通ヘッダー。デスクトップでは主要ページを常に見えるナビゲーションに置き、
+ * 小さい画面ではハンバーガーメニューにまとめる。
  * メニューは背景を暗くするオーバーレイ付きの右ドロワー(モーダル風)。
  * ログイン/新規登録は当面サービスとして提供しないため導線を出さない
  * (ページ・APIは残してある。再開時はメニューに項目を戻す)。
@@ -45,12 +46,42 @@ export function Header() {
           />
         </Link>
 
+        {/* 主要な読み物・サービス紹介へは、JS が動かない状態でも辿れる実リンクを置く。
+            初めての人が「何をするサービスか」「どう使うか」を見つけやすくするため。 */}
+        <nav aria-label="主要ナビゲーション" className="hidden items-center gap-1 lg:flex">
+          <Link
+            to="/guide"
+            className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-brand-700"
+          >
+            使い方ガイド
+          </Link>
+          <Link
+            to="/gym"
+            className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-brand-700"
+          >
+            体育館レビュー
+          </Link>
+          <Link
+            to="/about"
+            className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-brand-700"
+          >
+            サービス紹介
+          </Link>
+          <Link
+            to="/organizer/rooms/new"
+            className="ml-1 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
+          >
+            <Plus className="h-4 w-4" aria-hidden />
+            試合表を作る
+          </Link>
+        </nav>
+
         <button
           type="button"
           aria-label="メニュー"
           aria-expanded={open}
           onClick={openMenu}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 active:scale-90"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 active:scale-90 lg:hidden"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -113,6 +144,22 @@ export function Header() {
                   >
                     <History className="h-4 w-4 text-slate-400" />
                     過去の開催
+                  </Link>
+                  <Link
+                    to="/guide"
+                    onClick={close}
+                    className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <BookOpen className="h-4 w-4 text-slate-400" />
+                    使い方ガイド
+                  </Link>
+                  <Link
+                    to="/gym"
+                    onClick={close}
+                    className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <MapPin className="h-4 w-4 text-slate-400" />
+                    体育館レビュー
                   </Link>
                   <Link
                     to="/game"

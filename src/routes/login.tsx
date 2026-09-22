@@ -77,9 +77,6 @@ function LoginPage() {
           </p>
         </CardBody>
       </Card>
-      <p className="mt-3 text-center text-xs text-slate-400">
-        ※ パスワード未設定の既存ユーザーは「abcd1234」でログインできます。
-      </p>
     </div>
   )
 }

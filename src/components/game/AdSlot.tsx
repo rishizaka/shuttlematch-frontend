@@ -11,18 +11,13 @@ declare global {
 /**
  * ミニゲームの広告枠。マネタイズはミニゲームのページに閉じて、試合表や TOP には出さない方針。
  *
- * `ADSENSE_SLOT_ID`(表示広告ユニットの ID)が未設定のあいだ、または開発中は
- * 常にプレースホルダーを表示する。ローカル開発・vitest・E2E で誤って広告を
- * 読み込んだりクリックしたりしないための安全策で、本番ビルドで
- * `ADSENSE_SLOT_ID` を設定した瞬間だけ実際の広告に切り替わる。
+ * `ADSENSE_SLOT_ID`(表示広告ユニットの ID)が未設定のあいだ、または開発中は何も
+ * 表示しない。広告枠の準備中であることを利用者へ見せず、ローカル開発・vitest・E2E
+ * では広告を読み込んだりクリックしたりしないための安全策でもある。
  */
 export function AdSlot() {
   if (import.meta.env.DEV || !ADSENSE_SLOT_ID) {
-    return (
-      <div className="flex h-[100px] w-full items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-100/60">
-        <span className="text-xs tracking-wider text-slate-400">AD SPACE</span>
-      </div>
-    )
+    return null
   }
   return <AdUnit slot={ADSENSE_SLOT_ID} />
 }
