@@ -78,8 +78,6 @@ function HomePage() {
         </Link>
       </div>
 
-      <DoublesPracticePlanner />
-
       {all.isLoading ? (
         <LoadingBlock />
       ) : all.error ? (
@@ -131,6 +129,8 @@ function HomePage() {
           </div>
         </>
       )}
+
+      <DoublesPracticePlanner />
 
       <SiteIntro />
     </div>
