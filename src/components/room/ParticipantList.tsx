@@ -25,6 +25,7 @@ export function isFreeSlot(p: Participant): boolean {
 export function ParticipantList({
   participants,
   onRemove,
+  onlyLastRemovable = false,
   removingId,
   onMarkLeft,
   onReactivate,
@@ -36,8 +37,19 @@ export function ParticipantList({
   onToggleSelect,
 }: {
   participants: Participant[]
-  /** 指定すると各行に削除ボタンを表示する (オーガナイザー用・生成前)。 */
+  /**
+   * 指定すると削除ボタンを表示する(オーガナイザー用)。
+   * 生成前は全行、生成後(onlyLastRemovable)は一番後ろの1行だけに出す。
+   */
   onRemove?: (participant: Participant) => void
+  /**
+   * true なら削除ボタンを一番後ろの参加者だけに絞る(試合生成後、まだどのセットも
+   * 開始していない間だけ使える「末尾の削除」用)。試合数を減らす削除は、途中の番号を
+   * 消すと後続の番号が繰り上がってしまう(既に「7番」として announcement や
+   * ツールチップに登場した人が急に「6番」になる)ため末尾限定にしてある。
+   * 生成前(false)は全員削除できる従来通りの挙動。
+   */
+  onlyLastRemovable?: boolean
   removingId?: string | null
   /** 指定すると在席者に早退ボタンを表示する (オーガナイザー用・生成後)。 */
   onMarkLeft?: (participant: Participant) => void
@@ -161,12 +173,12 @@ export function ParticipantList({
                     早退
                   </button>
                 ) : null}
-                {onRemove ? (
+                {onRemove && (!onlyLastRemovable || i === participants.length - 1) ? (
                   <button
                     type="button"
                     onClick={() => onRemove(p)}
                     disabled={removingId === p.id}
-                    aria-label={`${i + 1}番 を削除`}
+                    aria-label={`${i + 1}番を削除`}
                     className="text-slate-400 transition hover:text-red-600 disabled:opacity-40"
                   >
                     <Trash2 className="h-4 w-4" />

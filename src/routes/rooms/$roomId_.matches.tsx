@@ -619,6 +619,7 @@ function MatchesPage() {
                   participants={room?.participants ?? []}
                   fixedPairs={room?.fixedPairs ?? []}
                   generated
+                  noSetStarted={activeSetNumber === null}
                 />
               </div>
 

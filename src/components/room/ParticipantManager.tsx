@@ -31,6 +31,7 @@ export function ParticipantManager({
   participants,
   fixedPairs = [],
   generated = false,
+  noSetStarted = false,
 }: {
   roomId: string
   /** 共有コード。あれば短縮URL(/r/{code})で共有する。 */
@@ -40,6 +41,13 @@ export function ParticipantManager({
   fixedPairs?: FixedPair[]
   /** 試合生成済みか。生成後は削除ではなく早退/復帰を使う。 */
   generated?: boolean
+  /**
+   * 生成後、まだどのセットも開始していないか。true の間だけ、一番後ろの番号の参加者を
+   * 削除できる(参加者数そのものを減らす)。1セットでも開始すると削除できなくなる
+   * (backend の RemoveParticipantUseCase と同じ条件)。generated=false のときは無視される
+   * (生成前は誰でも削除できる従来通りの挙動のまま)。
+   */
+  noSetStarted?: boolean
 }) {
   const add = useAddParticipant(roomId)
   const remove = useRemoveParticipant(roomId)
@@ -52,6 +60,9 @@ export function ParticipantManager({
   const { showToast } = useToast()
   // ゲスト追加・早退・復帰の後に「未開始セットを再編成しますか？」と確認するモーダルの開閉。
   const [showReplanConfirm, setShowReplanConfirm] = useState(false)
+  // 生成後・末尾の参加者を削除する前の確認モーダル(この参加者を指しているときだけ開く)。
+  // 早退と違って元に戻せない(参加者数そのものが減る)ので、誤タップ防止に確認を挟む。
+  const [confirmingRemove, setConfirmingRemove] = useState<Participant | null>(null)
   // まとめて早退・まとめて復帰させる複数選択モード。1人ずつ押すたびに再編成確認を
   // 挟むと、何人もまとめて操作したいときにモーダルを人数ぶん閉じることになるため、
   // 選んでから1回でまとめて処理し、再編成の確認も最後に1回だけ出す。
@@ -182,7 +193,14 @@ export function ParticipantManager({
 
       <ParticipantList
         participants={participants}
-        onRemove={generated ? undefined : (p) => remove.mutate(p.id)}
+        onRemove={
+          !generated
+            ? (p) => remove.mutate(p.id)
+            : noSetStarted
+              ? (p) => setConfirmingRemove(p)
+              : undefined
+        }
+        onlyLastRemovable={generated}
         removingId={remove.isPending ? (remove.variables as string) : null}
         onMarkLeft={
           generated
@@ -264,6 +282,9 @@ export function ParticipantManager({
       {add.isError ? <ErrorBlock message={(add.error as Error).message} /> : null}
       {markLeft.isError ? <ErrorBlock message={(markLeft.error as Error).message} /> : null}
       {reactivate.isError ? <ErrorBlock message={(reactivate.error as Error).message} /> : null}
+      {/* 生成後の削除(末尾限定)の失敗。ライブ更新で他端末がセットを開始した直後など、
+          クリックした時点では条件を満たしていてもサーバー側で弾かれることがある。 */}
+      {remove.isError ? <ErrorBlock message={(remove.error as Error).message} /> : null}
       {/* 固定ペアの解除に続く再編成が失敗したときの受け皿。解除だけ済んでいる状態なので、
           黙って閉じると試合表が古いままなのに気付けない。 */}
       {replan.isError ? <ErrorBlock message={(replan.error as Error).message} /> : null}
@@ -282,6 +303,25 @@ export function ParticipantManager({
             })
           }
           onCancel={() => setShowReplanConfirm(false)}
+        />
+      ) : null}
+
+      {confirmingRemove ? (
+        <ConfirmModal
+          title="参加者を削除しますか？"
+          description={`${participants.findIndex((x) => x.id === confirmingRemove.id) + 1}番を削除します。早退と違い参加者数そのものが減り、元に戻せません。`}
+          confirmLabel="削除する"
+          danger
+          confirming={remove.isPending}
+          onConfirm={() =>
+            remove.mutate(confirmingRemove.id, {
+              onSuccess: () => {
+                showToast('参加者を削除しました')
+                setConfirmingRemove(null)
+              },
+            })
+          }
+          onCancel={() => setConfirmingRemove(null)}
         />
       ) : null}
     </div>

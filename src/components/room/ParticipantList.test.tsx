@@ -49,6 +49,39 @@ describe('isFreeSlot', () => {
   })
 })
 
+describe('ParticipantList (削除ボタン)', () => {
+  const participants: Participant[] = [
+    guest('1', { id: 'p1' }),
+    guest('2', { id: 'p2' }),
+    guest('3', { id: 'p3' }),
+  ]
+
+  it('onlyLastRemovable が無ければ全行に削除ボタンを出す(生成前)', () => {
+    render(<ParticipantList participants={participants} onRemove={() => {}} />)
+    expect(screen.getByLabelText('1番を削除')).toBeInTheDocument()
+    expect(screen.getByLabelText('2番を削除')).toBeInTheDocument()
+    expect(screen.getByLabelText('3番を削除')).toBeInTheDocument()
+  })
+
+  it('onlyLastRemovable が true なら一番後ろの行にだけ削除ボタンを出す(生成後・末尾限定)', () => {
+    render(
+      <ParticipantList participants={participants} onRemove={() => {}} onlyLastRemovable />,
+    )
+    expect(screen.queryByLabelText('1番を削除')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('2番を削除')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('3番を削除')).toBeInTheDocument()
+  })
+
+  it('末尾の削除ボタンをクリックすると onRemove にその参加者が渡る', () => {
+    const onRemove = vi.fn()
+    render(
+      <ParticipantList participants={participants} onRemove={onRemove} onlyLastRemovable />,
+    )
+    fireEvent.click(screen.getByLabelText('3番を削除'))
+    expect(onRemove).toHaveBeenCalledWith(participants[2])
+  })
+})
+
 describe('ParticipantList (複数選択モード)', () => {
   const participants: Participant[] = [
     guest('1', { id: 'p1' }),

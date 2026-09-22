@@ -236,6 +236,11 @@ export function useRemoveFixedPair(roomId: string) {
   });
 }
 
+/**
+ * 参加者を削除する。生成前は誰でも、生成後は末尾の参加者だけ(まだどのセットも
+ * 開始していない間のみ)削除できる(backend の RemoveParticipantUseCase 参照)。
+ * 生成後の削除は同じ操作の中で試合表も組み直るため、matches のキャッシュも無効化する。
+ */
 export function useRemoveParticipant(roomId: string) {
   const qc = useQueryClient();
   return useMutation({
@@ -243,6 +248,7 @@ export function useRemoveParticipant(roomId: string) {
       roomApi.removeParticipant(roomId, participantId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.room(roomId) });
+      qc.invalidateQueries({ queryKey: queryKeys.matches(roomId) });
     },
   });
 }
