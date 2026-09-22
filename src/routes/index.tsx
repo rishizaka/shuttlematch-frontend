@@ -5,6 +5,7 @@ import { useMyRoomIdByPublicId } from '../hooks/useMyRoomIds'
 import { Card, CardBody } from '../components/ui/Card'
 import { ErrorBlock, LoadingBlock } from '../components/ui/Spinner'
 import { RoomCard } from '../components/room/RoomCard'
+import { DoublesPracticePlanner } from '../components/home/DoublesPracticePlanner'
 import { jstDayRange } from '../lib/format'
 import type { PublicRoom } from '../lib/types'
 
@@ -76,6 +77,8 @@ function HomePage() {
           組み合わせ表を作る
         </Link>
       </div>
+
+      <DoublesPracticePlanner />
 
       {all.isLoading ? (
         <LoadingBlock />
