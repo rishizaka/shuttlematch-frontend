@@ -1,5 +1,5 @@
-import { Suspense, lazy, useState } from 'react'
-import { ListChecks, Plus, QrCode, Share2 } from 'lucide-react'
+import { useState } from 'react'
+import { ListChecks, Plus } from 'lucide-react'
 import type { FixedPair, Participant } from '../../lib/types'
 import {
   useAddParticipant,
@@ -12,18 +12,13 @@ import {
   useReplanFutureSets,
 } from '../../hooks/queries'
 import { FixedPairEditor } from './FixedPairEditor'
-import { copyToClipboard } from '../../lib/clipboard'
 import { FREE_SLOT } from '../../lib/guests'
-import { shareOrigin } from '../../lib/og'
 import { Button } from '../ui/Button'
 import { ConfirmModal } from '../ui/ConfirmModal'
 import { ErrorBlock } from '../ui/Spinner'
 import { useToast } from '../ui/Toast'
 import { ParticipantList } from './ParticipantList'
-
-// QR の生成ライブラリごと、開いたときに初めて読み込む。
-// 試合表のページは参加者全員が開くので、運営者しか使わないものを既定のバンドルに載せない。
-const QrModal = lazy(() => import('./QrModal'))
+import { ShareButtons } from './ShareButtons'
 
 /**
  * オーガナイザー向けの参加者管理(番号追加・削除/早退・名前変更)。
@@ -57,8 +52,6 @@ export function ParticipantManager({
   const { showToast } = useToast()
   // ゲスト追加・早退・復帰の後に「未開始セットを再編成しますか？」と確認するモーダルの開閉。
   const [showReplanConfirm, setShowReplanConfirm] = useState(false)
-  // 試合表のURLをQRで見せるモーダルの開閉。
-  const [showQr, setShowQr] = useState(false)
   // まとめて早退・まとめて復帰させる複数選択モード。1人ずつ押すたびに再編成確認を
   // 挟むと、何人もまとめて操作したいときにモーダルを人数ぶん閉じることになるため、
   // 選んでから1回でまとめて処理し、再編成の確認も最後に1回だけ出す。
@@ -138,34 +131,14 @@ export function ParticipantManager({
     )
   }
 
-  // 試合表の共有リンク。共有コードがあれば短縮URL(/r/{code})を使う。
-  // openExternalBrowser=1 は LINE 等のアプリ内ブラウザから
-  // 既定(外部)ブラウザで開かせるためのパラメータ。
-  const origin = shareOrigin()
-  const shareUrl = shareCode
-    ? `${origin}/r/${shareCode}?openExternalBrowser=1`
-    : `${origin}/rooms/${roomId}/matches?openExternalBrowser=1`
-
-  const shareLink = async () => {
-    if (typeof window === 'undefined') return
-    const ok = await copyToClipboard(shareUrl)
-    if (ok) showToast('リンクをコピーしました')
-  }
-
   return (
     <div className="space-y-3">
-      {/* アクション行: 共有と途中参加(ゲスト追加)。説明はツールチップ的な1行に集約する。 */}
+      {/* アクション行: 共有と途中参加(ゲスト追加)。説明はツールチップ的な1行に集約する。
+          共有・QRは試合表ページのヘッダーにも全員向けに出ている(ShareButtons)。
+          運営メニューの中にも残してあるのは、運営者がここで見慣れているのと、
+          何かのついでに再共有したいときに探す場所が1つで済むため。 */}
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" size="sm" variant="secondary" onClick={shareLink}>
-          <Share2 className="h-4 w-4" />
-          試合表を共有
-        </Button>
-        {/* 会場でリンクを送れない相手にはQRで渡す。共有するURLは同じ
-            (短縮URL + openExternalBrowser=1)。 */}
-        <Button type="button" size="sm" variant="secondary" onClick={() => setShowQr(true)}>
-          <QrCode className="h-4 w-4" />
-          QRを表示
-        </Button>
+        <ShareButtons roomId={roomId} shareCode={shareCode} />
         <Button
           type="button"
           size="sm"
@@ -294,12 +267,6 @@ export function ParticipantManager({
       {/* 固定ペアの解除に続く再編成が失敗したときの受け皿。解除だけ済んでいる状態なので、
           黙って閉じると試合表が古いままなのに気付けない。 */}
       {replan.isError ? <ErrorBlock message={(replan.error as Error).message} /> : null}
-
-      {showQr ? (
-        <Suspense fallback={null}>
-          <QrModal url={shareUrl} onClose={() => setShowQr(false)} />
-        </Suspense>
-      ) : null}
 
       {showReplanConfirm ? (
         <ConfirmModal

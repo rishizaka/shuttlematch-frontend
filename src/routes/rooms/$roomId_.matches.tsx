@@ -52,6 +52,7 @@ import { QuickJoinBanner } from '../../components/room/QuickJoinBanner'
 import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { RosterAccordion } from '../../components/room/RosterAccordion'
+import { ShareButtons } from '../../components/room/ShareButtons'
 import { MatchScheduleList } from '../../components/match/MatchScheduleList'
 import { MatchesSkeleton } from '../../components/match/MatchesSkeleton'
 import { SetStartAnnouncement } from '../../components/match/SetStartAnnouncement'
@@ -484,6 +485,10 @@ function MatchesPage() {
             </p>
           ) : null}
         </div>
+        {/* 試合表の共有・QR表示。以前は運営メニュー(ParticipantManager)の中にしか無く、
+            一般参加者は友人を誘うのに使えなかった。誰でも押せるようヘッダーに出す
+            (終了済みルームも誰でも閲覧できる方針なので、closed でも隠さない)。 */}
+        {room ? <ShareButtons roomId={roomId} shareCode={room.shareCode} /> : null}
       </div>
 
       {/* 自分がまだ未設定の人への誘導。

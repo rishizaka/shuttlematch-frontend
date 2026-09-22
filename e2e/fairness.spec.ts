@@ -49,6 +49,11 @@ const configs = [
   { n: 13, courts: 2, label: '13人2コート' },
 ]
 
+// backend の MatchingDomainService.DEFAULT_SET_COUNT と同じ値(この e2e は frontend の
+// リポジトリなので直接参照できず、値をここに写している。backend 側でこの定数を
+// 変えたら、ここも合わせて直すこと)。
+const DEFAULT_SET_COUNT = 20
+
 for (const { n, courts, label } of configs) {
   test(`偏りなし(${label}): 生成 + UIでセット追加しても公平`, async ({ page, request }) => {
     const room = await createRoomAsOrganizer(page, request, {
@@ -61,10 +66,11 @@ for (const { n, courts, label } of configs) {
       await page.goto(`/rooms/${roomId}/matches`)
       await expect(page.getByText('第1セット')).toBeVisible()
 
-      // UI からセットを +6 追加(初期10 → 16)。
+      // UI からセットを +6 追加(既定のDEFAULT_SET_COUNT → +6)。
+      const totalSets = DEFAULT_SET_COUNT + 6
       await addSetsViaUI(page, 6)
-      // 画面にも増えたことが反映される(第16セットが出る)。
-      await expect(page.getByText('第16セット')).toBeVisible()
+      // 画面にも増えたことが反映される(最終セットが出る)。
+      await expect(page.getByText(`第${totalSets}セット`)).toBeVisible()
 
       // 結果の試合表(UI がレンダするのと同じデータ)を取得して偏りを検証。
       const schedule = await getSchedule(request, roomId)
@@ -72,7 +78,7 @@ for (const { n, courts, label } of configs) {
       const restPerSet = n - 4 * courts
       const streakBound = Math.ceil(n / restPerSet) + 1
 
-      expect(a.sets).toBe(16)
+      expect(a.sets).toBe(totalSets)
       expect(a.playDiff, '出場回数の偏り').toBeLessThanOrEqual(1)
       expect(a.restDiff, '休み回数の偏り').toBeLessThanOrEqual(1)
       expect(a.maxStreak, '最大連続出場(休みスパン)').toBeLessThanOrEqual(streakBound)

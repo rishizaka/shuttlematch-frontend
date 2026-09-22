@@ -203,3 +203,34 @@ test('参加者: 参加するが失敗したら、念のため番号を選ぶ導
     await deleteRoom(request, roomId)
   }
 })
+
+// 試合表の共有・QRは以前は運営メニュー(運営者だけ)にしか無かった。一般参加者でも
+// 友人を誘うのに使いたいという要望を受け、ヘッダーに全員向けとして出した(ShareButtons)。
+test('参加者: 運営者でなくても試合表の共有・QR表示ができる', async ({ page, request }) => {
+  const room = await quickCreateRoom(request, { participantCount: 4, courtCount: 1 })
+  const roomId: string = room.id
+  try {
+    await page.goto(`/rooms/${roomId}/matches`)
+
+    // 運営メニューは出ない(=このブラウザは運営者ではない)が、共有・QRボタンは出る。
+    await expect(page.getByRole('button', { name: /運営メニュー/ })).toBeHidden()
+    const shareButton = page.getByRole('button', { name: '試合表を共有' })
+    const qrButton = page.getByRole('button', { name: 'QRを表示' })
+    await expect(shareButton).toBeVisible()
+    await expect(qrButton).toBeVisible()
+
+    // 共有: クリップボードにコピーしたトーストが出る。
+    await shareButton.click()
+    await expect(page.getByText('リンクをコピーしました')).toBeVisible()
+
+    // QR: モーダルが開き、短縮URL(/r/{code})の文字列がそのまま表示される。
+    await qrButton.click()
+    const qrDialog = page.getByRole('dialog', { name: '試合表のQRコード' })
+    await expect(qrDialog).toBeVisible()
+    await expect(qrDialog.getByText(`/r/${room.shareCode}`, { exact: false })).toBeVisible()
+    await qrDialog.getByRole('button', { name: '閉じる' }).click()
+    await expect(qrDialog).toBeHidden()
+  } finally {
+    await deleteRoom(request, roomId)
+  }
+})
