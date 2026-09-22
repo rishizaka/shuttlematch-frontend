@@ -23,6 +23,14 @@ export type GymReview = {
    * 本文。heading を省略したセクションは地の文として表示する。guides.ts と同じ形。
    */
   sections: Array<{ heading?: string; paragraphs: string[]; bullets?: string[] }>
+  /**
+   * 関連する他の体育館レビュー(この配列の要素は他の GymReview の id)。
+   * guides.ts の relatedGuideIds と同じ考え方で、詳細ページ末尾に別枠でリンクを出す。
+   * 主に同じエリア(区)の施設同士をつなぐのに使う。
+   */
+  relatedGymIds?: string[]
+  /** 関連する使い方ガイド記事(GuideArticle の id)。詳細ページ末尾にリンクを出す。 */
+  relatedGuideIds?: string[]
 }
 
 /**
@@ -82,6 +90,7 @@ export const GYMS: GymReview[] = [
         ],
       },
     ],
+    relatedGuideIds: ['badminton-practice-schedule', 'find-tokyo-badminton-circle'],
   },
   {
     id: 'kanda-sakura-kan',
@@ -130,6 +139,8 @@ export const GYMS: GymReview[] = [
         ],
       },
     ],
+    relatedGymIds: ['shohei-domukan', 'chiyoda-parkside-plaza'],
+    relatedGuideIds: ['find-tokyo-badminton-circle'],
   },
   {
     id: 'chiyoda-parkside-plaza',
@@ -176,6 +187,8 @@ export const GYMS: GymReview[] = [
         ],
       },
     ],
+    relatedGymIds: ['shohei-domukan', 'kanda-sakura-kan'],
+    relatedGuideIds: ['badminton-practice-schedule'],
   },
   {
     id: 'shohei-domukan',
@@ -224,6 +237,8 @@ export const GYMS: GymReview[] = [
         ],
       },
     ],
+    relatedGymIds: ['chiyoda-parkside-plaza', 'kanda-sakura-kan'],
+    relatedGuideIds: ['find-tokyo-badminton-circle'],
   },
 ]
 

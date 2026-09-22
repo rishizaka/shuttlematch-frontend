@@ -4,7 +4,8 @@ import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { CreateRoomCta } from '../components/ui/CreateRoomCta'
 import { gymOgMeta } from '../lib/og'
-import { findGym, formatGymDate } from '../lib/gyms'
+import { GYMS, findGym, formatGymDate } from '../lib/gyms'
+import { GUIDES } from '../lib/guides'
 
 export const Route = createFileRoute('/gym/$id')({
   // データは同梱の静的配列なので loader は同期。存在しない id は 404 として扱う。
@@ -23,6 +24,12 @@ export const Route = createFileRoute('/gym/$id')({
 /** 体育館レビューの詳細ページ。 */
 function GymDetailPage() {
   const gym = Route.useLoaderData()
+  const relatedGyms = (gym.relatedGymIds ?? [])
+    .map((id) => GYMS.find((g) => g.id === id))
+    .filter((g) => g != null)
+  const relatedGuides = (gym.relatedGuideIds ?? [])
+    .map((id) => GUIDES.find((g) => g.id === id))
+    .filter((g) => g != null)
   return (
     <div className="space-y-6">
       <Breadcrumbs
@@ -93,6 +100,38 @@ function GymDetailPage() {
           ))}
         </CardBody>
       </Card>
+
+      {relatedGyms.length > 0 || relatedGuides.length > 0 ? (
+        <Card>
+          <CardBody className="space-y-2 py-4">
+            <h2 className="text-sm font-semibold text-slate-800">関連記事</h2>
+            <ul className="space-y-1.5">
+              {relatedGyms.map((g) => (
+                <li key={g.id}>
+                  <Link
+                    to="/gym/$id"
+                    params={{ id: g.id }}
+                    className="text-sm font-medium text-brand-600 hover:underline"
+                  >
+                    {g.name}({g.prefecture}{g.city})
+                  </Link>
+                </li>
+              ))}
+              {relatedGuides.map((g) => (
+                <li key={g.id}>
+                  <Link
+                    to="/guide/$id"
+                    params={{ id: g.id }}
+                    className="text-sm font-medium text-brand-600 hover:underline"
+                  >
+                    {g.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </CardBody>
+        </Card>
+      ) : null}
 
       <CreateRoomCta />
     </div>
