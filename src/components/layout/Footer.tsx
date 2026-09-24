@@ -21,7 +21,6 @@ export function Footer() {
         <nav className="flex flex-wrap gap-x-5 gap-y-2">
           <FooterLink to="/about">ShuttleMatch について</FooterLink>
           <FooterLink to="/guide">使い方ガイド</FooterLink>
-          <FooterLink to="/gym">体育館レビュー</FooterLink>
           <FooterLink to="/releases">リリースノート</FooterLink>
           <FooterLink to="/privacy">プライバシーポリシー</FooterLink>
           <FooterLink to="/terms">利用規約</FooterLink>
@@ -38,7 +37,7 @@ function FooterLink({
   to,
   children,
 }: {
-  to: '/about' | '/guide' | '/gym' | '/releases' | '/privacy' | '/terms'
+  to: '/about' | '/guide' | '/releases' | '/privacy' | '/terms'
   children: React.ReactNode
 }) {
   return (

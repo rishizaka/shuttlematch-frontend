@@ -91,7 +91,7 @@ function GuideDetailPage() {
         </CardBody>
       </Card>
 
-      {related.length > 0 || guide.showGymLink ? (
+      {related.length > 0 ? (
         <Card>
           <CardBody className="space-y-2 py-4">
             <h2 className="text-sm font-semibold text-slate-800">関連記事</h2>
@@ -107,13 +107,6 @@ function GuideDetailPage() {
                   </Link>
                 </li>
               ))}
-              {guide.showGymLink ? (
-                <li>
-                  <Link to="/gym" className="text-sm font-medium text-brand-600 hover:underline">
-                    体育館レビュー一覧
-                  </Link>
-                </li>
-              ) : null}
             </ul>
           </CardBody>
         </Card>

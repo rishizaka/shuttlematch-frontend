@@ -15,18 +15,15 @@ import { Route as ReleasesRouteImport } from './routes/releases'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PastRouteImport } from './routes/past'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as GymRouteImport } from './routes/gym'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as GymIndexRouteImport } from './routes/gym.index'
 import { Route as GuideIndexRouteImport } from './routes/guide.index'
 import { Route as RoomsRoomIdRouteImport } from './routes/rooms/$roomId'
 import { Route as ReleaseIdRouteImport } from './routes/release.$id'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as JoinRoomIdRouteImport } from './routes/join.$roomId'
-import { Route as GymIdRouteImport } from './routes/gym.$id'
 import { Route as GuideIdRouteImport } from './routes/guide.$id'
 import { Route as GameSkiRouteImport } from './routes/game_.ski'
 import { Route as GameRainRouteImport } from './routes/game_.rain'
@@ -67,11 +64,6 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GymRoute = GymRouteImport.update({
-  id: '/gym',
-  path: '/gym',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const GuideRoute = GuideRouteImport.update({
   id: '/guide',
   path: '/guide',
@@ -91,11 +83,6 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const GymIndexRoute = GymIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => GymRoute,
 } as any)
 const GuideIndexRoute = GuideIndexRouteImport.update({
   id: '/',
@@ -121,11 +108,6 @@ const JoinRoomIdRoute = JoinRoomIdRouteImport.update({
   id: '/join/$roomId',
   path: '/join/$roomId',
   getParentRoute: () => rootRouteImport,
-} as any)
-const GymIdRoute = GymIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => GymRoute,
 } as any)
 const GuideIdRoute = GuideIdRouteImport.update({
   id: '/$id',
@@ -178,7 +160,6 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/game': typeof GameRoute
   '/guide': typeof GuideRouteWithChildren
-  '/gym': typeof GymRouteWithChildren
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
   '/privacy': typeof PrivacyRoute
@@ -191,13 +172,11 @@ export interface FileRoutesByFullPath {
   '/game/rain': typeof GameRainRoute
   '/game/ski': typeof GameSkiRoute
   '/guide/$id': typeof GuideIdRoute
-  '/gym/$id': typeof GymIdRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/guide/': typeof GuideIndexRoute
-  '/gym/': typeof GymIndexRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
   '/rooms/$roomId/matches/print': typeof RoomsRoomIdMatchesPrintRoute
@@ -218,13 +197,11 @@ export interface FileRoutesByTo {
   '/game/rain': typeof GameRainRoute
   '/game/ski': typeof GameSkiRoute
   '/guide/$id': typeof GuideIdRoute
-  '/gym/$id': typeof GymIdRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/guide': typeof GuideIndexRoute
-  '/gym': typeof GymIndexRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId/matches': typeof RoomsRoomIdMatchesRoute
   '/rooms/$roomId/matches/print': typeof RoomsRoomIdMatchesPrintRoute
@@ -235,7 +212,6 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/game': typeof GameRoute
   '/guide': typeof GuideRouteWithChildren
-  '/gym': typeof GymRouteWithChildren
   '/login': typeof LoginRoute
   '/past': typeof PastRoute
   '/privacy': typeof PrivacyRoute
@@ -248,13 +224,11 @@ export interface FileRoutesById {
   '/game_/rain': typeof GameRainRoute
   '/game_/ski': typeof GameSkiRoute
   '/guide/$id': typeof GuideIdRoute
-  '/gym/$id': typeof GymIdRoute
   '/join/$roomId': typeof JoinRoomIdRoute
   '/r/$code': typeof RCodeRoute
   '/release/$id': typeof ReleaseIdRoute
   '/rooms/$roomId': typeof RoomsRoomIdRoute
   '/guide/': typeof GuideIndexRoute
-  '/gym/': typeof GymIndexRoute
   '/organizer/rooms/new': typeof OrganizerRoomsNewRoute
   '/rooms/$roomId_/matches': typeof RoomsRoomIdMatchesRoute
   '/rooms/$roomId_/matches_/print': typeof RoomsRoomIdMatchesPrintRoute
@@ -266,7 +240,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/game'
     | '/guide'
-    | '/gym'
     | '/login'
     | '/past'
     | '/privacy'
@@ -279,13 +252,11 @@ export interface FileRouteTypes {
     | '/game/rain'
     | '/game/ski'
     | '/guide/$id'
-    | '/gym/$id'
     | '/join/$roomId'
     | '/r/$code'
     | '/release/$id'
     | '/rooms/$roomId'
     | '/guide/'
-    | '/gym/'
     | '/organizer/rooms/new'
     | '/rooms/$roomId/matches'
     | '/rooms/$roomId/matches/print'
@@ -306,13 +277,11 @@ export interface FileRouteTypes {
     | '/game/rain'
     | '/game/ski'
     | '/guide/$id'
-    | '/gym/$id'
     | '/join/$roomId'
     | '/r/$code'
     | '/release/$id'
     | '/rooms/$roomId'
     | '/guide'
-    | '/gym'
     | '/organizer/rooms/new'
     | '/rooms/$roomId/matches'
     | '/rooms/$roomId/matches/print'
@@ -322,7 +291,6 @@ export interface FileRouteTypes {
     | '/about'
     | '/game'
     | '/guide'
-    | '/gym'
     | '/login'
     | '/past'
     | '/privacy'
@@ -335,13 +303,11 @@ export interface FileRouteTypes {
     | '/game_/rain'
     | '/game_/ski'
     | '/guide/$id'
-    | '/gym/$id'
     | '/join/$roomId'
     | '/r/$code'
     | '/release/$id'
     | '/rooms/$roomId'
     | '/guide/'
-    | '/gym/'
     | '/organizer/rooms/new'
     | '/rooms/$roomId_/matches'
     | '/rooms/$roomId_/matches_/print'
@@ -352,7 +318,6 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   GameRoute: typeof GameRoute
   GuideRoute: typeof GuideRouteWithChildren
-  GymRoute: typeof GymRouteWithChildren
   LoginRoute: typeof LoginRoute
   PastRoute: typeof PastRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -417,13 +382,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/gym': {
-      id: '/gym'
-      path: '/gym'
-      fullPath: '/gym'
-      preLoaderRoute: typeof GymRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/guide': {
       id: '/guide'
       path: '/guide'
@@ -451,13 +409,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/gym/': {
-      id: '/gym/'
-      path: '/'
-      fullPath: '/gym/'
-      preLoaderRoute: typeof GymIndexRouteImport
-      parentRoute: typeof GymRoute
     }
     '/guide/': {
       id: '/guide/'
@@ -493,13 +444,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/join/$roomId'
       preLoaderRoute: typeof JoinRoomIdRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/gym/$id': {
-      id: '/gym/$id'
-      path: '/$id'
-      fullPath: '/gym/$id'
-      preLoaderRoute: typeof GymIdRouteImport
-      parentRoute: typeof GymRoute
     }
     '/guide/$id': {
       id: '/guide/$id'
@@ -579,24 +523,11 @@ const GuideRouteChildren: GuideRouteChildren = {
 
 const GuideRouteWithChildren = GuideRoute._addFileChildren(GuideRouteChildren)
 
-interface GymRouteChildren {
-  GymIdRoute: typeof GymIdRoute
-  GymIndexRoute: typeof GymIndexRoute
-}
-
-const GymRouteChildren: GymRouteChildren = {
-  GymIdRoute: GymIdRoute,
-  GymIndexRoute: GymIndexRoute,
-}
-
-const GymRouteWithChildren = GymRoute._addFileChildren(GymRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   GameRoute: GameRoute,
   GuideRoute: GuideRouteWithChildren,
-  GymRoute: GymRouteWithChildren,
   LoginRoute: LoginRoute,
   PastRoute: PastRoute,
   PrivacyRoute: PrivacyRoute,

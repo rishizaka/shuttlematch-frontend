@@ -60,12 +60,6 @@ function GuidePage() {
           </Link>
         ))}
       </div>
-
-      <p className="border-t border-slate-100 pt-4 text-sm">
-        <Link to="/gym" className="font-medium text-brand-600 hover:underline">
-          体育館レビューも見る
-        </Link>
-      </p>
     </div>
   )
 }

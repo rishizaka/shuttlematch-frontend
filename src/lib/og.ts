@@ -118,19 +118,6 @@ export function guideOgMeta(guide: { id: string; title: string; summary: string 
   ]
 }
 
-/** 体育館レビュー(/gym/{id})の OGP メタタグ。guideOgMeta と同じ考え方。 */
-export function gymOgMeta(gym: { id: string; name: string; prefecture: string; city: string; summary: string }) {
-  const title = `${gym.name}(${gym.prefecture}${gym.city})でバドミントンダブルス | ${SITE_NAME}`
-  return [
-    { title },
-    { name: 'description', content: gym.summary },
-    { property: 'og:type', content: 'article' },
-    { property: 'og:title', content: title },
-    { property: 'og:description', content: gym.summary },
-    { property: 'og:url', content: `${SITE_ORIGIN}/gym/${gym.id}` },
-  ]
-}
-
 /**
  * ルーム系ページの動的 OGP メタタグ。
  * クローラーは JS を実行しないため、route の loader で取得した room を

@@ -19,8 +19,6 @@ export type GuideArticle = {
    * 記事同士の内部リンクはここにまとめる。
    */
   relatedGuideIds?: string[]
-  /** 体育館レビュー(/gym)へのリンクも詳細ページ末尾に出すか。 */
-  showGymLink?: boolean
 }
 
 /** ガイドの執筆主体。記事の表示と構造化データで同じ表記を使う。 */
@@ -107,7 +105,7 @@ export const GUIDES: GuideArticle[] = [
       {
         heading: 'エリアで探す',
         paragraphs: [
-          'サークルは特定の体育館を拠点にしていることが多いので、通いやすいエリアの体育館を知っておくと探しやすくなります。実際に運営者が使ったことのある体育館のレビューを、このサイトの体育館レビューのページにまとめています。',
+          'サークルは特定の体育館を拠点にしていることが多いので、通いやすいエリアの体育館を知っておくと探しやすくなります。',
         ],
         bullets: [
           '千代田区(秋葉原・神田・末広町エリア): 都心へのアクセスが良く、複数の体育館が徒歩圏に集まっている。コート2〜3面規模の施設が多い。',
@@ -128,7 +126,6 @@ export const GUIDES: GuideArticle[] = [
       },
     ],
     relatedGuideIds: ['how-to-choose-badminton-circle', 'badminton-practice-schedule'],
-    showGymLink: true,
   },
   {
     id: 'how-to-choose-badminton-circle',

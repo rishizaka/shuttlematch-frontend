@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from '@tanstack/react-router'
-import { BookOpen, Gamepad2, History, Home, Info, MapPin, Megaphone, Menu, Plus, X } from 'lucide-react'
+import { BookOpen, Gamepad2, History, Home, Info, Megaphone, Menu, Plus, X } from 'lucide-react'
 
 /**
  * サイト共通ヘッダー。デスクトップでは主要ページを常に見えるナビゲーションに置き、
@@ -54,12 +54,6 @@ export function Header() {
             className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-brand-700"
           >
             使い方ガイド
-          </Link>
-          <Link
-            to="/gym"
-            className="rounded-lg px-2.5 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-brand-700"
-          >
-            体育館レビュー
           </Link>
           <Link
             to="/about"
@@ -152,14 +146,6 @@ export function Header() {
                   >
                     <BookOpen className="h-4 w-4 text-slate-400" />
                     使い方ガイド
-                  </Link>
-                  <Link
-                    to="/gym"
-                    onClick={close}
-                    className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                  >
-                    <MapPin className="h-4 w-4 text-slate-400" />
-                    体育館レビュー
                   </Link>
                   <Link
                     to="/game"

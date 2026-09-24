@@ -7,7 +7,7 @@ import { SITE_ORIGIN } from '../../lib/og'
  * 最後の項目は現在地なのでリンクを持たない。
  */
 export type BreadcrumbItem =
-  | { label: string; to: '/' | '/guide' | '/gym' | '/releases' }
+  | { label: string; to: '/' | '/guide' | '/releases' }
   | { label: string }
 
 /**
