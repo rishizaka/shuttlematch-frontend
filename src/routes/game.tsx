@@ -7,11 +7,11 @@ import { GAMES } from '../components/game/catalog'
 export const Route = createFileRoute('/game')({
   head: () => ({
     meta: [
-      { title: 'ミニゲーム — 待ち時間のおともに | ShuttleMatch' },
+      { title: 'バドミントンのミニゲーム — 待ち時間に動体視力と反応を | ShuttleMatch' },
       {
         name: 'description',
         content:
-          '試合の待ち時間に片手で遊べるバドミントンミニゲーム。シャトルフラップ、スマッシュレイン、シャトポコのスキーほか。きみはどれが得意？',
+          'ダブルスの待ち時間に片手で遊べるバドミントンのミニゲーム。動くシャトルを目で追って反応する、動体視力のウォーミングアップにも。シャトルフラップ、スマッシュレインほか。',
       },
     ],
   }),
@@ -36,6 +36,16 @@ function GameHubPage() {
         <h1 className="text-xl font-bold text-slate-900">ミニゲーム</h1>
         <p className="text-sm text-slate-500">
           試合の待ち時間に、片手でどうぞ。スコアを重ねるとレベルアップして難易度が上がります。
+          動くシャトルを目で追って反応するので、次のセット前の目のウォーミングアップにも。
+        </p>
+        <p className="mt-1 text-sm">
+          <Link
+            to="/guide/$id"
+            params={{ id: 'badminton-doubles-dynamic-vision' }}
+            className="font-medium text-brand-600 hover:underline"
+          >
+            ダブルスに動体視力が必要な理由と鍛え方
+          </Link>
         </p>
       </div>
 

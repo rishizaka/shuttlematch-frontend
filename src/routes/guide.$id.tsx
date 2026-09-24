@@ -2,6 +2,7 @@ import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { CreateRoomCta } from '../components/ui/CreateRoomCta'
+import { GAMES } from '../components/game/catalog'
 import { guideOgMeta, SITE_NAME, SITE_ORIGIN } from '../lib/og'
 import { GUIDE_AUTHOR, GUIDES, findGuide, formatGuideDate } from '../lib/guides'
 
@@ -24,6 +25,9 @@ function GuideDetailPage() {
   const guide = Route.useLoaderData()
   const related = (guide.relatedGuideIds ?? [])
     .map((id) => GUIDES.find((g) => g.id === id))
+    .filter((g) => g != null)
+  const games = (guide.relatedGames ?? [])
+    .map((to) => GAMES.find((g) => g.to === to))
     .filter((g) => g != null)
   return (
     <div className="space-y-6">
@@ -91,7 +95,7 @@ function GuideDetailPage() {
         </CardBody>
       </Card>
 
-      {related.length > 0 ? (
+      {related.length > 0 || games.length > 0 ? (
         <Card>
           <CardBody className="space-y-2 py-4">
             <h2 className="text-sm font-semibold text-slate-800">関連記事</h2>
@@ -104,6 +108,13 @@ function GuideDetailPage() {
                     className="text-sm font-medium text-brand-600 hover:underline"
                   >
                     {g.title}
+                  </Link>
+                </li>
+              ))}
+              {games.map((g) => (
+                <li key={g.to}>
+                  <Link to={g.to} className="text-sm font-medium text-brand-600 hover:underline">
+                    {g.icon} ミニゲーム「{g.name}」で遊ぶ
                   </Link>
                 </li>
               ))}
