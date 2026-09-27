@@ -160,9 +160,16 @@ function SetGroupView({
       </div>
       <div
         className={
-          'mt-1.5 space-y-1' + (active ? ' -mx-2 rounded-lg bg-brand-50 px-2 py-1.5' : '')
+          'mt-1.5 space-y-1' +
+          (active ? ' relative isolate -mx-2 overflow-hidden rounded-lg bg-brand-50 px-2 py-1.5' : '')
         }
       >
+        {active ? (
+          <span
+            aria-hidden
+            className="animate-set-shine pointer-events-none absolute inset-y-0 left-0 -z-10 w-1/4 bg-gradient-to-r from-transparent via-white/90 to-transparent"
+          />
+        ) : null}
         {group.matches.map((m) => (
           <MatchCard
             key={m.matchNumber}

@@ -56,6 +56,17 @@
 .animate-announce-fade { animation: announce-fade 0.25s ease-out; }
 .animate-announce-pop { animation: announce-pop 0.45s cubic-bezier(0.16, 1, 0.3, 1); }
 
+/* 進行中セットの帯に、ときどき光がすっと走る(進行している感を出す)。
+   走るのは周期の前半だけで、残りは静止。番号が読みにくくならないよう中身の下(帯の背景の上)を走らせる。 */
+@keyframes set-shine {
+  0% { transform: translateX(-120%) skewX(-20deg); }
+  40%, 100% { transform: translateX(420%) skewX(-20deg); }
+}
+.animate-set-shine { animation: set-shine 3.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-set-shine { display: none; }
+}
+
 /* ミニゲームのランキング(レトロなアーケード筐体風)の演出。
    /game 配下のランキング表示だけで使う。 */
 @keyframes arcade-blink {
@@ -64,7 +75,7 @@
 }
 .animate-arcade-blink { animation: arcade-blink 0.9s steps(1, end) infinite; }
 
-/* CRT の走査線。中身の上に重ねるだけなのでクリックは透過させる。 */
+/* CRT の走査線。番号が読みにくくならないよう中身の下(帯の背景の上)を走らせる。 */
 .arcade-scanlines::after {
   content: '';
   position: absolute;
