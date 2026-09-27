@@ -131,7 +131,7 @@ export function LegacyAboutPage() {
                 to="/organizer/rooms/new"
                 className="rounded-xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-900/50 transition hover:bg-brand-400"
               >
-                試合表を作ってみる
+                ランダム表をつくる
               </Link>
               <Link
                 to="/"
@@ -262,7 +262,7 @@ export function LegacyAboutPage() {
                 to="/organizer/rooms/new"
                 className="rounded-xl bg-brand-500 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-brand-900/50 transition hover:bg-brand-400"
               >
-                ランダム表を作成する
+                ランダム表をつくる
               </Link>
               <Link
                 to="/"

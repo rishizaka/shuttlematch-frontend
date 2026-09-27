@@ -144,7 +144,7 @@ function NewRoomPage() {
   return (
     <div className="mx-auto max-w-lg">
       <Card>
-        <CardHeader title="ランダム表を作成" description="作り方を選べます。" />
+        <CardHeader title="ランダム表をつくる" description="作り方を選べます。" />
         <CardBody>
           <div className="mb-4 grid grid-cols-2 gap-2">
             {modeButton('quick', '人数を入れて作成', '番号で試合表をすぐ作る')}
@@ -212,14 +212,14 @@ function NewRoomPage() {
             ) : (
               <p className="text-xs text-slate-500">
                 受付モードでは、作成後に共有リンクを渡すと、各自が名前で参加して番号が自動で
-                割り振られます。人数が集まったら「試合表を生成」を押します。
+                割り振られます。人数が集まったら「ランダム表をつくる」を押します。
               </p>
             )}
 
             {guestError ? <p className="text-sm text-red-600">{guestError}</p> : null}
             {createError ? <p className="text-sm text-red-600">{createError}</p> : null}
             <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? '作成中…' : mode === 'quick' ? '試合表を作成' : '受付を開始'}
+              {pending ? '作成中…' : mode === 'quick' ? 'ランダム表をつくる' : '受付を開始'}
             </Button>
             {!user ? (
               <p className="text-center text-xs text-slate-400">

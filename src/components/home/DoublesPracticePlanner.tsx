@@ -57,7 +57,7 @@ export function DoublesPracticePlanner() {
       <Card className="overflow-hidden border-brand-200">
         <CardHeader
           title={<span id="practice-planner-heading">人数・コート数から練習会を見積もる</span>}
-          description="試合表を作る前に、休憩人数と出場回数の目安を確認できます。"
+          description="ランダム表をつくる前に、休憩人数と出場回数の目安を確認できます。"
         />
         <CardBody className="space-y-6">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -159,7 +159,7 @@ export function DoublesPracticePlanner() {
               to="/organizer/rooms/new"
               className="font-semibold text-brand-600 hover:text-brand-700 hover:underline"
             >
-              この条件で試合表を作る →
+              この条件でランダム表をつくる →
             </Link>
             <Link
               to="/guide/$id"
