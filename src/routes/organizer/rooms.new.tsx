@@ -144,7 +144,7 @@ function NewRoomPage() {
   return (
     <div className="mx-auto max-w-lg">
       <Card>
-        <CardHeader title="ルームを作成" description="作り方を選べます。" />
+        <CardHeader title="ランダム表を作成" description="作り方を選べます。" />
         <CardBody>
           <div className="mb-4 grid grid-cols-2 gap-2">
             {modeButton('quick', '人数を入れて作成', '番号で試合表をすぐ作る')}
@@ -223,7 +223,7 @@ function NewRoomPage() {
             </Button>
             {!user ? (
               <p className="text-center text-xs text-slate-400">
-                ログインなしで作成できます。この端末がルームの運営者になります。
+                ログインなしで作成できます。この端末がランダム表の運営者になります。
               </p>
             ) : null}
           </form>

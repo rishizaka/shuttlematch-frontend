@@ -36,7 +36,7 @@ function PastRoomsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">過去の開催</h1>
-        <p className="text-sm text-slate-500">終了したルームの一覧です。試合表は記録として閲覧できます。</p>
+        <p className="text-sm text-slate-500">終了したランダム表の一覧です。試合表は記録として閲覧できます。</p>
       </div>
 
       {closed.isLoading ? (
@@ -51,7 +51,7 @@ function PastRoomsPage() {
       ) : past.length === 0 ? (
         <Card>
           <CardBody>
-            <p className="text-sm text-slate-500">過去のルームはまだありません。</p>
+            <p className="text-sm text-slate-500">過去のランダム表はまだありません。</p>
           </CardBody>
         </Card>
       ) : (

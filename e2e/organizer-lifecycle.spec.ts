@@ -33,7 +33,7 @@ test('運営者: 試合表表示 → 運営メニュー → 削除 → ホーム
     await expect(menu).toBeVisible()
     await menu.click()
     await page.getByRole('button', { name: '削除する' }).click() // 危険セクションのボタン
-    const dialog = page.getByRole('dialog', { name: 'このルームを削除しますか？' })
+    const dialog = page.getByRole('dialog', { name: 'このランダム表を削除しますか？' })
     await expect(dialog).toBeVisible()
     await dialog.getByRole('button', { name: '削除する' }).click()
 

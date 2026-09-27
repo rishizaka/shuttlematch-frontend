@@ -55,7 +55,7 @@ function JoinPage() {
     if (isNetworkError(error)) {
       return <ErrorBlock message={(error as Error).message} onRetry={() => void refetch()} />
     }
-    return <ErrorBlock message="ルームが見つかりません。招待リンクを確認してください。" />
+    return <ErrorBlock message="ランダム表が見つかりません。招待リンクを確認してください。" />
   }
 
   const acceptsJoin = room.status === 'OPEN' || room.status === 'PREPARING'
@@ -103,7 +103,7 @@ function JoinPage() {
             </div>
           ) : !acceptsJoin ? (
             <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
-              このルームは現在参加を受け付けていません。
+              このランダム表は現在参加を受け付けていません。
             </p>
           ) : (
             <div className="space-y-3">

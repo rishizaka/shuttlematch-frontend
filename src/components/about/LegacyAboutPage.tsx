@@ -137,7 +137,7 @@ export function LegacyAboutPage() {
                 to="/"
                 className="rounded-xl border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/15"
               >
-                今日のルームを見る
+                今日のランダム表を見る
               </Link>
             </div>
           </Reveal>
@@ -262,13 +262,13 @@ export function LegacyAboutPage() {
                 to="/organizer/rooms/new"
                 className="rounded-xl bg-brand-500 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-brand-900/50 transition hover:bg-brand-400"
               >
-                ルームを作成する
+                ランダム表を作成する
               </Link>
               <Link
                 to="/"
                 className="rounded-xl border border-white/20 bg-white/5 px-8 py-3.5 text-base font-semibold text-white backdrop-blur transition hover:bg-white/15"
               >
-                ルーム一覧へ
+                ランダム表一覧へ
               </Link>
             </div>
           </Reveal>

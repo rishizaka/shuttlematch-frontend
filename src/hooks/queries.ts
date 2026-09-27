@@ -114,7 +114,7 @@ export function useDeleteRoom(roomId: string, shareCode: string | undefined) {
   return useMutation({
     mutationFn: () => {
       // 共有コードが無い状態で叩いても 403 になるだけなので、手前で止めて理由を出す。
-      if (!shareCode) throw new Error("ルームの読み込みが終わっていません");
+      if (!shareCode) throw new Error("ランダム表の読み込みが終わっていません");
       return roomApi.deleteRoom(roomId, shareCode);
     },
     onSuccess: () => {

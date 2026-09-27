@@ -539,7 +539,7 @@ function AboutPage() {
               試合表を作ってみる
             </Link>
             <Link className="btn btn-outline" to="/">
-              今日のルームを見る
+              今日のランダム表を見る
             </Link>
           </div>
         </div>
@@ -743,10 +743,10 @@ function AboutPage() {
           <h2 className="colophon-head reveal">今日の練習会から、<br /><span className="foil">どうぞ。</span></h2>
           <div className="cta-row reveal">
             <Link className="btn btn-gold" to="/organizer/rooms/new">
-              ルームを作成する
+              ランダム表を作成する
             </Link>
             <Link className="btn btn-outline" to="/">
-              ルーム一覧へ
+              ランダム表一覧へ
             </Link>
           </div>
           <p className="imprint">

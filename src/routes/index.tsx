@@ -90,7 +90,7 @@ function HomePage() {
           {active.length === 0 && closedToday.length === 0 ? (
             <Card>
               <CardBody>
-                <p className="text-sm text-slate-500">開催中のルームはありません。</p>
+                <p className="text-sm text-slate-500">開催中のランダム表はありません。</p>
               </CardBody>
             </Card>
           ) : null}

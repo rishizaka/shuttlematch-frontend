@@ -442,7 +442,7 @@ function MatchesPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Link to="/" className="text-sm text-brand-600 hover:underline">
-            ← ルーム一覧へ
+            ← ランダム表一覧へ
           </Link>
           <div className="mt-1 flex items-center gap-2">
             <h1 className="text-2xl font-bold text-slate-900">{room?.title ?? '試合表'}</h1>
@@ -700,7 +700,7 @@ function MatchesPage() {
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <Trash2 className="h-4 w-4 text-red-500" />
-                      <h3 className="text-sm font-semibold text-red-700">ルームを削除</h3>
+                      <h3 className="text-sm font-semibold text-red-700">ランダム表を削除</h3>
                     </div>
                     <p className="text-xs text-slate-500">
                       参加者・試合表を含めてすべて完全に削除します。元に戻せません。
@@ -720,7 +720,7 @@ function MatchesPage() {
                   <p className="mt-2 text-sm text-red-600">
                     {deleteRoom.error instanceof Error
                       ? deleteRoom.error.message
-                      : 'ルームの削除に失敗しました'}
+                      : 'ランダム表の削除に失敗しました'}
                   </p>
                 ) : null}
               </div>
@@ -731,7 +731,7 @@ function MatchesPage() {
 
       {confirmingDelete ? (
         <ConfirmModal
-          title="このルームを削除しますか？"
+          title="このランダム表を削除しますか？"
           description="参加者・固定ペア・試合表を含めてすべて完全に削除します。元に戻せません。"
           confirmLabel="削除する"
           cancelLabel="やめる"
@@ -742,7 +742,7 @@ function MatchesPage() {
               onSuccess: () => {
                 removeRoomId(roomId)
                 setConfirmingDelete(false)
-                showToast('ルームを削除しました')
+                showToast('ランダム表を削除しました')
                 void navigate({ to: '/' })
               },
             })
@@ -872,7 +872,7 @@ function MatchesPage() {
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 transition hover:text-red-600"
               >
                 <Archive className="h-4 w-4" />
-                ルームを終了
+                ランダム表を終了
               </button>
             </div>
           )}

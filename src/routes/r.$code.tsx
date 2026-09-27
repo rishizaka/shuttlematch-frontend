@@ -43,7 +43,7 @@ function ShortUrlError({ error }: { error: unknown }) {
   }
   return (
     <div className="py-12 text-center">
-      <p className="text-sm text-slate-600">このリンクのルームが見つかりませんでした。</p>
+      <p className="text-sm text-slate-600">このリンクのランダム表が見つかりませんでした。</p>
       <p className="mt-1 text-xs text-slate-400">URLが正しいか確認してください。</p>
       <Link to="/" className="mt-4 inline-block text-sm font-medium text-brand-600 hover:underline">
         TOPへ戻る
