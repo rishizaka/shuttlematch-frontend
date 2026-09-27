@@ -32,6 +32,8 @@ export function groupMatchesBySet(matches: Match[]): SetGroup[] {
 /**
  * 1セット分の表示(コンパクト固定)。カードをやめ、セットの区切りを
  * 「ラベル付き横線」にして密度を上げる。進行中セットだけ薄い帯で示す。
+ * 次に開始できるセットは見出しごと点線の枠で囲み、開始ボタンがどのセットのものかを
+ * はっきりさせる(帯の直下・右端にボタンがあると、進行中セットのボタンに見えやすかった)。
  * 行が低いので折りたたみは提供しない。
  */
 function SetGroupView({
@@ -72,7 +74,11 @@ function SetGroupView({
   const upcoming = !startedAt && !canStart
 
   return (
-    <section>
+    <section
+      className={
+        canStart ? '-mx-2 rounded-lg border border-dashed border-brand-300 px-2 py-2' : undefined
+      }
+    >
       <div className="flex items-center gap-2">
         <span
           className={
@@ -87,6 +93,11 @@ function SetGroupView({
           }
         >
           {finished ? <Check className="h-3 w-3 text-slate-300" /> : null}
+          {canStart ? (
+            <span className="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700">
+              次
+            </span>
+          ) : null}
           {active ? (
             <span className="relative flex h-1.5 w-1.5" aria-hidden>
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
@@ -106,10 +117,10 @@ function SetGroupView({
             type="button"
             disabled={starting}
             onClick={() => onStart?.()}
-            className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50"
+            className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md bg-brand-600 px-3 text-xs font-bold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50"
           >
-            <Play className="h-3 w-3 fill-current" />
-            {starting ? '開始中…' : '開始'}
+            <Play className="h-3.5 w-3.5 fill-current" />
+            {starting ? '開始中…' : `第${group.setNumber}セット開始`}
           </button>
         ) : null}
         {canRevert ? (

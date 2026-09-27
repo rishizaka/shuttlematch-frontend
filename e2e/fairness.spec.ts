@@ -101,7 +101,7 @@ test('偏りなし(10人2コート): 早退・遅刻・再編成しても公平'
     await openOrganizerMenu(page)
 
     // 第1セットを開始(以降を「未開始」にして再編成の対象を作る)。
-    await page.getByRole('button', { name: /^開始/ }).first().click()
+    await page.getByRole('button', { name: /^第\d+セット開始/ }).first().click()
     const startDialog = page.getByRole('dialog')
     if (await startDialog.isVisible().catch(() => false)) {
       await startDialog.getByRole('button', { name: /開始|はい/ }).click()

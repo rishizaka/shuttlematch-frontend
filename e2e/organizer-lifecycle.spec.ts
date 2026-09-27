@@ -94,7 +94,7 @@ test('運営者: 生成後・未開始のあいだは末尾の参加者を削除
 
     // 第1セットを開始すると、新しい末尾(5番)の削除ボタンも消える
     // (1セットでも開始した後は末尾でも削除できない)。
-    await page.getByRole('button', { name: /^開始/ }).first().click()
+    await page.getByRole('button', { name: /^第\d+セット開始/ }).first().click()
     const startDialog = page.getByRole('dialog')
     if (await startDialog.isVisible().catch(() => false)) {
       await startDialog.getByRole('button', { name: /開始|はい/ }).click()
