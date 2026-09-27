@@ -1,4 +1,5 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
+import { Plus } from 'lucide-react'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { CreateRoomCta } from '../components/ui/CreateRoomCta'
@@ -61,12 +62,23 @@ function GuideDetailPage() {
           {formatGuideDate(guide.date)}
         </time>
         <h1 className="mt-2 text-2xl font-bold leading-snug text-slate-900">{guide.title}</h1>
-        <p className="mt-2 text-xs text-slate-500">
-          執筆:{' '}
-          <Link to="/about" className="font-medium text-brand-600 hover:underline">
-            {GUIDE_AUTHOR}
+        {/* 本文の前にも作成への導線を置く。本文の書き出しを押し下げないよう、
+            カードにせず執筆者の行に並べる小さなボタンにとどめる(末尾には CreateRoomCta)。 */}
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-slate-500">
+            執筆:{' '}
+            <Link to="/about" className="font-medium text-brand-600 hover:underline">
+              {GUIDE_AUTHOR}
+            </Link>
+          </p>
+          <Link
+            to="/organizer/rooms/new"
+            className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-700"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden />
+            ランダム表をつくる
           </Link>
-        </p>
+        </div>
       </div>
 
       <Card>
