@@ -19,7 +19,7 @@ export function CreateRoomCta() {
           className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
         >
           <Plus className="h-4 w-4" />
-          ランダム表をつくる
+          乱数表をつくる
         </Link>
       </CardBody>
     </Card>

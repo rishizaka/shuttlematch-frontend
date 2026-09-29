@@ -59,7 +59,7 @@ test('受付モード: 作成 → 各自が名前で参加 → 生成 → 試合
     await expect(page.getByText('たろう')).toBeVisible()
 
     // 生成ボタンが有効になり、押すと試合表へ。
-    const gen = page.getByRole('button', { name: /ランダム表をつくる/ })
+    const gen = page.getByRole('button', { name: /乱数表をつくる/ })
     await expect(gen).toBeEnabled()
     await gen.click()
     await expect(page.getByText('第1セット')).toBeVisible({ timeout: 10_000 })

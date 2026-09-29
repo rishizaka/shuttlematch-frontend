@@ -536,7 +536,7 @@ function AboutPage() {
 
           <div className="cta-row">
             <Link className="btn btn-gold" to="/organizer/rooms/new">
-              ランダム表をつくる
+              乱数表をつくる
             </Link>
             <Link className="btn btn-outline" to="/">
               今日のランダム表を見る
@@ -743,7 +743,7 @@ function AboutPage() {
           <h2 className="colophon-head reveal">今日の練習会から、<br /><span className="foil">どうぞ。</span></h2>
           <div className="cta-row reveal">
             <Link className="btn btn-gold" to="/organizer/rooms/new">
-              ランダム表をつくる
+              乱数表をつくる
             </Link>
             <Link className="btn btn-outline" to="/">
               ランダム表一覧へ

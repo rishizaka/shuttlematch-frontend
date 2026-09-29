@@ -98,7 +98,7 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
 
   const doGenerate = () => {
     generate.mutate(undefined, {
-      onSuccess: () => showToast('ランダム表をつくりました'),
+      onSuccess: () => showToast('乱数表をつくりました'),
     })
   }
 
@@ -266,8 +266,8 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
             {generate.isPending
               ? '生成中…'
               : remaining > 0
-                ? `ランダム表をつくる（${count}人＋ゲスト${remaining}）`
-                : `ランダム表をつくる（${count}人）`}
+                ? `乱数表をつくる（${count}人＋ゲスト${remaining}）`
+                : `乱数表をつくる（${count}人）`}
           </Button>
           {generate.isError ? (
             <div className="mt-2">
@@ -277,12 +277,12 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
           <p className="mt-2 text-center text-xs text-slate-400">
             {remaining > 0
               ? `コート ${room.courtCount ?? 1} 面は ${required} 人で回します。足りない ${remaining} 人分はゲスト（空き番号）として用意し、後から参加できます。`
-              : `コート ${room.courtCount ?? 1} 面・${count} 人でランダム表をつくります。`}
+              : `コート ${room.courtCount ?? 1} 面・${count} 人で乱数表をつくります。`}
           </p>
         </div>
       ) : (
         <p className="text-center text-xs text-slate-400">
-          運営者がランダム表をつくるまでお待ちください。
+          運営者が乱数表をつくるまでお待ちください。
         </p>
       )}
 
