@@ -31,9 +31,9 @@ export function groupMatchesBySet(matches: Match[]): SetGroup[] {
 
 /**
  * 1セット分の表示(コンパクト固定)。カードをやめ、セットの区切りを
- * 「ラベル付き横線」にして密度を上げる。進行中セットだけ薄い帯で示す。
- * 次に開始できるセットは見出しごと点線の枠で囲み、開始ボタンがどのセットのものかを
- * はっきりさせる(帯の直下・右端にボタンがあると、進行中セットのボタンに見えやすかった)。
+ * 「ラベル付き横線」にして密度を上げる。進行中セットは見出しごと枠線で囲み、薄い帯と
+ * ときどき走る光で「いま進行中」を示す。次に開始できるセットには「次」ラベルを付け、
+ * 開始ボタンの文言にもセット番号を入れて、どのセットのボタンかをはっきりさせる。
  * 行が低いので折りたたみは提供しない。
  */
 function SetGroupView({
@@ -76,9 +76,17 @@ function SetGroupView({
   return (
     <section
       className={
-        canStart ? '-mx-2 rounded-lg border border-dashed border-brand-300 px-2 py-2' : undefined
+        active
+          ? 'relative isolate -mx-2 overflow-hidden rounded-lg border border-brand-300 bg-brand-50 px-2 py-2'
+          : undefined
       }
     >
+      {active ? (
+        <span
+          aria-hidden
+          className="animate-set-shine pointer-events-none absolute inset-y-0 left-0 -z-10 w-1/4 bg-gradient-to-r from-transparent via-white/90 to-transparent"
+        />
+      ) : null}
       <div className="flex items-center gap-2">
         <span
           className={
@@ -158,18 +166,7 @@ function SetGroupView({
           )
         ) : null}
       </div>
-      <div
-        className={
-          'mt-1.5 space-y-1' +
-          (active ? ' relative isolate -mx-2 overflow-hidden rounded-lg bg-brand-50 px-2 py-1.5' : '')
-        }
-      >
-        {active ? (
-          <span
-            aria-hidden
-            className="animate-set-shine pointer-events-none absolute inset-y-0 left-0 -z-10 w-1/4 bg-gradient-to-r from-transparent via-white/90 to-transparent"
-          />
-        ) : null}
+      <div className="mt-1.5 space-y-1">
         {group.matches.map((m) => (
           <MatchCard
             key={m.matchNumber}
