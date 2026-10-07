@@ -29,12 +29,12 @@ export function RenameModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
+      className="animate-announce-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
       role="dialog"
       aria-modal="true"
       aria-label="名前を変更"
     >
-      <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+      <div className="animate-announce-pop w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
         <h2 className="text-lg font-bold text-slate-900">名前を変更</h2>
         <p className="mt-1 text-sm text-slate-500">
           ニックネームを変更します（任意）。未入力なら「ゲスト」になります。

@@ -4,6 +4,8 @@ import type { ReactNode } from 'react'
 interface ToastItem {
   id: number
   message: string
+  /** 消える途中(退場アニメ中)。 */
+  leaving?: boolean
 }
 
 interface ToastContextValue {
@@ -13,6 +15,8 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | null>(null)
 
 const DISPLAY_MS = 2500
+/** 退場アニメの長さ(styles.css の toast-out と合わせる)。 */
+const LEAVE_MS = 220
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
@@ -22,8 +26,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     const id = nextId.current++
     setToasts((prev) => [...prev, { id, message }])
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
+      setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, leaving: true } : t)))
     }, DISPLAY_MS)
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id))
+    }, DISPLAY_MS + LEAVE_MS)
   }, [])
 
   return (
@@ -34,7 +41,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             role="status"
-            className="pointer-events-none rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg"
+            className={
+              'pointer-events-none rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-lg ' +
+              (t.leaving ? 'animate-toast-out' : 'animate-toast-in')
+            }
           >
             {t.message}
           </div>

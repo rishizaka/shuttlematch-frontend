@@ -57,7 +57,7 @@ export function RoomCard({ room, roomId }: { room: PublicRoom; roomId?: string |
       to="/rooms/$roomId/matches"
       params={{ roomId }}
       search={{ openExternalBrowser: 1 }}
-      className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-300 hover:shadow"
+      className="lift block rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:border-brand-300"
     >
       {body}
     </Link>

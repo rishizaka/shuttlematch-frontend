@@ -90,12 +90,12 @@ export function ClaimNumberModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
+      className="animate-announce-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
       role="dialog"
       aria-modal="true"
       aria-label="自分の番号を設定"
     >
-      <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+      <div className="animate-announce-pop w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
         <h2 className="text-lg font-bold text-slate-900">あなたの番号は？</h2>
         <p className="mt-1 text-sm text-slate-500">
           自分の番号を選ぶと、試合表であなたの試合が強調表示されます。

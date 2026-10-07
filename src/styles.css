@@ -93,3 +93,110 @@
 
 /* 蛍光管のにじみ。文字色に追従させる。 */
 .arcade-glow { text-shadow: 0 0 6px currentColor; }
+
+/* ===== マイクロインタラクション ===== */
+
+/* ページ遷移: 中身をふわっと下から出す */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-page-in { animation: page-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* トースト: ばねっぽく下から出て、消えるときは沈む */
+@keyframes toast-in {
+  0% { opacity: 0; transform: translateY(16px) scale(0.92); }
+  60% { opacity: 1; transform: translateY(-3px) scale(1.02); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateY(10px) scale(0.96); }
+}
+.animate-toast-in { animation: toast-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-toast-out { animation: toast-out 0.22s ease-in both; }
+
+/* 進行中になったセット: 枠がぽんと膨らんで落ち着く */
+@keyframes set-activate {
+  0% { transform: scale(0.97); box-shadow: 0 0 0 0 rgba(29, 70, 133, 0.35); }
+  45% { transform: scale(1.012); box-shadow: 0 0 0 6px rgba(29, 70, 133, 0.12); }
+  100% { transform: none; box-shadow: 0 0 0 0 rgba(29, 70, 133, 0); }
+}
+.animate-set-activate { animation: set-activate 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* 番号チップ: 順番にぽこぽこ出る(遅延は --chip-delay) */
+@keyframes chip-in {
+  0% { transform: scale(0.4); opacity: 0; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+.animate-chip-in {
+  animation: chip-in 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: var(--chip-delay, 0ms);
+}
+
+/* 自分の番号: 進行中セットでは光の輪が広がり続ける */
+@keyframes self-ring {
+  0% { box-shadow: 0 0 0 0 rgba(224, 160, 32, 0.6); }
+  100% { box-shadow: 0 0 0 7px rgba(224, 160, 32, 0); }
+}
+.animate-self-ring { animation: self-ring 1.6s ease-out infinite; }
+
+/* 数値が変わったとき: 下から差し替わる */
+@keyframes tick {
+  from { opacity: 0; transform: translateY(40%); }
+  to { opacity: 1; transform: none; }
+}
+.animate-tick { display: inline-block; animation: tick 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* ツールチップ: 下からぴょこっと */
+@keyframes pop-up {
+  from { opacity: 0; transform: translate(-50%, 4px) scale(0.9); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+.animate-pop-up { animation: pop-up 0.18s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* アコーディオン: 開くときに中身が上からすっと降りてくる(閉じるのは瞬時) */
+@keyframes accordion-in {
+  from { opacity: 0; transform: translateY(-6px); clip-path: inset(0 0 100% 0); }
+  to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); }
+}
+.animate-accordion-in { animation: accordion-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* シェブロンの回転を少し弾ませる */
+.chevron-spring { transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* リンクカード: ホバーで少し浮く */
+.lift { transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease; }
+@media (hover: hover) {
+  .lift:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -8px rgba(18, 58, 112, 0.25); }
+}
+
+/* 入力欄: フォーカスでふわっと光る */
+@layer base {
+  input, textarea, select {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    box-shadow: 0 0 0 4px rgba(29, 70, 133, 0.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in, .animate-toast-in, .animate-toast-out, .animate-set-activate,
+  .animate-chip-in, .animate-self-ring, .animate-tick, .animate-pop-up, .animate-accordion-in {
+    animation: none;
+  }
+  .lift, .lift:hover { transition: none; transform: none; }
+  .chevron-spring { transition: none; }
+}
+
+/* 自分の番号(進行中セット): 飛び出し(chip-in)のあとに光の輪を出し続ける。
+   animation は1つのプロパティなので、2つ並べて指定する。 */
+.ring-anim.animate-chip-in {
+  animation:
+    chip-in 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) var(--chip-delay, 0ms) both,
+    self-ring 1.6s ease-out calc(var(--chip-delay, 0ms) + 0.45s) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ring-anim.animate-chip-in { animation: none; }
+}

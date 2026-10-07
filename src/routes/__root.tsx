@@ -15,6 +15,7 @@ import { ToastProvider } from '../components/ui/Toast'
 import { SITE_JSON_LD, SITE_ORIGIN, defaultOgMeta } from '../lib/og'
 import { ADSENSE_CLIENT_ID } from '../lib/ads'
 import { WEB_ANALYTICS_TOKEN } from '../lib/analytics'
+import { installPressFeedback } from '../lib/motion'
 
 import appCss from '../styles.css?url'
 
@@ -60,6 +61,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   // ここに置けば React はこのタグの存在を最初から知らない(hydrate 対象外な)ので、
   // AdSense が何をしても React 側とは衝突しない。サイト確認・クロールに要る
   // 「<head> にタグが存在すること」は、マウント直後に足す形でも満たせる。
+  // ボタン・カードの押し込み+波紋(マイクロインタラクション)。イベント委譲で全ページに効く。
+  useEffect(() => installPressFeedback(), [])
+
   useEffect(() => {
     if (!import.meta.env.PROD) return
     if (document.querySelector('script[src*="pagead2.googlesyndication.com"]')) return
@@ -105,7 +109,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="flex min-h-dvh flex-col bg-slate-50 text-slate-900">
         <ToastProvider>
           <Header />
-          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
+          <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+            {/* ページが切り替わるたびに中身をふわっと出す(key で再マウントしてアニメを再生)。 */}
+            <div key={pathname} className="animate-page-in">
+              {children}
+            </div>
+          </main>
           <Footer />
           <TanStackDevtools
             config={{ position: 'bottom-right' }}

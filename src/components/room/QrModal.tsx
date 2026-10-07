@@ -31,14 +31,14 @@ export default function QrModal({ url, onClose }: { url: string; onClose: () => 
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
+      className="animate-announce-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
       role="dialog"
       aria-modal="true"
       aria-label="試合表のQRコード"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-xl"
+        className="animate-announce-pop w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-bold text-slate-900">試合表のQRコード</h2>

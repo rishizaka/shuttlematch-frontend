@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type React from 'react'
 import type { Match } from '../../lib/types'
 import { FREE_SLOT } from '../../lib/guests'
 
@@ -15,12 +16,15 @@ function PlayerChip({
   name,
   self,
   finished,
+  appearDelay = null,
 }: {
   index: number | undefined
   /** 付いていればタップで表示する名前。無ければ番号のみの非インタラクティブなチップ。 */
   name?: string
   self: boolean
   finished: boolean
+  /** 進行中セットで順番に飛び出させるときの遅延(ms)。null なら動かさない。 */
+  appearDelay?: number | null
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLSpanElement>(null)
@@ -56,15 +60,26 @@ function PlayerChip({
       : finished
         ? 'border border-slate-200 bg-white text-slate-400'
         : 'border border-slate-300 bg-white text-slate-700 shadow-sm'
+  const appearing = appearDelay != null
   const base =
-    'flex h-7 w-7 select-none items-center justify-center rounded-full text-xs font-semibold tabular-nums '
+    'flex h-7 w-7 select-none items-center justify-center rounded-full text-xs font-semibold tabular-nums ' +
+    (appearing ? 'animate-chip-in ' : '') +
+    // 進行中セットの自分の番号は、光の輪を出し続けて「いま自分の番」を知らせる。
+    (appearing && self ? 'ring-anim ' : '')
+  const appearStyle = appearing
+    ? ({ '--chip-delay': `${appearDelay}ms` } as React.CSSProperties)
+    : undefined
 
   // フリーは色とラベルで既に示せているので、タップの名前ツールチップ(「フリー」を
   // もう一度表示するだけ)は出さない。ラベルぶん縦に伸びるのはこの枠だけ。
   if (free) {
     return (
       <span className="flex flex-col items-center gap-0.5">
-        <span aria-label={index != null ? `${index}番 フリー` : 'フリー'} className={base + chip}>
+        <span
+          aria-label={index != null ? `${index}番 フリー` : 'フリー'}
+          className={base + chip}
+          style={appearStyle}
+        >
           {index ?? '?'}
         </span>
         <span
@@ -83,7 +98,11 @@ function PlayerChip({
   // 名前が無ければ従来どおり非インタラクティブなチップ。
   if (!name) {
     return (
-      <span aria-label={index != null ? `${index}番` : undefined} className={base + chip}>
+      <span
+        aria-label={index != null ? `${index}番` : undefined}
+        className={base + chip}
+        style={appearStyle}
+      >
         {index ?? '?'}
       </span>
     )
@@ -96,13 +115,14 @@ function PlayerChip({
         aria-label={index != null ? `${index}番 ${name}` : name}
         onClick={() => setOpen((v) => !v)}
         className={base + chip}
+        style={appearStyle}
       >
         {index ?? '?'}
       </button>
       {open ? (
         <span
           role="tooltip"
-          className="absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-white shadow-lg"
+          className="animate-pop-up absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-white shadow-lg"
         >
           {name}
         </span>
@@ -173,6 +193,7 @@ export function MatchCard({
             name={nameByParticipantId?.get(id)}
             self={isSelf(id)}
             finished={finished}
+            appearDelay={active ? ((match.courtNumber ?? 1) - 1) * 160 + i * 45 : null}
           />
         ))}
       </span>

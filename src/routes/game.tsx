@@ -54,7 +54,7 @@ function GameHubPage() {
           <Link
             key={g.to}
             to={g.to}
-            className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-200 hover:shadow-md active:scale-[0.99]"
+            className="lift flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-brand-200"
           >
             <div
               className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-3xl ${g.iconBg}`}

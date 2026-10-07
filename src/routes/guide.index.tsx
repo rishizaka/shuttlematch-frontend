@@ -45,7 +45,7 @@ function GuidePage() {
       <div className="space-y-3">
         {GUIDES.map((guide) => (
           <Link key={guide.id} to="/guide/$id" params={{ id: guide.id }} className="block">
-            <Card className="transition hover:border-brand-300 hover:shadow">
+            <Card className="lift hover:border-brand-300">
               <CardBody className="flex items-center gap-4">
                 <div className="min-w-0 flex-1">
                   <time dateTime={guide.date} className="text-xs text-slate-500">

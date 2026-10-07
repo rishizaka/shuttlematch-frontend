@@ -1,10 +1,12 @@
-import type { ButtonHTMLAttributes } from 'react'
+import type { ButtonHTMLAttributes, Ref } from 'react'
 import { cn } from '../../lib/cn'
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'
 type Size = 'sm' | 'md'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /** React 19 では ref も通常の prop として button に渡る(紙吹雪の起点などに使う)。 */
+  ref?: Ref<HTMLButtonElement>
   variant?: Variant
   size?: Size
 }

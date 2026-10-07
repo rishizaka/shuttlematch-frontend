@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Check, Play, RotateCcw } from 'lucide-react'
 import type { Match } from '../../lib/types'
 import { formatTime } from '../../lib/format'
 import { MatchCard } from './MatchCard'
+import { burst } from '../../lib/motion'
 
 export interface SetGroup {
   setNumber: number
@@ -63,6 +64,7 @@ function SetGroupView({
 }) {
   // 「開始前に戻す」の確認状態。開始はワンタップなので確認しない。
   const [confirmingRevert, setConfirmingRevert] = useState(false)
+  const startButtonRef = useRef<HTMLButtonElement>(null)
 
   // セットの開始時刻は同一セット共通。任意の1試合から拾う。
   const startedAt = group.matches.find((m) => m.startedAt)?.startedAt ?? null
@@ -77,7 +79,7 @@ function SetGroupView({
     <section
       className={
         active
-          ? 'relative isolate -mx-2 overflow-hidden rounded-lg border border-brand-300 bg-brand-50 px-2 py-2'
+          ? 'animate-set-activate relative isolate -mx-2 overflow-hidden rounded-lg border border-brand-300 bg-brand-50 px-2 py-2'
           : undefined
       }
     >
@@ -123,8 +125,12 @@ function SetGroupView({
         {canStart ? (
           <button
             type="button"
+            ref={startButtonRef}
             disabled={starting}
-            onClick={() => onStart?.()}
+            onClick={() => {
+              burst(startButtonRef.current)
+              onStart?.()
+            }}
             className="inline-flex h-8 shrink-0 items-center gap-1 rounded-md bg-brand-600 px-3 text-xs font-bold text-white shadow-sm transition hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50"
           >
             <Play className="h-3.5 w-3.5 fill-current" />

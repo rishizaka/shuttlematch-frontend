@@ -592,15 +592,16 @@ function MatchesPage() {
             ) : null}
             <ChevronDown
               className={
-                'h-5 w-5 shrink-0 text-slate-400 transition-transform ' +
+                'chevron-spring h-5 w-5 shrink-0 text-slate-400 ' +
                 (organizerOpen ? 'rotate-180' : '')
               }
             />
           </button>
 
-          {/* 中身は瞬時に開閉する(高さアニメは付けない)。開閉の合図はシェブロンの回転のみ。 */}
+          {/* 開くときだけ中身を上からすっと出す(閉じるのは瞬時)。高さのアニメは中身の
+              再描画で揺れやすいので使わない。 */}
           {organizerOpen ? (
-            <div className="divide-y divide-slate-100 border-t border-slate-100">
+            <div className="animate-accordion-in divide-y divide-slate-100 border-t border-slate-100">
               {/* 「自分の番号」はここには置かない。運営者もプレーヤーとして参加者と同じ
                   ページ上部の導線を使う(以前は受付モードのときだけここにも出していた)。 */}
 

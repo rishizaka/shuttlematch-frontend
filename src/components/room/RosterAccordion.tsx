@@ -40,14 +40,14 @@ export function RosterAccordion({
         <span className="text-xs text-slate-400">{participants.length}人</span>
         <ChevronDown
           className={
-            'ml-auto h-4 w-4 shrink-0 text-slate-400 transition-transform ' +
+            'chevron-spring ml-auto h-4 w-4 shrink-0 text-slate-400 ' +
             (open ? 'rotate-180' : '')
           }
         />
       </button>
-      {/* 中身は瞬時に開閉する(高さアニメは付けない)。開閉の合図はシェブロンの回転のみ。 */}
+      {/* 開くときだけ中身を上からすっと出す(閉じるのは瞬時)。 */}
       {open ? (
-        <ul className="grid grid-cols-2 gap-x-4 border-t border-slate-100 px-4 py-3 sm:grid-cols-3">
+        <ul className="animate-accordion-in grid grid-cols-2 gap-x-4 border-t border-slate-100 px-4 py-3 sm:grid-cols-3">
           {participants.map((p, i) => {
             const left = p.status === 'LEFT'
             const self = p.id === selfParticipantId

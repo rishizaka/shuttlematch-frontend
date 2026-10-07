@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { burst } from '../../lib/motion'
 import { UserPlus } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { ErrorBlock } from '../ui/Spinner'
@@ -29,12 +30,14 @@ export function QuickJoinBanner({
   const [touched, setTouched] = useState(false)
 
   const trimmed = name.trim()
+  const joinRef = useRef<HTMLButtonElement>(null)
   const submit = () => {
     if (pending) return
     if (!trimmed) {
       setTouched(true)
       return
     }
+    burst(joinRef.current)
     onSubmit(trimmed)
   }
 
@@ -61,7 +64,7 @@ export function QuickJoinBanner({
           aria-invalid={touched && !trimmed}
           className="min-w-0 flex-1 rounded-lg border border-amber-300 bg-white px-3 py-2 text-base focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
         />
-        <Button type="button" onClick={submit} disabled={pending}>
+        <Button ref={joinRef} type="button" onClick={submit} disabled={pending}>
           {pending ? '参加中…' : '参加する'}
         </Button>
       </div>

@@ -179,7 +179,12 @@ function PlanStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg bg-white px-3 py-2.5">
       <dt className="text-xs text-slate-500">{label}</dt>
-      <dd className="mt-0.5 text-base font-bold text-slate-900">{value}</dd>
+      <dd className="mt-0.5 overflow-hidden text-base font-bold text-slate-900">
+        {/* 値が変わるたびに key で差し替え、下からせり上がる */}
+        <span key={value} className="animate-tick">
+          {value}
+        </span>
+      </dd>
     </div>
   )
 }

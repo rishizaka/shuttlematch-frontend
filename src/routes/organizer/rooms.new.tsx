@@ -1,5 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
+import { burst } from '../../lib/motion'
+import { useRef, useState } from 'react'
 import { useCreateRoom, useQuickCreateRoom } from '../../hooks/queries'
 import { useCurrentUser } from '../../hooks/useCurrentUser'
 import { roomApi, userApi } from '../../lib/api'
@@ -58,6 +59,7 @@ function NewRoomPage() {
       ? (createRoom.error as Error).message
       : null
 
+  const submitRef = useRef<HTMLButtonElement>(null)
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setAttempted(true)
@@ -95,7 +97,12 @@ function NewRoomPage() {
           participantCount: people,
           createdBy: creatorId,
         },
-        { onSuccess: (room) => goMatches(room.id) },
+        {
+          onSuccess: (room) => {
+            burst(submitRef.current, 28)
+            goMatches(room.id)
+          },
+        },
       )
     } else {
       // 受付モード: コート数だけで OPEN ルームを作成 → 主催者を1番として参加させ、
@@ -218,7 +225,7 @@ function NewRoomPage() {
 
             {guestError ? <p className="text-sm text-red-600">{guestError}</p> : null}
             {createError ? <p className="text-sm text-red-600">{createError}</p> : null}
-            <Button type="submit" className="w-full" disabled={pending}>
+            <Button ref={submitRef} type="submit" className="w-full" disabled={pending}>
               {pending ? '作成中…' : mode === 'quick' ? '乱数表をつくる' : '受付を開始'}
             </Button>
             {!user ? (

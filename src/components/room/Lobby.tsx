@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { burst } from '../../lib/motion'
 import { Share2, UserPlus, Users } from 'lucide-react'
 import type { Room } from '../../lib/types'
 import {
@@ -96,9 +97,13 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
     )
   }
 
+  const generateRef = useRef<HTMLButtonElement>(null)
   const doGenerate = () => {
     generate.mutate(undefined, {
-      onSuccess: () => showToast('乱数表をつくりました'),
+      onSuccess: () => {
+        burst(generateRef.current, 28)
+        showToast('乱数表をつくりました')
+      },
     })
   }
 
@@ -258,6 +263,7 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
       {isOrganizer ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <Button
+            ref={generateRef}
             type="button"
             className="w-full"
             onClick={doGenerate}
