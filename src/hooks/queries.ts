@@ -10,7 +10,6 @@ import {
   roomApi,
   userApi,
   type AddParticipantInput,
-  type CreateRoomInput,
   type CreateUserInput,
   type RoomListParams,
 } from "../lib/api";
@@ -83,15 +82,6 @@ export function useRooms(roomIds: string[]) {
       queryKey: queryKeys.room(id),
       queryFn: () => roomApi.get(id),
     })),
-  });
-}
-
-export function useCreateRoom() {
-  return useMutation({
-    mutationFn: (input: CreateRoomInput) => roomApi.create(input),
-    onSuccess: (room) => {
-      addRoomId(room.id);
-    },
   });
 }
 

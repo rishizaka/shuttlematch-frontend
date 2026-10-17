@@ -24,8 +24,9 @@ test('運営者: 試合表表示 → 運営メニュー → 削除 → ホーム
   try {
     await page.goto(`/rooms/${roomId}/matches`)
 
-    // 試合表が描画される(第1セット・ヘッダーロゴ)。
-    await expect(page.getByText('第1セット')).toBeVisible()
+    // 試合表が描画される(第1セットの開始ボタン・ヘッダーロゴ)。
+    // 「第1セット」だけだと「次第1セット」ラベルにも当たって strict mode 違反になる。
+    await expect(page.getByRole('button', { name: '第1セット開始' })).toBeVisible()
     await expect(page.locator('header img[alt="ShuttleMatch"]')).toBeVisible()
 
     // 運営者にだけ出る「運営メニュー」を開いてルーム削除。
@@ -67,7 +68,7 @@ test('運営者: 生成後・未開始のあいだは末尾の参加者を削除
 
   try {
     await page.goto(`/rooms/${roomId}/matches`)
-    await expect(page.getByText('第1セット')).toBeVisible()
+    await expect(page.getByRole('button', { name: '第1セット開始' })).toBeVisible()
 
     const menu = page.getByRole('button', { name: /運営メニュー/ })
     await menu.click()
