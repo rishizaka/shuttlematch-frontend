@@ -21,7 +21,12 @@ export function useCurrentUser() {
   }
 }
 
+/** SSR 時に返す空の一覧。**毎回同じ配列を返すこと** —
+    `() => []` のように都度作ると参照が変わり続け、React が
+    「getServerSnapshot の結果はキャッシュせよ(無限ループの恐れ)」と警告する。 */
+const NO_ROOM_IDS: string[] = []
+
 /** 既知の room ID 一覧を購読する。 */
 export function useKnownRoomIds(): string[] {
-  return useSyncExternalStore(subscribe, getRoomIds, () => [])
+  return useSyncExternalStore(subscribe, getRoomIds, () => NO_ROOM_IDS)
 }

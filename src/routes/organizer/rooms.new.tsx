@@ -10,10 +10,27 @@ import { Card, CardBody, CardHeader } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Field, Input } from '../../components/ui/Field'
 
+/** TOP の見積もりから引き継ぐ初期値。どちらも任意。 */
+function parseCount(value: unknown): number | undefined {
+  const count = Number(value)
+  return Number.isFinite(count) && count > 0 ? Math.floor(count) : undefined
+}
+
 export const Route = createFileRoute('/organizer/rooms/new')({
   // 作成フォームは検索の着地点ではない。検索結果には、使い方まで説明しているTOPや
   // ガイドを出し、ここはそこから遷移した人だけが使えるようにする。
   head: () => ({ meta: [{ name: 'robots', content: 'noindex,follow' }] }),
+  // TOP の「この条件で乱数表をつくる」から人数・コート数を引き継ぐ。
+  // 読み取れない値は無視して従来の初期値にする(URL を直接編集されても壊れない)。
+  // 戻り値の型は**省略可能なプロパティ**として明示する。これを省くと
+  // `participantCount: number | undefined` という「値はundefinedでよいがキーは必須」の
+  // 型になり、このルートへ張っている既存の <Link> すべてに search の指定を強制してしまう。
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { participantCount?: number; courtCount?: number } => ({
+    participantCount: parseCount(search.participantCount),
+    courtCount: parseCount(search.courtCount),
+  }),
   component: NewRoomPage,
 })
 
@@ -27,10 +44,17 @@ function NewRoomPage() {
   const quickCreate = useQuickCreateRoom()
   const createRoom = useCreateRoom()
 
+  // TOP の見積もりで入れた人数・コート数があれば、それを初期値にする。
+  const prefill = Route.useSearch()
+
   const [mode, setMode] = useState<Mode>('quick')
   const [title, setTitle] = useState(defaultRoomTitle())
-  const [participantCount, setParticipantCount] = useState('')
-  const [courtCount, setCourtCount] = useState('2')
+  const [participantCount, setParticipantCount] = useState(
+    prefill.participantCount ? String(prefill.participantCount) : '',
+  )
+  const [courtCount, setCourtCount] = useState(
+    prefill.courtCount ? String(prefill.courtCount) : '2',
+  )
   // 受付モードで主催者が自分を1番として参加させるためのニックネーム。
   const [organizerName, setOrganizerName] = useState('')
   const [attempted, setAttempted] = useState(false)

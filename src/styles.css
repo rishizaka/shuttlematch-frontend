@@ -25,6 +25,23 @@
   --color-accent-500: #e0a020;
   --color-accent-600: #c4870f;
   --color-accent-700: #9c6a0c;
+
+  /* 数字・英字ラベル用の面。和文はシステムのゴシックに任せ、ここは数字だけを担う
+     (和文フォントを配信すると数MBになるため)。TOP の見積もり・乱数表の例で使う。 */
+  --font-fig: "Archivo Sub", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Archivo Variable (SIL Open Font License 1.1, Omnibus-Type)。
+   ASCII のみ・軸は wght 400-900 × wdth 100-125 に絞ったサブセット(29KB)。
+   woff2-variations なので1ファイルで太さと幅の両方を動かせる。
+   @font-face を宣言しただけでは読み込まれない(使っている文字が描画されたときだけ)ので、
+   このフォントを使わないページには転送の負担がかからない。 */
+@font-face {
+  font-family: "Archivo Sub";
+  src: url("/fonts/archivo-subset.woff2") format("woff2-variations");
+  font-weight: 400 900;
+  font-stretch: 100% 125%;
+  font-display: swap;
 }
 
 /* ここのリセットは必ず @layer base に入れること。
@@ -42,6 +59,48 @@
   }
 }
 
+
+/* 数字と和文見出しの組み。
+   **Tailwind v4 では `@layer components { ... }` を使わないこと** — 中身が捨てられて
+   `@layer components;` という空の宣言だけが出力され、クラスが無言で効かなくなる
+   (実際にそれで .fig が当たらず、数字がシステムフォントのまま出ていた)。
+   v4 で自前のクラスを足すときは `@utility`。utilities レイヤーに入るので、
+   使う側で text-* などのユーティリティと素直に併用できる。 */
+
+/* 得点板の刻印のような数字。幅軸(wdth)を広げて存在感を出す。 */
+@utility fig {
+  font-family: var(--font-fig);
+  font-variation-settings: "wght" 800, "wdth" 118;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+/* 一覧や表で桁を揃える数字。日時や「10 / 12」のような並びに使う。 */
+@utility tab {
+  font-family: var(--font-fig);
+  font-variation-settings: "wght" 600, "wdth" 100;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 小さな英字ラベル(COURT 1 など)。 */
+@utility lbl {
+  font-family: var(--font-fig);
+  font-variation-settings: "wght" 700, "wdth" 100;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+/* 和文の見出し。palt(プロポーショナル詰め)で仮名と約物を詰め、字送りを締める。
+   body に当てるとサイト全体の組みが変わってしまうので、使う見出しにだけ当てる。
+   word-break: auto-phrase は文節で折り返す指定(「ダブルス組/み合わせ表」を防ぐ)。 */
+@utility jp-tight {
+  font-feature-settings: "palt" 1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+  word-break: auto-phrase;
+}
 
 /* セット開始アナウンス(モーダル)のアニメーション */
 @keyframes announce-fade {

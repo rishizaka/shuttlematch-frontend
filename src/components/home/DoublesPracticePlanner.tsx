@@ -1,29 +1,11 @@
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Card, CardBody, CardHeader } from '../ui/Card'
-import { Field, Input } from '../ui/Field'
+import { ArrowRight } from 'lucide-react'
 import { createDoublesPracticePlan } from '../../lib/doubles-practice-plan'
+import { createDoublesPracticeExample } from '../../lib/doubles-practice-example'
 
-const EXAMPLE_SETS = [
-  {
-    set: 1,
-    court1: '1・2 vs 3・4',
-    court2: '5・6 vs 7・8',
-    resting: '9・10',
-  },
-  {
-    set: 2,
-    court1: '1・5 vs 7・9',
-    court2: '2・6 vs 8・10',
-    resting: '3・4',
-  },
-  {
-    set: 3,
-    court1: '1・7 vs 3・9',
-    court2: '2・8 vs 4・10',
-    resting: '5・6',
-  },
-]
+/** 組み合わせ例として見せるセット数。見出しの「最初の3セット」と揃える。 */
+const EXAMPLE_SET_COUNT = 3
 
 function numericInput(value: string, fallback: number): number {
   const number = Number(value)
@@ -31,8 +13,11 @@ function numericInput(value: string, fallback: number): number {
 }
 
 /**
- * 試合表を作る前に、人数・コート数と時間から当日の回し方を見積もる小さな計算機。
+ * 乱数表をつくる前に、人数・コート数と時間から当日の回し方を見積もる小さな計算機。
  * 完成した組み合わせを装わず、あくまで主催者が条件を決めるための補助として出す。
+ *
+ * 入れた人数・コート数は「この条件で乱数表をつくる」のリンクに載せて作成フォームへ渡す
+ * (ここで決めた条件をもう一度入力させないため)。
  */
 export function DoublesPracticePlanner() {
   const [participantCount, setParticipantCount] = useState('10')
@@ -40,151 +25,264 @@ export function DoublesPracticePlanner() {
   const [availableMinutes, setAvailableMinutes] = useState('90')
   const [minutesPerSet, setMinutesPerSet] = useState('6')
 
+  const people = numericInput(participantCount, 10)
+  const courts = numericInput(courtCount, 2)
+
   const plan = createDoublesPracticePlan({
-    participantCount: numericInput(participantCount, 10),
-    courtCount: numericInput(courtCount, 2),
+    participantCount: people,
+    courtCount: courts,
     availableMinutes: numericInput(availableMinutes, 90),
     minutesPerSet: numericInput(minutesPerSet, 6),
   })
   const hasEnoughPlayers = plan.playersNeeded === 0
   const playCount =
     plan.minimumPlayCount === plan.maximumPlayCount
-      ? `${plan.minimumPlayCount}回`
-      : `${plan.minimumPlayCount}〜${plan.maximumPlayCount}回`
+      ? `${plan.minimumPlayCount}`
+      : `${plan.minimumPlayCount}–${plan.maximumPlayCount}`
+
+  const exampleSets = createDoublesPracticeExample({
+    participantCount: plan.participantCount,
+    courtCount: plan.courtCount,
+    setCount: EXAMPLE_SET_COUNT,
+  })
 
   return (
-    <section aria-labelledby="practice-planner-heading">
-      <Card className="overflow-hidden border-brand-200">
-        <CardHeader
-          title={<span id="practice-planner-heading">人数・コート数から練習会を見積もる</span>}
-          description="乱数表をつくる前に、休憩人数と出場回数の目安を確認できます。"
-        />
-        <CardBody className="space-y-6">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Field label="参加人数" htmlFor="planner-participant-count">
-              <Input
-                id="planner-participant-count"
-                type="number"
-                min="1"
-                inputMode="numeric"
-                value={participantCount}
-                onChange={(event) => setParticipantCount(event.target.value)}
-              />
-            </Field>
-            <Field label="コート数" htmlFor="planner-court-count">
-              <Input
-                id="planner-court-count"
-                type="number"
-                min="1"
-                inputMode="numeric"
-                value={courtCount}
-                onChange={(event) => setCourtCount(event.target.value)}
-              />
-            </Field>
-            <Field label="試合に使える時間（分）" htmlFor="planner-available-minutes">
-              <Input
-                id="planner-available-minutes"
-                type="number"
-                min="1"
-                inputMode="numeric"
-                value={availableMinutes}
-                onChange={(event) => setAvailableMinutes(event.target.value)}
-              />
-            </Field>
-            <Field label="1セットの目安（分）" htmlFor="planner-minutes-per-set">
-              <Input
-                id="planner-minutes-per-set"
-                type="number"
-                min="1"
-                inputMode="numeric"
-                value={minutesPerSet}
-                onChange={(event) => setMinutesPerSet(event.target.value)}
-              />
-            </Field>
-          </div>
+    <section
+      aria-labelledby="practice-planner-heading"
+      className="rounded-[20px] border border-slate-200 bg-white shadow-sm"
+    >
+      <div className="px-5 pt-5 sm:px-6 sm:pt-6">
+        <h2 id="practice-planner-heading" className="jp-tight text-xl font-semibold text-slate-900">
+          人数・コート数から練習会を見積もる
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">
+          乱数表をつくる前に、休憩人数と出場回数の目安を確認できます。
+        </p>
+      </div>
 
-          {hasEnoughPlayers ? (
-            <div className="rounded-xl bg-brand-50 p-4">
-              <h3 className="text-sm font-semibold text-brand-900">この条件での目安</h3>
-              <dl className="mt-3 grid gap-3 sm:grid-cols-3">
-                <PlanStat label="1セットの出場・休憩" value={`${plan.activePlayersPerSet}人・${plan.restingPlayersPerSet}人`} />
-                <PlanStat label="回せるセット数" value={`${plan.setCount}セット前後`} />
-                <PlanStat label="1人あたりの出場回数" value={playCount} />
-              </dl>
-              <p className="mt-3 text-xs leading-relaxed text-brand-800">
-                {plan.totalPlaySlots}枠を{plan.participantCount}人で分けた計算です。実際の組み合わせは、
-                遅刻・早退・固定ペアなどの条件に応じて作成してください。
+      <div className="space-y-5 px-5 pb-6 pt-5 sm:px-6">
+        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+          <CountField
+            id="planner-participant-count"
+            label="参加人数"
+            unit="人"
+            value={participantCount}
+            onChange={setParticipantCount}
+          />
+          <CountField
+            id="planner-court-count"
+            label="コート数"
+            unit="面"
+            value={courtCount}
+            onChange={setCourtCount}
+          />
+          <CountField
+            id="planner-available-minutes"
+            label="試合に使える時間"
+            unit="分"
+            value={availableMinutes}
+            onChange={setAvailableMinutes}
+          />
+          <CountField
+            id="planner-minutes-per-set"
+            label="1セットの目安"
+            unit="分"
+            value={minutesPerSet}
+            onChange={setMinutesPerSet}
+          />
+        </div>
+
+        {hasEnoughPlayers ? (
+          <div>
+            <dl className="grid gap-2.5 sm:grid-cols-3">
+              <PlanStat label="1セットの出場・休憩">
+                <StatValue value={plan.activePlayersPerSet} />
+                <StatUnit>人</StatUnit>
+                <span className="fig mx-1 text-lg text-brand-200">/</span>
+                <StatValue value={plan.restingPlayersPerSet} />
+                <StatUnit>人</StatUnit>
+              </PlanStat>
+              <PlanStat label="回せるセット数">
+                <StatValue value={plan.setCount} />
+                <StatUnit>セット前後</StatUnit>
+              </PlanStat>
+              <PlanStat label="1人あたりの出場回数">
+                <StatValue value={playCount} />
+                <StatUnit>回</StatUnit>
+              </PlanStat>
+            </dl>
+            <p className="mt-3 text-xs leading-relaxed text-slate-500">
+              {plan.totalPlaySlots}枠を{plan.participantCount}人で分けた計算です。実際の組み合わせは、
+              遅刻・早退・固定ペアなどの条件に応じて作成してください。
+            </p>
+          </div>
+        ) : (
+          <p className="rounded-xl border border-accent-200 bg-accent-50 px-4 py-3 text-sm leading-relaxed text-accent-700">
+            {plan.courtCount}面のダブルスには、同時に{plan.activePlayersPerSet}人必要です。あと
+            {plan.playersNeeded}人集まるか、使うコート数を減らしてください。
+          </p>
+        )}
+
+        <div className="border-t border-slate-100 pt-5">
+          <h3 className="jp-tight text-[15px] font-semibold text-slate-900">
+            {plan.participantCount}人・{plan.courtCount}面: 最初の{EXAMPLE_SET_COUNT}
+            セットの組み合わせ例
+          </h3>
+          {exampleSets.length > 0 ? (
+            <>
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                {plan.restingPlayersPerSet > 0
+                  ? `各セットで${plan.activePlayersPerSet}人が出場し、休憩の${plan.restingPlayersPerSet}人を入れ替える例です。`
+                  : '参加者全員が毎セット出場するため、休憩は出ません。'}
+                {EXAMPLE_SET_COUNT}セット内で同じ4人が同じコートに入ることはありません。
               </p>
-            </div>
+              <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50">
+                      <th scope="col" className="px-3 py-2.5 text-xs font-semibold text-slate-500">
+                        セット
+                      </th>
+                      {Array.from({ length: plan.courtCount }, (_, index) => (
+                        <th
+                          key={index}
+                          scope="col"
+                          className="lbl px-3 py-2.5 text-[10.5px] text-slate-400"
+                        >
+                          Court {index + 1}
+                        </th>
+                      ))}
+                      {plan.restingPlayersPerSet > 0 ? (
+                        <th
+                          scope="col"
+                          className="px-3 py-2.5 text-xs font-semibold text-slate-500"
+                        >
+                          休憩
+                        </th>
+                      ) : null}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {exampleSets.map((set) => (
+                      <tr key={set.set} className="border-b border-slate-100 last:border-b-0">
+                        <td className="px-3 py-2.5">
+                          <span className="fig inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent-50 text-xs text-accent-700">
+                            {set.set}
+                          </span>
+                        </td>
+                        {set.courts.map((court, index) => (
+                          <td key={index} className="whitespace-nowrap px-3 py-2.5">
+                            <span className="tab text-[15px] text-slate-800">
+                              {court.teamA.join('・')}
+                            </span>
+                            <span className="mx-2 text-[11px] text-slate-400">vs</span>
+                            <span className="tab text-[15px] text-slate-800">
+                              {court.teamB.join('・')}
+                            </span>
+                          </td>
+                        ))}
+                        {plan.restingPlayersPerSet > 0 ? (
+                          <td className="tab whitespace-nowrap px-3 py-2.5 text-sm text-slate-500">
+                            {set.resting.join('・')}
+                          </td>
+                        ) : null}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                この表は番号で運用するときの説明用の例です。実際には、参加者の条件とこれまでの出場・ペア履歴に応じて結果が変わります。
+              </p>
+            </>
           ) : (
-            <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
-              {plan.courtCount}面のダブルスには、同時に{plan.activePlayersPerSet}人必要です。あと
-              {plan.playersNeeded}人集まるか、使うコート数を減らしてください。
+            <p className="mt-1 text-sm leading-relaxed text-slate-600">
+              人数がそろうと、ここに組み合わせの例が出ます。
             </p>
           )}
+        </div>
 
-          <div className="border-t border-slate-100 pt-5">
-            <h3 className="text-sm font-semibold text-slate-900">10人・2面: 最初の3セットの組み合わせ例</h3>
-            <p className="mt-1 text-sm leading-relaxed text-slate-600">
-              各セットで8人が出場し、休憩の2人を入れ替える例です。3セット内で同じ2人が続けてパートナーになることはありません。
-            </p>
-            <ol className="mt-3 grid gap-3 lg:grid-cols-3">
-              {EXAMPLE_SETS.map((example) => (
-                <li key={example.set} className="rounded-lg border border-slate-200 p-3 text-sm">
-                  <p className="font-semibold text-slate-900">第{example.set}セット</p>
-                  <dl className="mt-2 space-y-1.5 text-slate-600">
-                    <div className="flex justify-between gap-3">
-                      <dt>1コート</dt>
-                      <dd className="font-medium text-slate-800">{example.court1}</dd>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <dt>2コート</dt>
-                      <dd className="font-medium text-slate-800">{example.court2}</dd>
-                    </div>
-                    <div className="flex justify-between gap-3 border-t border-slate-100 pt-1.5">
-                      <dt>休憩</dt>
-                      <dd className="font-medium text-slate-800">{example.resting}</dd>
-                    </div>
-                  </dl>
-                </li>
-              ))}
-            </ol>
-            <p className="mt-3 text-xs leading-relaxed text-slate-500">
-              この表は番号で運用するときの説明用の例です。実際には、参加者の条件とこれまでの出場・ペア履歴に応じて結果が変わります。
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-            <Link
-              to="/organizer/rooms/new"
-              className="font-semibold text-brand-600 hover:text-brand-700 hover:underline"
-            >
-              この条件で乱数表をつくる →
-            </Link>
-            <Link
-              to="/guide/$id"
-              params={{ id: 'ten-players-two-courts-doubles-example' }}
-              className="font-medium text-brand-600 hover:text-brand-700 hover:underline"
-            >
-              10人・2面の詳しい回し方を見る →
-            </Link>
-          </div>
-        </CardBody>
-      </Card>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+          <Link
+            to="/organizer/rooms/new"
+            search={{ participantCount: people, courtCount: courts }}
+            className="lift inline-flex items-center gap-2 rounded-xl bg-accent-500 px-6 py-3.5 text-base font-semibold text-brand-900 shadow-sm hover:bg-accent-400"
+          >
+            {plan.participantCount}人・{plan.courtCount}面で乱数表をつくる
+            <ArrowRight className="h-[17px] w-[17px]" strokeWidth={2.4} aria-hidden />
+          </Link>
+          <Link
+            to="/guide/$id"
+            params={{ id: 'ten-players-two-courts-doubles-example' }}
+            className="border-b-2 border-transparent pb-0.5 text-sm font-semibold text-slate-500 transition hover:border-accent-400 hover:text-slate-900"
+          >
+            10人・2面の詳しい回し方を見る →
+          </Link>
+        </div>
+      </div>
     </section>
   )
 }
 
-function PlanStat({ label, value }: { label: string; value: string }) {
+/**
+ * 数字だけを入れる欄。入力した値そのものを大きく見せたいので、ラベルは上の小さな文字、
+ * 単位は欄の中に置く。文字サイズは 16px 以上(iOS がフォーカス時にズームするのを防ぐ)。
+ */
+function CountField({
+  id,
+  label,
+  unit,
+  value,
+  onChange,
+}: {
+  id: string
+  label: string
+  unit: string
+  value: string
+  onChange: (value: string) => void
+}) {
   return (
-    <div className="rounded-lg bg-white px-3 py-2.5">
-      <dt className="text-xs text-slate-500">{label}</dt>
-      <dd className="mt-0.5 overflow-hidden text-base font-bold text-slate-900">
-        {/* 値が変わるたびに key で差し替え、下からせり上がる */}
-        <span key={value} className="animate-tick">
-          {value}
-        </span>
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="text-xs font-semibold text-slate-500">
+        {label}
+      </label>
+      <div className="flex items-center gap-1.5 rounded-xl border-[1.5px] border-slate-200 bg-slate-50 px-3 py-2 transition focus-within:border-accent-400 focus-within:bg-accent-50">
+        <input
+          id={id}
+          type="number"
+          min="1"
+          inputMode="numeric"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="fig w-full min-w-0 bg-transparent text-[23px] text-slate-900 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+        <span className="shrink-0 text-xs font-semibold text-slate-400">{unit}</span>
+      </div>
+    </div>
+  )
+}
+
+/** 目安の1枚。濃紺の下地に白い数字を置いて、入力の結果だと分かるようにする。 */
+function PlanStat({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl bg-brand-800 px-4 py-3.5">
+      <dt className="lbl mb-2.5 text-[10.5px] text-accent-200">{label}</dt>
+      <dd className="flex flex-wrap items-baseline gap-0.5 overflow-hidden text-white">
+        {children}
       </dd>
     </div>
   )
+}
+
+/** 値が変わるたびに key で差し替え、下からせり上がる(サイト共通の animate-tick)。 */
+function StatValue({ value }: { value: number | string }) {
+  return (
+    <span key={value} className="fig animate-tick text-[32px]">
+      {value}
+    </span>
+  )
+}
+
+function StatUnit({ children }: { children: React.ReactNode }) {
+  return <span className="text-xs font-semibold text-brand-100">{children}</span>
 }
