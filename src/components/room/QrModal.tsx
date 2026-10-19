@@ -8,7 +8,18 @@ import { Button } from '../ui/Button'
  * QRの生成ライブラリごと動的 import される前提のファイル(呼び出し側が React.lazy で読む)。
  * 試合表のページは参加者全員が開くので、運営者しか使わないQRを既定のバンドルに載せない。
  */
-export default function QrModal({ url, onClose }: { url: string; onClose: () => void }) {
+export default function QrModal({
+  url,
+  onClose,
+  title = '試合表のQRコード',
+  description = 'スマホのカメラで読み取ると試合表が開きます。',
+}: {
+  url: string
+  onClose: () => void
+  /** 見出し。運営者用リンクなど、試合表以外の QR を出すときに差し替える。 */
+  title?: string
+  description?: string
+}) {
   // 誤り訂正レベル M。会場の紙やスマホ画面越しでも読める程度に余裕を持たせる。
   // 型番 0 は「入るいちばん小さい型番を自動で選ぶ」。
   const qr = qrcode(0, 'M')
@@ -34,17 +45,15 @@ export default function QrModal({ url, onClose }: { url: string; onClose: () => 
       className="animate-announce-fade fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="試合表のQRコード"
+      aria-label={title}
       onClick={onClose}
     >
       <div
         className="animate-announce-pop w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-bold text-slate-900">試合表のQRコード</h2>
-        <p className="mt-1 text-xs text-slate-500">
-          スマホのカメラで読み取ると試合表が開きます。
-        </p>
+        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+        <p className="mt-1 text-xs text-slate-500">{description}</p>
 
         {/* QR は白地に黒でないと読み取りが安定しないので、ダーク配色にはしない。 */}
         <svg
@@ -52,7 +61,7 @@ export default function QrModal({ url, onClose }: { url: string; onClose: () => 
           className="mx-auto mt-4 h-auto w-full max-w-[15rem] rounded-lg bg-white"
           shapeRendering="crispEdges"
           role="img"
-          aria-label="試合表のURLのQRコード"
+          aria-label={`${title}(URL)`}
         >
           <rect width={size} height={size} fill="#ffffff" />
           <g transform={`translate(${quiet} ${quiet})`}>

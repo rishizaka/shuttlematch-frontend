@@ -228,6 +228,15 @@ export const roomApi = {
       method: 'POST',
       body: JSON.stringify(input),
     }).then(rememberOrganizerToken),
+  /**
+   * 運営者トークンが本物か確かめる(運営者用リンクを開いた端末が、保存する前に使う)。
+   * 合っていれば成功(204)、違えば 403 の ApiError、ランダム表が無ければ 404。
+   * 保存済みのトークンではなく、受け取ったトークンをそのまま送る。
+   */
+  checkOrganizer: (roomId: string, token: string) =>
+    request<void>(`/api/v1/rooms/${roomId}/organizer-check`, {
+      headers: { 'X-Organizer-Token': token },
+    }),
   /** ルームを終了する(終了済みとして履歴に残す)。 */
   close: (roomId: string) =>
     request<Room>(`/api/v1/rooms/${roomId}/close`, {

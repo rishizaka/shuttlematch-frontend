@@ -31,7 +31,8 @@ import {
   useStartSet,
 } from '../../hooks/queries'
 import { useCurrentUser, useHasOrganizerToken } from '../../hooks/useCurrentUser'
-import { roomApi } from '../../lib/api'
+import { ApiError, isNetworkError, roomApi } from '../../lib/api'
+import { readOrganizerTokenFromHash } from '../../lib/organizer-link'
 import {
   addRoomId,
   getSelfParticipant,
@@ -39,6 +40,7 @@ import {
   removeSelfParticipant,
   removeOrganizerToken,
   removeRoomId,
+  setOrganizerToken,
   subscribe,
 } from '../../lib/local-store'
 import { FREE_SLOT } from '../../lib/guests'
@@ -54,6 +56,7 @@ import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { RosterAccordion } from '../../components/room/RosterAccordion'
 import { ShareButtons } from '../../components/room/ShareButtons'
+import { OrganizerLinkSection } from '../../components/room/OrganizerLinkSection'
 import { MatchScheduleList } from '../../components/match/MatchScheduleList'
 import { MatchesSkeleton } from '../../components/match/MatchesSkeleton'
 import { SetStartAnnouncement } from '../../components/match/SetStartAnnouncement'
@@ -109,6 +112,35 @@ function MatchesPage() {
   const { data: room, refetch: refetchRoom } = useRoom(roomId, { live: true })
   const closed = room?.status === 'CLOSED'
   const qc = useQueryClient()
+
+  // 運営者用リンク(#organizer=トークン)で開かれたら、トークンが本物か確かめてから保存し、
+  // この端末でも運営できるようにする。アドレスバーからはすぐ消す(うっかり再共有しない・
+  // 履歴に残さない)。サーバーにはフラグメントが届かないので、確認は API で行う。
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const token = readOrganizerTokenFromHash(window.location.hash)
+    if (!token) return
+    const url = new URL(window.location.href)
+    url.hash = ''
+    window.history.replaceState(window.history.state, '', url.toString())
+    roomApi
+      .checkOrganizer(roomId, token)
+      .then(() => {
+        setOrganizerToken(roomId, token)
+        addRoomId(roomId)
+        showToast('この端末でも運営できるようになりました')
+      })
+      .catch((e: unknown) => {
+        if (isNetworkError(e)) {
+          showToast('通信できず、運営者用リンクを確認できませんでした。もう一度開いてください')
+        } else if (e instanceof ApiError && e.status === 404) {
+          showToast('このランダム表は見つかりませんでした')
+        } else {
+          showToast('運営者用リンクが正しくないため、運営はできません')
+        }
+      })
+    // roomId ごとに一度だけ。showToast は安定している前提。
+  }, [roomId])
 
   // 再編成で途中参加者が試合表に現れたら、次の room ポーリングを待たずに
   // すぐ名前を解決できるよう room を取り直す (未知の ParticipantId を検知したときのみ)。
@@ -688,6 +720,9 @@ function MatchesPage() {
               </div>
                 </>
               ) : null}
+
+              {/* 運営者用リンク(この端末にトークンがあるときだけ)。終了済みでも削除に要るので出す。 */}
+              <OrganizerLinkSection roomId={roomId} />
 
               {/* スクショ用ページ */}
               <div className="px-4 py-4 sm:px-5">

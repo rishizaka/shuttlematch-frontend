@@ -87,7 +87,10 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
   運営操作の API に `X-Organizer-Token` で添える（`src/lib/api.ts` の `organizerHeaders`）。
   付ける API は backend の `@RequiresOrganizer` と揃えること（rename・claim-next・参照には付けない）。
 - 運営メニューの出し分けは「トークンを持つ or 作成者（`createdBy`）」。導入前のランダム表はトークンが無いので作成者判定で残す。
-- トークンは作成したブラウザにしか無い。データ消去・シークレットウィンドウ・別ブラウザでは運営できない（受け渡しは未実装）。
+- トークンは作成したブラウザにしか無い。別端末・共同運営者へは運営メニューの「運営者用リンク」
+  （`/rooms/{id}/matches#organizer={token}`、`src/lib/organizer-link.ts`）で渡す。`#` 以降なのでサーバーに送られない。
+  開いた側は試合表ページでトークンを `roomApi.checkOrganizer` で確かめてから保存し、アドレスバーから消す。
+  リンクは持つ人全員が運営者になれるので、参加者向けの共有とは見た目・文言を分けている。
 - **E2E**: API で作ったルームを運営者として扱うときは `e2e/helpers.ts` の `actAsOrganizer` でトークンも注入する。
   API 経由の運営操作には `organizerHeaders(roomId)` を添える。
 - 作業ブランチの backend を別ポートで動かして確かめるときは、`VITE_API_BASE_URL` と `DEV_API_PROXY_TARGET` の両方をそのポートに向ける
