@@ -9,6 +9,7 @@ import type {
   SubmitScoreResult,
   User,
 } from './types'
+import { getOrganizerToken, setOrganizerToken } from './local-store'
 
 // バックエンドのベース URL は実行環境で変わる:
 //  - SSR(サーバー): 同一ホスト上の backend を直接叩く(localhost:8080)。CORS 不要。
@@ -116,6 +117,25 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T
 }
 
+// ---- 運営者トークン ----
+
+/**
+ * 運営操作に添えるヘッダ。ランダム表の作成時に払い出され localStorage に保存したトークンを送る。
+ * 持っていなければ何も送らない(トークン導入前のランダム表は backend が従来どおり通し、
+ * それ以外は 403 になる)。SSR では常に空になるが、運営操作はすべてブラウザから行う。
+ * 付ける API は backend の @RequiresOrganizer と揃えること。
+ */
+function organizerHeaders(roomId: string): Record<string, string> {
+  const token = getOrganizerToken(roomId)
+  return token ? { 'X-Organizer-Token': token } : {}
+}
+
+/** 作成レスポンスに含まれる運営者トークンを保存する(平文が届くのはこの1回だけ)。 */
+function rememberOrganizerToken(room: Room): Room {
+  if (room.organizerToken) setOrganizerToken(room.id, room.organizerToken)
+  return room
+}
+
 // ---- User ----
 
 export interface CreateUserInput {
@@ -180,7 +200,7 @@ export const roomApi = {
     request<Room>('/api/v1/rooms', {
       method: 'POST',
       body: JSON.stringify(input),
-    }),
+    }).then(rememberOrganizerToken),
   /**
    * 条件でルーム一覧を取得する(公開)。
    * 返るのは `PublicRoom` で **roomId も shareCode も入っていない**(理由は型の説明を参照)。
@@ -207,10 +227,13 @@ export const roomApi = {
     request<Room>('/api/v1/rooms/quick', {
       method: 'POST',
       body: JSON.stringify(input),
-    }),
+    }).then(rememberOrganizerToken),
   /** ルームを終了する(終了済みとして履歴に残す)。 */
   close: (roomId: string) =>
-    request<Room>(`/api/v1/rooms/${roomId}/close`, { method: 'POST' }),
+    request<Room>(`/api/v1/rooms/${roomId}/close`, {
+      method: 'POST',
+      headers: organizerHeaders(roomId),
+    }),
   /**
    * ルームを配下データ(参加者・固定ペア・試合表)ごと完全に削除する。
    * 共有コードが要る(認証が無いため、リンクを知っている人だけに絞っている)。
@@ -219,16 +242,18 @@ export const roomApi = {
   deleteRoom: (roomId: string, shareCode: string) =>
     request<void>(
       `/api/v1/rooms/${roomId}?shareCode=${encodeURIComponent(shareCode)}`,
-      { method: 'DELETE' },
+      { method: 'DELETE', headers: organizerHeaders(roomId) },
     ),
     addFixedPair: (roomId: string, participantA: string, participantB: string) =>
       request<Room>(`/api/v1/rooms/${roomId}/fixed-pairs`, {
         method: 'POST',
+        headers: organizerHeaders(roomId),
         body: JSON.stringify({ participantA, participantB }),
       }),
     removeFixedPair: (roomId: string, participantA: string, participantB: string) =>
       request<Room>(`/api/v1/rooms/${roomId}/fixed-pairs/${participantA}/${participantB}`, {
         method: 'DELETE',
+        headers: organizerHeaders(roomId),
       }),
   /** 受付中ルームに本人が参加する(名前必須)。参加順で番号が自動採番される。 */
   join: (roomId: string, name: string) =>
@@ -254,16 +279,19 @@ export const roomApi = {
   addParticipant: (roomId: string, input: AddParticipantInput) =>
     request<Room>(`/api/v1/rooms/${roomId}/participants`, {
       method: 'POST',
+      headers: organizerHeaders(roomId),
       body: JSON.stringify(input),
     }),
   removeParticipant: (roomId: string, participantId: string) =>
     request<void>(`/api/v1/rooms/${roomId}/participants/${participantId}`, {
       method: 'DELETE',
+      headers: organizerHeaders(roomId),
     }),
   /** 早退(在席状態を LEFT に)。 */
   markParticipantLeft: (roomId: string, participantId: string) =>
     request<Room>(`/api/v1/rooms/${roomId}/participants/${participantId}/leave`, {
       method: 'POST',
+      headers: organizerHeaders(roomId),
     }),
   /**
    * 複数人をまとめて早退にする。1回の読み込み・保存で反映するため、
@@ -274,17 +302,20 @@ export const roomApi = {
   markParticipantsLeft: (roomId: string, participantIds: string[]) =>
     request<Room>(`/api/v1/rooms/${roomId}/participants/leave-bulk`, {
       method: 'POST',
+      headers: organizerHeaders(roomId),
       body: JSON.stringify({ participantIds }),
     }),
   /** 復帰(在席状態を ACTIVE に)。 */
   reactivateParticipant: (roomId: string, participantId: string) =>
     request<Room>(`/api/v1/rooms/${roomId}/participants/${participantId}/reactivate`, {
       method: 'POST',
+      headers: organizerHeaders(roomId),
     }),
   /** 複数人をまとめて復帰させる。markParticipantsLeft と同じ理由で一括APIを使う。 */
   reactivateParticipants: (roomId: string, participantIds: string[]) =>
     request<Room>(`/api/v1/rooms/${roomId}/participants/reactivate-bulk`, {
       method: 'POST',
+      headers: organizerHeaders(roomId),
       body: JSON.stringify({ participantIds }),
     }),
 }
@@ -295,27 +326,32 @@ export const matchApi = {
   generate: (roomId: string, matchCount?: number) =>
     request<MatchSchedule>(`/api/v1/rooms/${roomId}/matches/generate`, {
       method: 'POST',
+      headers: organizerHeaders(roomId),
       body: JSON.stringify(matchCount != null ? { matchCount } : {}),
     }),
   get: (roomId: string) => request<MatchSchedule>(`/api/v1/rooms/${roomId}/matches`),
   startSet: (roomId: string, setNumber: number) =>
     request<MatchSchedule>(`/api/v1/rooms/${roomId}/matches/sets/${setNumber}/start`, {
       method: 'POST',
+      headers: organizerHeaders(roomId),
     }),
   /** 進行中セットを開始前に戻す(開始時刻を消す)。 */
   revertSet: (roomId: string, setNumber: number) =>
     request<MatchSchedule>(`/api/v1/rooms/${roomId}/matches/sets/${setNumber}/revert`, {
       method: 'POST',
+      headers: organizerHeaders(roomId),
     }),
   addSets: (roomId: string, setCount?: number) =>
     request<MatchSchedule>(`/api/v1/rooms/${roomId}/matches/sets`, {
       method: 'POST',
+      headers: organizerHeaders(roomId),
       body: JSON.stringify(setCount != null ? { setCount } : {}),
     }),
   /** 未開始セットを現在の在席者で再編成する(途中参加・早退の反映)。 */
   replan: (roomId: string) =>
     request<MatchSchedule>(`/api/v1/rooms/${roomId}/matches/replan`, {
       method: 'POST',
+      headers: organizerHeaders(roomId),
     }),
 }
 

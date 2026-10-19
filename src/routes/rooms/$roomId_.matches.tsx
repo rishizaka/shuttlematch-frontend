@@ -30,13 +30,14 @@ import {
   useRoom,
   useStartSet,
 } from '../../hooks/queries'
-import { useCurrentUser } from '../../hooks/useCurrentUser'
+import { useCurrentUser, useHasOrganizerToken } from '../../hooks/useCurrentUser'
 import { roomApi } from '../../lib/api'
 import {
   addRoomId,
   getSelfParticipant,
   setSelfParticipant,
   removeSelfParticipant,
+  removeOrganizerToken,
   removeRoomId,
   subscribe,
 } from '../../lib/local-store'
@@ -173,10 +174,13 @@ function MatchesPage() {
   const activeCount = (room?.participants ?? []).length - leftCount
   const hasLeftParticipant = leftCount > 0
 
-  // 運営者(ルームの作成者)のみセット開始などの操作ができる。
+  // 運営者(ランダム表を作成したブラウザ=運営者トークンを持つ)のみセット開始などの操作ができる。
+  // サーバーも同じトークンで運営操作を認可する。トークン導入前に作ったランダム表はトークンが
+  // 無いので、従来どおり作成者(createdBy)でも判定する(backend もそれらは誰でも操作できる扱い)。
+  const hasOrganizerToken = useHasOrganizerToken(roomId)
   const isOrganizer = useMemo(
-    () => !!user && !!room && room.createdBy === user.id,
-    [user, room],
+    () => !!room && (hasOrganizerToken || (!!user && room.createdBy === user.id)),
+    [user, room, hasOrganizerToken],
   )
 
   // 参加者一覧の並び順を 1 始まりの番号として割り当てる。
@@ -758,6 +762,7 @@ function MatchesPage() {
             deleteRoom.mutate(undefined, {
               onSuccess: () => {
                 removeRoomId(roomId)
+                removeOrganizerToken(roomId)
                 setConfirmingDelete(false)
                 showToast('ランダム表を削除しました')
                 void navigate({ to: '/' })

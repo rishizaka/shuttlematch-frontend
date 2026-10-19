@@ -58,6 +58,11 @@ export interface Room {
    * 1セット目が始まる前の参加導線(QuickJoinBanner か番号選択か)の出し分けに使う。
    */
   quickCreated: boolean
+  /**
+   * 運営者トークンの平文。**作成のレスポンスにだけ**含まれる。
+   * 参照系(get / getByCode)では常に undefined。
+   */
+  organizerToken?: string
 }
 
 /**

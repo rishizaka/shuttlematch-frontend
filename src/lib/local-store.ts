@@ -130,3 +130,34 @@ export function removeSelfParticipant(roomId: string) {
   }
   emit()
 }
+
+// ---- organizer token (ランダム表を作成した端末であることの証明) ----
+// 作成のレスポンスで一度だけ払い出される秘密。以降、運営操作(終了・削除・参加者管理・
+// 試合表操作)のリクエストに X-Organizer-Token として添える。
+// 「自分の番号」と違い、これは失うとそのランダム表を運営できなくなる本物の権限。
+// サーバーはハッシュしか持たないので、ここで失えば復旧手段は無い(仕様として割り切っている)。
+
+const ORGANIZER_PREFIX = 'shuttlematch.organizer.'
+
+export function getOrganizerToken(roomId: string): string | null {
+  if (!isBrowser()) return null
+  try {
+    return window.localStorage.getItem(ORGANIZER_PREFIX + roomId)
+  } catch {
+    return null
+  }
+}
+
+export function setOrganizerToken(roomId: string, token: string) {
+  if (isBrowser()) {
+    window.localStorage.setItem(ORGANIZER_PREFIX + roomId, token)
+  }
+  emit()
+}
+
+export function removeOrganizerToken(roomId: string) {
+  if (isBrowser()) {
+    window.localStorage.removeItem(ORGANIZER_PREFIX + roomId)
+  }
+  emit()
+}

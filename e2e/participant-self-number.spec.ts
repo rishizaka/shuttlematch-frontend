@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { API_BASE, deleteRoom, quickCreateRoom } from './helpers'
+import { API_BASE, deleteRoom, organizerHeaders, quickCreateRoom } from './helpers'
 
 // 参加者(非運営者)視点。新しいコンテキスト(localStorage 空)で開くので運営者にはならない。
 
@@ -70,7 +70,9 @@ test('参加者: 1セット目が始まったあとは番号を選ぶ導線に�
   const room = await quickCreateRoom(request, { participantCount: 10, courtCount: 2 })
   const roomId: string = room.id
   try {
-    await request.post(`${API_BASE}/api/v1/rooms/${roomId}/matches/sets/1/start`)
+    await request.post(`${API_BASE}/api/v1/rooms/${roomId}/matches/sets/1/start`, {
+      headers: organizerHeaders(roomId),
+    })
 
     await page.goto(`/rooms/${roomId}/matches`)
 

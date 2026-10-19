@@ -40,7 +40,9 @@ const config = defineConfig({
     // `npm run dev:host` で LAN に公開してスマホ実機から見るとき用。ブラウザ側から
     // localhost:8080 には届かないので、/api を dev サーバー経由で backend に中継する
     // (本番の serve.mjs と同じ形)。PC の localhost からは api.ts が直叩きするので未使用。
-    proxy: { '/api': 'http://localhost:8080' },
+    // 別ポートで動かした backend に向けたいとき(E2E で作業ブランチを検証するなど)は
+    // DEV_API_PROXY_TARGET で差し替える。
+    proxy: { '/api': process.env.DEV_API_PROXY_TARGET ?? 'http://localhost:8080' },
   },
 })
 

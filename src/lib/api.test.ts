@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, NetworkError, isNetworkError, roomApi, userApi } from './api'
+import { ApiError, NetworkError, isNetworkError, matchApi, roomApi, userApi } from './api'
+import { getOrganizerToken, setOrganizerToken } from './local-store'
 
 const okJson = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -75,5 +76,113 @@ describe('api client', () => {
     expect(isNetworkError(revived)).toBe(true)
     expect(isNetworkError(new ApiError(404, 'not found'))).toBe(false)
     expect(isNetworkError(undefined)).toBe(false)
+  })
+})
+
+describe('運営者トークン', () => {
+  const ROOM = 'room-1'
+
+  beforeEach(() => {
+    vi.restoreAllMocks()
+    window.localStorage.clear()
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+    window.localStorage.clear()
+  })
+
+  const room = (extra: Record<string, unknown> = {}) => ({
+    quickCreated: true,
+    id: ROOM,
+    shareCode: 'abcd2345',
+    title: '練習会',
+    heldAt: '2026-08-01T09:00:00Z',
+    location: null,
+    capacity: null,
+    courtCount: 2,
+    status: 'GENERATED',
+    createdBy: 'u1',
+    participantCount: 0,
+    participants: [],
+    fixedPairs: [],
+    ...extra,
+  })
+
+  const headerOf = (init: RequestInit | undefined) =>
+    (init?.headers as Record<string, string> | undefined)?.['X-Organizer-Token']
+
+  it('かんたん作成のレスポンスに含まれるトークンを端末に保存する', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      okJson(room({ organizerToken: 'secret-token' }), 201),
+    )
+
+    await roomApi.quickCreate({
+      title: '練習会',
+      courtCount: 2,
+      participantCount: 8,
+      createdBy: 'u1',
+    })
+
+    expect(getOrganizerToken(ROOM)).toBe('secret-token')
+  })
+
+  it('運営者専用の操作には保存したトークンを X-Organizer-Token で添える', async () => {
+    setOrganizerToken(ROOM, 'secret-token')
+    // Response の body は一度しか読めないため、呼び出しごとに新しく作る
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(() => Promise.resolve(okJson(room())))
+
+    await roomApi.close(ROOM)
+    expect(headerOf(fetchMock.mock.calls[0][1])).toBe('secret-token')
+
+    await matchApi.replan(ROOM)
+    expect(headerOf(fetchMock.mock.calls[1][1])).toBe('secret-token')
+  })
+
+  it('トークンを持っていなければヘッダを送らない(サーバーが 403 で弾く)', async () => {
+    // Response の body は一度しか読めないため、呼び出しごとに新しく作る
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(() => Promise.resolve(okJson(room())))
+
+    await roomApi.close(ROOM)
+
+    expect(headerOf(fetchMock.mock.calls[0][1])).toBeUndefined()
+  })
+
+  it('早退・復帰(一括を含む)は運営操作なのでトークンを添える', async () => {
+    setOrganizerToken(ROOM, 'secret-token')
+    // Response の body は一度しか読めないため、呼び出しごとに新しく作る
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(() => Promise.resolve(okJson(room())))
+
+    await roomApi.markParticipantLeft(ROOM, 'p1')
+    await roomApi.markParticipantsLeft(ROOM, ['p1'])
+    await roomApi.reactivateParticipant(ROOM, 'p1')
+    await roomApi.reactivateParticipants(ROOM, ['p1'])
+
+    for (const call of fetchMock.mock.calls) {
+      expect(headerOf(call[1])).toBe('secret-token')
+    }
+  })
+
+  it('名前の変更・「参加する」・参照はトークンを送らない(参加者本人も使う/共有リンクで見られる)', async () => {
+    setOrganizerToken(ROOM, 'secret-token')
+    // Response の body は一度しか読めないため、呼び出しごとに新しく作る
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(() =>
+        Promise.resolve(okJson({ ...room(), participantId: 'p1', number: 1, room: room() })),
+      )
+
+    await roomApi.renameParticipant(ROOM, 'p1', 'たろう')
+    await roomApi.claimNext(ROOM, 'たろう')
+    await roomApi.get(ROOM)
+
+    for (const call of fetchMock.mock.calls) {
+      expect(headerOf(call[1])).toBeUndefined()
+    }
   })
 })

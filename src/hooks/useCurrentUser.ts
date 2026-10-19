@@ -1,5 +1,11 @@
 import { useSyncExternalStore } from 'react'
-import { getCurrentUser, getRoomIds, setCurrentUser, subscribe } from '../lib/local-store'
+import {
+  getCurrentUser,
+  getOrganizerToken,
+  getRoomIds,
+  setCurrentUser,
+  subscribe,
+} from '../lib/local-store'
 import type { User } from '../lib/types'
 
 /**
@@ -29,4 +35,17 @@ const NO_ROOM_IDS: string[] = []
 /** 既知の room ID 一覧を購読する。 */
 export function useKnownRoomIds(): string[] {
   return useSyncExternalStore(subscribe, getRoomIds, () => NO_ROOM_IDS)
+}
+
+/**
+ * このランダム表の運営者トークンを持っているかを購読する。
+ * トークンは作成したブラウザにしか無いので、共有リンクで開いた人には false になる。
+ * SSR ではサーバースナップショットとして false を返し、ハイドレーション後に同期する。
+ */
+export function useHasOrganizerToken(roomId: string | undefined): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => roomId != null && getOrganizerToken(roomId) != null,
+    () => false,
+  )
 }

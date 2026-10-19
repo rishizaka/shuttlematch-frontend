@@ -82,6 +82,17 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
   試合表や TOP にも自動で広告を差し込みうる。ads.txt とスクリプトは全ページの head に
   乗っているため、Auto ads を止める歯止めは AdSense 側の設定しかない）。
 
+## 運営者トークン（2026-10 導入。backend の CLAUDE.md「運営者トークン」も参照）
+- ランダム表の作成レスポンスにだけ入る `organizerToken` を localStorage（`shuttlematch.organizer.{roomId}`）に保存し、
+  運営操作の API に `X-Organizer-Token` で添える（`src/lib/api.ts` の `organizerHeaders`）。
+  付ける API は backend の `@RequiresOrganizer` と揃えること（rename・claim-next・参照には付けない）。
+- 運営メニューの出し分けは「トークンを持つ or 作成者（`createdBy`）」。導入前のランダム表はトークンが無いので作成者判定で残す。
+- トークンは作成したブラウザにしか無い。データ消去・シークレットウィンドウ・別ブラウザでは運営できない（受け渡しは未実装）。
+- **E2E**: API で作ったルームを運営者として扱うときは `e2e/helpers.ts` の `actAsOrganizer` でトークンも注入する。
+  API 経由の運営操作には `organizerHeaders(roomId)` を添える。
+- 作業ブランチの backend を別ポートで動かして確かめるときは、`VITE_API_BASE_URL` と `DEV_API_PROXY_TARGET` の両方をそのポートに向ける
+  （E2E は `E2E_BASE_URL` / `E2E_API_BASE` も）。
+
 ## デプロイ（本番反映）
 
 > **main に push すれば自動デプロイされる**（`.github/workflows/ci.yml`）。以下の手動手順は

@@ -64,7 +64,7 @@ for (const { n, courts, label } of configs) {
     const nums = numberMap(room.participants)
     try {
       await page.goto(`/rooms/${roomId}/matches`)
-      await expect(page.getByText('第1セット')).toBeVisible()
+      await expect(page.getByRole('button', { name: '第1セット開始' })).toBeVisible()
 
       // UI からセットを +6 追加(既定のDEFAULT_SET_COUNT → +6)。
       const totalSets = DEFAULT_SET_COUNT + 6
@@ -97,7 +97,7 @@ test('偏りなし(10人2コート): 早退・遅刻・再編成しても公平'
   const roomId: string = room.id
   try {
     await page.goto(`/rooms/${roomId}/matches`)
-    await expect(page.getByText('第1セット')).toBeVisible()
+    await expect(page.getByRole('button', { name: '第1セット開始' })).toBeVisible()
     await openOrganizerMenu(page)
 
     // 第1セットを開始(以降を「未開始」にして再編成の対象を作る)。

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { API_BASE, deleteRoom } from './helpers'
+import { API_BASE, actAsOrganizer, deleteRoom, rememberOrganizerToken } from './helpers'
 
 // 運営者視点の主要UI: 試合表表示 → 運営メニュー → ルーム削除 → ホームへ。
 // SSR 作成フォームはハイドレーション待ちが不安定なため、ルームは API で用意し、
@@ -17,9 +17,8 @@ test('運営者: 試合表表示 → 運営メニュー → 削除 → ホーム
   let roomId: string | null = room.id
 
   // このブラウザを運営者にする(user.id === room.createdBy)。
-  await page.addInitScript((user) => {
-    localStorage.setItem('shuttlematch.currentUser', JSON.stringify(user))
-  }, { id: uid, name: 'e2e-organizer', email: null })
+  rememberOrganizerToken(room)
+  await actAsOrganizer(page, { id: uid, name: 'e2e-organizer' }, room)
 
   try {
     await page.goto(`/rooms/${roomId}/matches`)
@@ -62,9 +61,8 @@ test('運営者: 生成後・未開始のあいだは末尾の参加者を削除
   ).json()
   const roomId: string = room.id
 
-  await page.addInitScript((user) => {
-    localStorage.setItem('shuttlematch.currentUser', JSON.stringify(user))
-  }, { id: uid, name: 'e2e-organizer2', email: null })
+  rememberOrganizerToken(room)
+  await actAsOrganizer(page, { id: uid, name: 'e2e-organizer2' }, room)
 
   try {
     await page.goto(`/rooms/${roomId}/matches`)
@@ -93,14 +91,36 @@ test('運営者: 生成後・未開始のあいだは末尾の参加者を削除
       })
       .toBe(5)
 
-    // 第1セットを開始すると、新しい末尾(5番)の削除ボタンも消える
-    // (1セットでも開始した後は末尾でも削除できない)。
+    // 第1セットを開始したあとは、末尾(5番)が開始済みセットに出ていれば削除できず、
+    // 出ていなければ(休憩なら)引き続き削除できる(2026-10-19 に backend の条件を緩めた)。
+    // 5人1コートでは誰が休むかは組み合わせ次第なので、実際の試合表を見て期待値を決める。
     await page.getByRole('button', { name: /^第\d+セット開始/ }).first().click()
     const startDialog = page.getByRole('dialog')
     if (await startDialog.isVisible().catch(() => false)) {
       await startDialog.getByRole('button', { name: /開始|はい/ }).click()
     }
-    await expect(page.getByLabel('5番を削除')).toBeHidden()
+    const fifthId: string = (
+      await (await request.get(`${API_BASE}/api/v1/rooms/${roomId}`)).json()
+    ).participants[4].id
+    let fifthPlayed = false
+    await expect
+      .poll(async () => {
+        const s = await (await request.get(`${API_BASE}/api/v1/rooms/${roomId}/matches`)).json()
+        const started = s.matches.filter((m: { startedAt: string | null }) => m.startedAt)
+        fifthPlayed = started.some(
+          (m: { pairA: Record<string, string>; pairB: Record<string, string> }) =>
+            [m.pairA.player1Id, m.pairA.player2Id, m.pairB.player1Id, m.pairB.player2Id].includes(
+              fifthId,
+            ),
+        )
+        return started.length
+      })
+      .toBeGreaterThan(0)
+    if (fifthPlayed) {
+      await expect(page.getByLabel('5番を削除')).toBeHidden()
+    } else {
+      await expect(page.getByLabel('5番を削除')).toBeVisible()
+    }
   } finally {
     await deleteRoom(request, roomId)
   }

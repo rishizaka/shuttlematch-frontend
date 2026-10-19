@@ -29,6 +29,41 @@ export const API_BASE = (
   'http://localhost:8080'
 ).replace(/\/$/, '')
 
+// ---- 運営者トークン ----
+// 運営操作(終了・削除・参加者管理・試合表操作)には、作成レスポンスで一度だけ返る
+// 運営者トークンを X-Organizer-Token で添える必要がある。テストでは API で作ったルームの
+// トークンをここに覚えておき、後始末の削除や API 経由の運営操作に使う。
+const organizerTokens = new Map<string, string>()
+
+/** 作成レスポンスの運営者トークンを覚える(参照系のレスポンスには入っていない)。 */
+export function rememberOrganizerToken(room: { id: string; organizerToken?: string }) {
+  if (room.organizerToken) organizerTokens.set(room.id, room.organizerToken)
+}
+
+/** API 経由の運営操作に添えるヘッダ。 */
+export function organizerHeaders(roomId: string): Record<string, string> {
+  const token = organizerTokens.get(roomId)
+  return token ? { 'X-Organizer-Token': token } : {}
+}
+
+/**
+ * このブラウザを運営者として振る舞わせる。作成者(createdBy)のユーザーに加えて、
+ * 運営者トークンも localStorage に入れる(無いと運営操作が 403 で弾かれる)。
+ */
+export async function actAsOrganizer(
+  page: Page,
+  user: { id: string; name: string },
+  room: { id: string; organizerToken?: string },
+) {
+  await page.addInitScript(
+    ({ user, roomId, token }) => {
+      localStorage.setItem('shuttlematch.currentUser', JSON.stringify(user))
+      if (token) localStorage.setItem(`shuttlematch.organizer.${roomId}`, token)
+    },
+    { user: { ...user, email: null }, roomId: room.id, token: room.organizerToken },
+  )
+}
+
 /** URL から roomId(UUID)を取り出す。/rooms/{id}/matches など。 */
 export function roomIdFromUrl(url: string): string | null {
   const m = url.match(/\/rooms\/([0-9a-fA-F-]{36})/)
@@ -57,7 +92,9 @@ export async function quickCreateRoom(
       createdBy,
     },
   })
-  return res.json()
+  const room = await res.json()
+  rememberOrganizerToken(room)
+  return room
 }
 
 /**
@@ -70,6 +107,7 @@ export async function deleteRoom(request: APIRequestContext, roomId: string) {
     const shareCode = (await res.json()).shareCode as string
     await request.delete(
       `${API_BASE}/api/v1/rooms/${roomId}?shareCode=${encodeURIComponent(shareCode)}`,
+      { headers: organizerHeaders(roomId) },
     )
   } catch {
     // 後始末なので、失敗してもテスト結果は変えない
@@ -176,10 +214,8 @@ export async function createRoomAsOrganizer(
     },
   })
   const room = await res.json()
-  await page.addInitScript(
-    (user) => localStorage.setItem('shuttlematch.currentUser', JSON.stringify(user)),
-    { id: uid, name: 'e2e', email: null },
-  )
+  rememberOrganizerToken(room)
+  await actAsOrganizer(page, { id: uid, name: 'e2e' }, room)
   return room
 }
 
