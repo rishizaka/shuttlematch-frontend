@@ -28,7 +28,7 @@ describe('sitemap', () => {
       expect(p).not.toContain('/join/')
       expect(p).not.toContain('/r/')
       expect(p).not.toContain('/organizer/')
-      expect(p).not.toMatch(/^\/(login|signup)$/)
+      expect(p).not.toMatch(/^\/(login|signup|admin)$/)
     }
   })
 

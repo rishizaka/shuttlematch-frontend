@@ -1,3 +1,4 @@
+import { getAdminToken } from './admin-token'
 import type {
   GameRanking,
   JoinResult,
@@ -80,6 +81,7 @@ interface ProblemDetail {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const adminToken = getAdminToken()
   let res: Response
   try {
     res = await fetch(`${API_BASE_URL}${path}`, {
@@ -87,6 +89,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       headers: {
         Accept: 'application/json',
         ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+        // 管理者トークンがこの端末に保存されていれば常に付ける。サーバーは一覧 API と
+        // 確認用エンドポイントでしか見ないので、他のリクエストでは無視される。
+        ...(adminToken ? { 'X-Admin-Token': adminToken } : {}),
         ...init?.headers,
       },
     })
@@ -162,6 +167,12 @@ export interface RoomListParams {
   heldFrom?: string
   /** 開催日時がこの時刻未満 (ISO-8601)。 */
   heldTo?: string
+}
+
+export const adminApi = {
+  /** 管理者トークンが正しいか確認する。合っていれば 204、違えば 403。 */
+  verify: (token: string) =>
+    request<void>('/api/v1/admin/verify', { headers: { 'X-Admin-Token': token } }),
 }
 
 export const roomApi = {

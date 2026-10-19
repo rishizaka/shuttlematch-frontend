@@ -21,7 +21,7 @@ type Entry = {
  * 実体が無く、練習会のたびに増え続けるため、大量に載せるとサイト全体の評価を下げうる。
  * 過去の試合表は /past からリンクしてあるので、クロール自体はそこから辿れる。
  *
- * 認証や個人の端末に紐づくページ(/organizer/rooms/new、/join/{id}、/r/{code}、
+ * 認証や個人の端末に紐づくページ(/organizer/rooms/new、/r/{code}、/admin、
  * /login、/signup)も載せない。検索から来ても意味が無いか、他人のルームに入る導線になる。
  */
 export function sitemapEntries(buildDate: string): Entry[] {
