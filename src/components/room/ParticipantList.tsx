@@ -26,6 +26,7 @@ export function ParticipantList({
   participants,
   onRemove,
   onlyLastRemovable = false,
+  notRemovableIds,
   removingId,
   onMarkLeft,
   onReactivate,
@@ -43,13 +44,17 @@ export function ParticipantList({
    */
   onRemove?: (participant: Participant) => void
   /**
-   * true なら削除ボタンを一番後ろの参加者だけに絞る(試合生成後、まだどのセットも
-   * 開始していない間だけ使える「末尾の削除」用)。試合数を減らす削除は、途中の番号を
-   * 消すと後続の番号が繰り上がってしまう(既に「7番」として announcement や
-   * ツールチップに登場した人が急に「6番」になる)ため末尾限定にしてある。
-   * 生成前(false)は全員削除できる従来通りの挙動。
+   * true なら削除ボタンを一番後ろの参加者だけに絞る(試合生成後の「末尾の削除」用)。
+   * 試合数を減らす削除は、途中の番号を消すと後続の番号が繰り上がってしまう
+   * (既に「7番」として announcement やツールチップに登場した人が急に「6番」になる)
+   * ため末尾限定にしてある。生成前(false)は全員削除できる従来通りの挙動。
    */
   onlyLastRemovable?: boolean
+  /**
+   * 削除できない参加者の id(開始済みセットに出た人)。末尾であっても削除ボタンを出さない。
+   * 押せないボタンを出すより、出さないほうが「なぜ押せないのか」を悩ませずに済む。
+   */
+  notRemovableIds?: ReadonlySet<string>
   removingId?: string | null
   /** 指定すると在席者に早退ボタンを表示する (オーガナイザー用・生成後)。 */
   onMarkLeft?: (participant: Participant) => void
@@ -173,7 +178,9 @@ export function ParticipantList({
                     早退
                   </button>
                 ) : null}
-                {onRemove && (!onlyLastRemovable || i === participants.length - 1) ? (
+                {onRemove &&
+                (!onlyLastRemovable || i === participants.length - 1) &&
+                !notRemovableIds?.has(p.id) ? (
                   <button
                     type="button"
                     onClick={() => onRemove(p)}

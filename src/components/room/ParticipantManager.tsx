@@ -31,7 +31,7 @@ export function ParticipantManager({
   participants,
   fixedPairs = [],
   generated = false,
-  noSetStarted = false,
+  playedParticipantIds,
 }: {
   roomId: string
   /** 共有コード。あれば短縮URL(/r/{code})で共有する。 */
@@ -42,12 +42,13 @@ export function ParticipantManager({
   /** 試合生成済みか。生成後は削除ではなく早退/復帰を使う。 */
   generated?: boolean
   /**
-   * 生成後、まだどのセットも開始していないか。true の間だけ、一番後ろの番号の参加者を
-   * 削除できる(参加者数そのものを減らす)。1セットでも開始すると削除できなくなる
-   * (backend の RemoveParticipantUseCase と同じ条件)。generated=false のときは無視される
-   * (生成前は誰でも削除できる従来通りの挙動のまま)。
+   * 開始済みセットに一度でも出た参加者の id。ここに載っている人は削除できない
+   * (試合データがその参加者を参照したまま残り、サーバー側で外部キー制約に反するため)。
+   * 逆に、間違えて追加したばかりのゲストのように一度も出ていない人は、セットが
+   * 始まったあとでも削除できる(backend の RemoveParticipantUseCase と同じ条件)。
+   * generated=false のときは無視される(生成前は誰でも削除できる従来通りの挙動のまま)。
    */
-  noSetStarted?: boolean
+  playedParticipantIds?: ReadonlySet<string>
 }) {
   const add = useAddParticipant(roomId)
   const remove = useRemoveParticipant(roomId)
@@ -194,13 +195,10 @@ export function ParticipantManager({
       <ParticipantList
         participants={participants}
         onRemove={
-          !generated
-            ? (p) => remove.mutate(p.id)
-            : noSetStarted
-              ? (p) => setConfirmingRemove(p)
-              : undefined
+          !generated ? (p) => remove.mutate(p.id) : (p) => setConfirmingRemove(p)
         }
         onlyLastRemovable={generated}
+        notRemovableIds={generated ? playedParticipantIds : undefined}
         removingId={remove.isPending ? (remove.variables as string) : null}
         onMarkLeft={
           generated

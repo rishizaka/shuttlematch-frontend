@@ -214,6 +214,22 @@ function MatchesPage() {
     return active
   }, [schedule])
 
+  // 開始済みセットに一度でも出た参加者。この人たちは削除できない(試合データが
+  // その参加者を参照したまま残り、サーバー側で外部キー制約に反するため)。
+  // 逆に言えば、間違えて追加したばかりのゲストのように一度も出ていない人は、
+  // セットが始まったあとでも削除できる(backend の RemoveParticipantUseCase と同じ条件)。
+  const playedParticipantIds = useMemo(() => {
+    const played = new Set<string>()
+    for (const m of schedule?.matches ?? []) {
+      if (!m.startedAt) continue
+      played.add(m.pairA.player1Id)
+      played.add(m.pairA.player2Id)
+      played.add(m.pairB.player1Id)
+      played.add(m.pairB.player2Id)
+    }
+    return played
+  }, [schedule])
+
   // 簡易作成ルームで、1セット目が始まる前だけ「参加する」の自動採番導線を出す。
   // 受付モードは生成直後(1セット目前)でも番号を選ぶ導線のままにする(既に名前入りの
   // 早退中の枠などへ選び直したい場合があり、自動採番だけでは足りないため)。
@@ -620,7 +636,7 @@ function MatchesPage() {
                   participants={room?.participants ?? []}
                   fixedPairs={room?.fixedPairs ?? []}
                   generated
-                  noSetStarted={activeSetNumber === null}
+                  playedParticipantIds={playedParticipantIds}
                 />
               </div>
 
