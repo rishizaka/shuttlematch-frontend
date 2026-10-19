@@ -191,7 +191,7 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
                 <li key={p.id} className="flex items-center gap-3 py-2 text-sm">
                   <span
                     className={
-                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums ' +
+                      'tab flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ' +
                       (p.id === selfId
                         ? 'bg-accent-500 text-brand-900'
                         : 'bg-slate-100 text-slate-600')

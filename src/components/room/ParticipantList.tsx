@@ -112,7 +112,7 @@ export function ParticipantList({
                 />
               ) : null}
               <span
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 tabular-nums"
+                className="tab flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600"
                 aria-hidden
               >
                 {i + 1}

@@ -67,7 +67,7 @@ export function SetStartAnnouncement({
                 <span
                   key={i}
                   className={
-                    'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold tabular-nums ' +
+                    'tab flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ' +
                     (m.self
                       ? 'bg-accent-500 text-brand-900'
                       : 'border border-brand-200 bg-white text-slate-700')

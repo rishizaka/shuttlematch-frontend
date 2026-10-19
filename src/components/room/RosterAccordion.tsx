@@ -55,7 +55,7 @@ export function RosterAccordion({
               <li key={p.id} className="flex items-center gap-2 py-1 text-sm">
                 <span
                   className={
-                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums ' +
+                    'tab flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ' +
                     (self ? 'bg-accent-500 text-brand-900' : 'bg-slate-100 text-slate-600')
                   }
                 >

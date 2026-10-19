@@ -62,7 +62,7 @@ function PlayerChip({
         : 'border border-slate-300 bg-white text-slate-700 shadow-sm'
   const appearing = appearDelay != null
   const base =
-    'flex h-7 w-7 select-none items-center justify-center rounded-full text-xs font-semibold tabular-nums ' +
+    'tab flex h-7 w-7 select-none items-center justify-center rounded-full text-xs font-semibold ' +
     (appearing ? 'animate-chip-in ' : '') +
     // 進行中セットの自分の番号は、光の輪を出し続けて「いま自分の番」を知らせる。
     (appearing && self ? 'ring-anim ' : '')
