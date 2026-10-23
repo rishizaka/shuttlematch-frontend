@@ -1,4 +1,5 @@
 import { getAdminToken } from './admin-token'
+import { currentInAppBrowser } from './in-app-browser'
 import type {
   GameRanking,
   JoinResult,
@@ -107,7 +108,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       // ボディが JSON でない場合は無視する。
     }
-    const message = problem.detail ?? problem.title ?? `リクエストに失敗しました (${res.status})`
+    // このアプリが返すエラーは必ず ProblemDetail(JSON)。JSON で無いということは、
+    // サーバーに届く前に手前(CDN やアプリ内ブラウザ)で止められている。
+    const message = problem.detail ?? problem.title ?? blockedMessage(res.status)
     throw new ApiError(res.status, message, problem.title, problem.detail)
   }
 
@@ -115,6 +118,23 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     return undefined as T
   }
   return (await res.json()) as T
+}
+
+/**
+ * サーバーまで届かずに弾かれたときの文言。
+ *
+ * 2026-10-23、Instagram のアプリ内ブラウザから乱数表を作ろうとすると 403 になる事象が出た。
+ * 原因は Cloudflare のボット対策で、ページの表示(GET)は通るのに作成(POST)だけ弾かれるため、
+ * 画面からは理由がまったく分からなかった。せめて次の一手が分かる文言にする。
+ */
+function blockedMessage(status: number): string {
+  if (status === 403 && currentInAppBrowser()) {
+    return 'アプリ内ブラウザでは操作できないことがあります。Safari などのブラウザで開き直してください'
+  }
+  if (status === 403) {
+    return '操作が許可されませんでした。時間をおいて試すか、ブラウザを変えてお試しください'
+  }
+  return `リクエストに失敗しました (${status})`
 }
 
 // ---- 運営者トークン ----

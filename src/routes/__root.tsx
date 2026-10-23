@@ -11,6 +11,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 import { Header } from '../components/layout/Header'
 import { Footer } from '../components/layout/Footer'
+import { InAppBrowserNotice } from '../components/layout/InAppBrowserNotice'
 import { ToastProvider } from '../components/ui/Toast'
 import { SITE_JSON_LD, SITE_ORIGIN, defaultOgMeta } from '../lib/og'
 import { ADSENSE_CLIENT_ID } from '../lib/ads'
@@ -109,6 +110,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="flex min-h-dvh flex-col bg-slate-50 text-slate-900">
         <ToastProvider>
           <Header />
+          {/* アプリ内ブラウザ(Instagram 等)で開かれたときだけ出る案内。
+              作成や保存が失敗する前に、外のブラウザへ誘導する。 */}
+          <InAppBrowserNotice />
           <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
             {/* ページが切り替わるたびに中身をふわっと出す(key で再マウントしてアニメを再生)。 */}
             <div key={pathname} className="animate-page-in">
