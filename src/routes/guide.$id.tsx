@@ -5,11 +5,14 @@ import { Card, CardBody } from '../components/ui/Card'
 import { CreateRoomCta } from '../components/ui/CreateRoomCta'
 import { GAMES } from '../components/game/catalog'
 import { guideOgMeta, SITE_NAME, SITE_ORIGIN } from '../lib/og'
-import { GUIDE_AUTHOR, GUIDES, findGuide, formatGuideDate } from '../lib/guides'
+import { GUIDE_AUTHOR, GUIDES, formatGuideDate } from '../lib/guides'
 
 export const Route = createFileRoute('/guide/$id')({
-  // データは同梱の静的配列なので loader は同期。存在しない id は 404 として扱う。
-  loader: ({ params }) => {
+  // データは同梱の静的配列。存在しない id は 404 として扱う。
+  // loader は自動コード分割の対象外(エントリ側に残る)なので、ここで静的 import すると
+  // 記事本文が全ページ共通のバンドルに入ってしまう。動的 import でこのルートの時だけ読む。
+  loader: async ({ params }) => {
+    const { findGuide } = await import('../lib/guides')
     const guide = findGuide(params.id)
     if (!guide) throw notFound()
     return guide

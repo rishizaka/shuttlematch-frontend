@@ -40,9 +40,24 @@ async function apiProxy(request, next) {
   })
 }
 
+/**
+ * Vite が出力する /assets/* はファイル名に内容ハッシュが入っていて、中身が変われば URL も変わる。
+ * なので 1 年 immutable で返してよい。付けないと Cloudflare の既定(max-age=14400 = 4時間)になり、
+ * 試合表を開き直すたびに JS/CSS の再検証・再取得が走る。
+ * public/ 直下(ロゴ・favicon・ads.txt など)はハッシュが無いので対象外。
+ */
+async function immutableAssets(request, next) {
+  const res = await next()
+  if (!res.ok || !new URL(request.url).pathname.startsWith('/assets/')) return res
+  // new Response(res.body, ...) で包み直さないこと。serveStatic の FastResponse は body が
+  // Node ストリームで、res.body で Web ストリーム化すると二重 close でプロセスごと落ちる。
+  res.headers.set('cache-control', 'public, max-age=31536000, immutable')
+  return res
+}
+
 serve({
   fetch: handler.fetch,
   port: process.env.PORT || 3000,
   hostname: '0.0.0.0',
-  middleware: [apiProxy, serveStatic({ dir: './dist/client' })],
+  middleware: [apiProxy, immutableAssets, serveStatic({ dir: './dist/client' })],
 })

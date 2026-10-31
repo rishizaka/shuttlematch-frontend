@@ -3,12 +3,15 @@ import { Badge } from '../components/ui/Badge'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { releaseOgMeta } from '../lib/og'
-import { findRelease, formatReleaseDate } from '../lib/releases'
+import { formatReleaseDate } from '../lib/releases'
 import type { ReleaseTag } from '../lib/releases'
 
 export const Route = createFileRoute('/release/$id')({
-  // データは同梱の静的配列なので loader は同期。存在しない id は 404 として扱う。
-  loader: ({ params }) => {
+  // データは同梱の静的配列。存在しない id は 404 として扱う。
+  // loader は自動コード分割の対象外(エントリ側に残る)なので、ここで静的 import すると
+  // 記事本文が全ページ共通のバンドルに入ってしまう。動的 import でこのルートの時だけ読む。
+  loader: async ({ params }) => {
+    const { findRelease } = await import('../lib/releases')
     const release = findRelease(params.id)
     if (!release) throw notFound()
     return release
