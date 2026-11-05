@@ -1,7 +1,20 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from '@tanstack/react-router'
-import { BookOpen, Gamepad2, History, Home, Info, Megaphone, Menu, Plus, X } from 'lucide-react'
+import {
+  BookOpen,
+  ExternalLink,
+  Gamepad2,
+  History,
+  Home,
+  Info,
+  Instagram,
+  Megaphone,
+  Menu,
+  Plus,
+  X,
+} from 'lucide-react'
+import { INSTAGRAM_URL } from '../../lib/og'
 
 /**
  * サイト共通ヘッダー。デスクトップでは主要ページを常に見えるナビゲーションに置き、
@@ -172,6 +185,18 @@ export function Header() {
                     <Info className="h-4 w-4 text-slate-400" />
                     ShuttleMatch について
                   </Link>
+                  {/* 外部サイトなので新しいタブで開く。ドロワーは閉じておく。 */}
+                  <a
+                    href={INSTAGRAM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={close}
+                    className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    <Instagram className="h-4 w-4 text-slate-400" />
+                    公式 Instagram
+                    <ExternalLink className="ml-auto h-3.5 w-3.5 text-slate-300" aria-hidden />
+                  </a>
                 </nav>
               </div>
             </div>,
