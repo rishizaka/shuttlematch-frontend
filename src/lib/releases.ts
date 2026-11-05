@@ -39,6 +39,46 @@ export type ReleaseNote = {
  */
 export const RELEASES: ReleaseNote[] = [
   {
+    id: '2026-11-05-instagram',
+    date: '2026-11-05',
+    title: 'ShuttleMatch の公式 Instagram をはじめました',
+    summary:
+      'シャトポコ、SNS はじめました。新しい機能やミニゲームのお知らせを Instagram でもお届けします。サイトのメニューやフッターからも開けます。',
+    tags: ['新機能'],
+    hero: {
+      src: '/releases/instagram-hero.webp',
+      thumb: '/releases/instagram-thumb.webp',
+      alt: 'ラケットとスマートフォンを持ったシャトポコが、ビルの立ち並ぶ街角で「シャトポコ、SNSはじめました!」と飛び跳ねている',
+      width: 1200,
+      height: 675,
+    },
+    sections: [
+      {
+        paragraphs: [
+          'ShuttleMatch の公式 Instagram アカウント「@shuttlematchnet」を開設しました。新しい機能やミニゲームの追加、使い方のちょっとしたコツなどを、こちらでもお知らせしていきます。',
+          'フォローしておくと、リリースノートを見に来なくても新しいお知らせに気づけます。',
+        ],
+      },
+      {
+        heading: 'サイトからもすぐ開けます',
+        paragraphs: [
+          'サイトの中からも Instagram へ移れるようにしました。どこからでも新しいタブで開きます。',
+        ],
+        bullets: [
+          'パソコン: 画面上部のメニューにある Instagram のアイコン',
+          'スマートフォン: 右上のメニューを開いて「公式 Instagram」',
+          'すべてのページの一番下(フッター)の「Instagram」',
+        ],
+      },
+      {
+        heading: 'アプリ内ブラウザでの乱数表づくりにご注意を',
+        paragraphs: [
+          'Instagram のリンクから ShuttleMatch を開くと、Instagram アプリの中のブラウザで表示されます。この状態だと乱数表の作成に失敗することがあるため、画面上部の案内に従って Safari や Chrome で開き直してからお使いください。',
+        ],
+      },
+    ],
+  },
+  {
     id: '2026-10-23-in-app-browser-notice',
     date: '2026-10-23',
     title: 'Instagram などのアプリ内ブラウザで、乱数表が作れないことがある問題への案内を追加',
