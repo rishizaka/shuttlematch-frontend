@@ -74,6 +74,17 @@ export function Header() {
           >
             サービス紹介
           </Link>
+          {/* 外部リンク。ナビが文字だらけにならないようアイコンのみにし、名前は aria-label で渡す */}
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="公式 Instagram(新しいタブで開く)"
+            title="公式 Instagram"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-50 hover:text-brand-700"
+          >
+            <Instagram className="h-[18px] w-[18px]" aria-hidden />
+          </a>
           <Link
             to="/organizer/rooms/new"
             className="ml-1 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-brand-700"
