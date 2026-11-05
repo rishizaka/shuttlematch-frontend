@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { SITE_NAME } from '../../lib/og'
+import { INSTAGRAM_URL, SITE_NAME } from '../../lib/og'
 
 /**
  * サイト共通フッター。
@@ -24,6 +24,14 @@ export function Footer() {
           <FooterLink to="/releases">リリースノート</FooterLink>
           <FooterLink to="/privacy">プライバシーポリシー</FooterLink>
           <FooterLink to="/terms">利用規約</FooterLink>
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-medium text-slate-500 transition hover:text-brand-600"
+          >
+            Instagram
+          </a>
         </nav>
         <p className="text-xs text-slate-400">
           © {currentYearJst()} {SITE_NAME}

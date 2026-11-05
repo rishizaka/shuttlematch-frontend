@@ -24,6 +24,9 @@ export const SITE_NAME = 'ShuttleMatch'
 // 「乱数表」を先に出す。「組み合わせ表」も検索でよく使われる表記なので併記する。
 // 「自動作成」は誰でも名乗れる一般的な文言なので、狙って先頭には置かない
 // (TOP ページの head と同じ考え方。src/routes/index.tsx のコメント参照)。
+/** 公式 Instagram。フッターの導線と構造化データの sameAs で使う。 */
+export const INSTAGRAM_URL = 'https://www.instagram.com/shuttlematchnet/'
+
 export const SITE_DESCRIPTION =
   'バドミントンの乱数表(ダブルスの組み合わせ表)を作って共有'
 
@@ -43,6 +46,15 @@ export const SITE_JSON_LD = {
       name: SITE_NAME,
       description: SITE_DESCRIPTION,
       inLanguage: 'ja',
+      publisher: { '@id': `${SITE_ORIGIN}/#organization` },
+    },
+    {
+      // 運営主体。sameAs で公式 SNS アカウントをサイトと結び付ける
+      '@type': 'Organization',
+      '@id': `${SITE_ORIGIN}/#organization`,
+      url: SITE_ORIGIN,
+      name: SITE_NAME,
+      sameAs: [INSTAGRAM_URL],
     },
     {
       '@type': 'WebApplication',
