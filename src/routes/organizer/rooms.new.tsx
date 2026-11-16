@@ -8,6 +8,8 @@ import { defaultRoomTitle } from '../../lib/format'
 import { Card, CardBody, CardHeader } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Field, Input } from '../../components/ui/Field'
+import { OpenInBrowserModal } from '../../components/ui/OpenInBrowserModal'
+import { currentInAppBrowser, type InAppBrowser } from '../../lib/in-app-browser'
 
 /** TOP の見積もりから引き継ぐ初期値。どちらも任意。 */
 function parseCount(value: unknown): number | undefined {
@@ -58,6 +60,10 @@ function NewRoomPage() {
   const [attempted, setAttempted] = useState(false)
   const [issuingGuest, setIssuingGuest] = useState(false)
   const [guestError, setGuestError] = useState<string | null>(null)
+  // アプリ内ブラウザで作成ボタンを押したときの「Safari などで開いて」モーダル。
+  // 「このまま作成する」を選んだら、このページにいる間は二度と出さない。
+  const [inAppPrompt, setInAppPrompt] = useState<InAppBrowser | null>(null)
+  const inAppAcknowledged = useRef(false)
 
   const courts = Number(courtCount)
   const people = Number(participantCount)
@@ -79,6 +85,14 @@ function NewRoomPage() {
     e.preventDefault()
     setAttempted(true)
     if (titleError || courtError || peopleError) return
+
+    // 作る前に止める。作ってしまうと運営者トークンがアプリ内ブラウザ側に残り、
+    // 外のブラウザで開き直しても運営操作ができない(lib/in-app-browser.ts)。
+    const inApp = currentInAppBrowser()
+    if (inApp && !inAppAcknowledged.current) {
+      setInAppPrompt(inApp)
+      return
+    }
 
     // 未ログインならゲストユーザーを発行し、この端末のユーザーとして保存する。
     let creatorId = user?.id
@@ -117,8 +131,29 @@ function NewRoomPage() {
     )
   }
 
+  // 外のブラウザで開き直したときに入れ直さずに済むよう、入力済みの人数・コート数を引き継ぐ。
+  const reopenUrl = () => {
+    const url = new URL(window.location.href)
+    url.search = ''
+    if (people > 0) url.searchParams.set('participantCount', String(people))
+    if (courts > 0) url.searchParams.set('courtCount', String(courts))
+    return url.toString()
+  }
+
   return (
     <div className="mx-auto max-w-lg">
+      {inAppPrompt ? (
+        <OpenInBrowserModal
+          browser={inAppPrompt}
+          url={reopenUrl()}
+          onCancel={() => setInAppPrompt(null)}
+          onContinue={() => {
+            inAppAcknowledged.current = true
+            setInAppPrompt(null)
+            submitRef.current?.form?.requestSubmit()
+          }}
+        />
+      ) : null}
       <Card>
         <CardHeader
           title="乱数表をつくる"

@@ -61,3 +61,22 @@ export function currentInAppBrowser(): InAppBrowser | null {
   if (typeof navigator === 'undefined') return null
   return detectInAppBrowser(navigator.userAgent || '')
 }
+
+export function isAndroid(userAgent: string): boolean {
+  return /Android/i.test(userAgent)
+}
+
+/**
+ * Android のアプリ内ブラウザから Chrome を起動する intent URL。
+ * Chrome が無い端末では `browser_fallback_url`(=同じページ)に戻るだけなので害はない。
+ * iOS には同等の手段が無い(Instagram 等は外部ブラウザを開かせてくれない)ので、手順の案内になる。
+ */
+export function androidChromeIntentUrl(href: string): string {
+  const url = new URL(href)
+  const scheme = url.protocol.replace(':', '')
+  return (
+    `intent://${url.host}${url.pathname}${url.search}${url.hash}` +
+    `#Intent;scheme=${scheme};package=com.android.chrome;` +
+    `S.browser_fallback_url=${encodeURIComponent(href)};end`
+  )
+}

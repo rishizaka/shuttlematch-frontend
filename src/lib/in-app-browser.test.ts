@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { detectInAppBrowser } from './in-app-browser'
+import { androidChromeIntentUrl, detectInAppBrowser } from './in-app-browser'
 
 /** 実際の端末が送ってくる User-Agent の例。 */
 const UA = {
@@ -57,5 +57,15 @@ describe('detectInAppBrowser', () => {
   it('空文字や未知の UA でも落ちない', () => {
     expect(detectInAppBrowser('')).toBeNull()
     expect(detectInAppBrowser('なにかよく分からない UA')).toBeNull()
+  })
+})
+
+describe('androidChromeIntentUrl', () => {
+  it('同じ URL を Chrome で開く intent にする(クエリも保つ)', () => {
+    expect(androidChromeIntentUrl('https://s-match.net/organizer/rooms/new?courtCount=2')).toBe(
+      'intent://s-match.net/organizer/rooms/new?courtCount=2' +
+        '#Intent;scheme=https;package=com.android.chrome;' +
+        'S.browser_fallback_url=https%3A%2F%2Fs-match.net%2Forganizer%2Frooms%2Fnew%3FcourtCount%3D2;end',
+    )
   })
 })
