@@ -220,7 +220,7 @@ function SkiPage() {
 
       {/* ゲーム中は canvas 内の HUD が本体。ここは「掛け算で決まる」ことの補足 */}
       {phase !== 'over' ? (
-        <p className="text-center text-[11px] text-slate-400">
+        <p className="text-center text-[11px] text-slate-500">
           スコアは <span className="font-semibold text-slate-500">滑った距離 × 倍率</span>。
           転んでも終わりませんが、速度が振り出しに戻ります。
           {stats.speedStep > 0 ? (

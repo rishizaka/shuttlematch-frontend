@@ -78,7 +78,7 @@ function GameHubPage() {
 
       <AdSlot />
 
-      <p className="text-center text-[11px] text-slate-400">
+      <p className="text-center text-[11px] text-slate-500">
         ベストスコアはこの端末にだけ保存されます。
       </p>
     </div>

@@ -271,7 +271,7 @@ export function ParticipantManager({
       />
 
       {generated ? (
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-500">
           早退は自動で未開始セットに反映されます。ゲストの追加・復帰・固定ペアの追加は
           「未開始セットを再編成」で試合表に反映されます。
         </p>

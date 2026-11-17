@@ -345,8 +345,8 @@ function SiteIntro() {
 
         {/* 本文のいちばん強い一文を抜いて添える。文面は本文からそのまま。 */}
         <aside className="h-fit rounded-2xl bg-accent-50 px-5 py-4 lg:sticky lg:top-20">
-          <p className="lbl mb-2.5 text-[10.5px] text-accent-600">Fair rotation</p>
-          <p className="jp-tight text-[15px] font-semibold leading-relaxed text-accent-700">
+          <p className="lbl mb-2.5 text-[10.5px] text-accent-800">Fair rotation</p>
+          <p className="jp-tight text-[15px] font-semibold leading-relaxed text-accent-800">
             出場回数の差は常に1回以内に収まります。
           </p>
         </aside>

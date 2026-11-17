@@ -117,7 +117,7 @@ export function DoublesPracticePlanner() {
             </p>
           </div>
         ) : (
-          <p className="rounded-xl border border-accent-200 bg-accent-50 px-4 py-3 text-sm leading-relaxed text-accent-700">
+          <p className="rounded-xl border border-accent-200 bg-accent-50 px-4 py-3 text-sm leading-relaxed text-accent-800">
             {plan.courtCount}面のダブルスには、同時に{plan.activePlayersPerSet}人必要です。あと
             {plan.playersNeeded}人集まるか、使うコート数を減らしてください。
           </p>
@@ -147,7 +147,7 @@ export function DoublesPracticePlanner() {
                         <th
                           key={index}
                           scope="col"
-                          className="lbl px-3 py-2.5 text-[10.5px] text-slate-400"
+                          className="lbl px-3 py-2.5 text-[10.5px] text-slate-500"
                         >
                           Court {index + 1}
                         </th>
@@ -166,7 +166,7 @@ export function DoublesPracticePlanner() {
                     {exampleSets.map((set) => (
                       <tr key={set.set} className="border-b border-slate-100 last:border-b-0">
                         <td className="px-3 py-2.5">
-                          <span className="fig inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent-50 text-xs text-accent-700">
+                          <span className="fig inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent-50 text-xs text-accent-800">
                             {set.set}
                           </span>
                         </td>
@@ -175,7 +175,7 @@ export function DoublesPracticePlanner() {
                             <span className="tab text-[15px] text-slate-800">
                               {court.teamA.join('・')}
                             </span>
-                            <span className="mx-2 text-[11px] text-slate-400">vs</span>
+                            <span className="mx-2 text-[11px] text-slate-500">vs</span>
                             <span className="tab text-[15px] text-slate-800">
                               {court.teamB.join('・')}
                             </span>

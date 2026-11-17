@@ -80,7 +80,7 @@ function AdminPage() {
             <p className="text-sm text-slate-400">読み込み中…</p>
           ) : enabled ? (
             <>
-              <p className="flex items-center gap-2 rounded-xl border border-accent-200 bg-accent-50 px-4 py-3 text-sm font-semibold text-accent-700">
+              <p className="flex items-center gap-2 rounded-xl border border-accent-200 bg-accent-50 px-4 py-3 text-sm font-semibold text-accent-800">
                 <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden />
                 この端末では管理者モードが有効です
               </p>

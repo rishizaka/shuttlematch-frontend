@@ -31,7 +31,8 @@ import {
   useStartSet,
 } from '../../hooks/queries'
 import { useCurrentUser, useHasOrganizerToken } from '../../hooks/useCurrentUser'
-import { ApiError, isNetworkError, roomApi } from '../../lib/api'
+import { ApiError, isNetworkError, matchApi, roomApi } from '../../lib/api'
+import type { Room } from '../../lib/types'
 import { readOrganizerTokenFromHash } from '../../lib/organizer-link'
 import {
   addRoomId,
@@ -69,12 +70,30 @@ export const Route = createFileRoute('/rooms/$roomId_/matches')({
       search.openExternalBrowser === 1 || search.openExternalBrowser === '1' ? 1 : undefined,
   }),
   // OGP(SNS のリンクカード)用。SSR の HTML にルーム名入りメタタグを含める。
-  loader: async ({ params }) => {
+  // あわせてルームと試合表を Query のキャッシュへ先に入れておく。SSR の HTML に試合表そのものが
+  // 載り、ブラウザで JS が動いてから取りに行くのを待たずに済む(以前は SSR では骨組みだけで、
+  // モバイル計測で LCP が 4.8 秒かかっていた)。キャッシュは SSR 連携でブラウザへ引き継がれ、
+  // 以降のポーリングは useMatches / useRoom がそのまま続ける。
+  loader: async ({ params, context }) => {
+    const qc = context.queryClient
+    let room: Room
     try {
-      return await roomApi.get(params.roomId)
+      room = await qc.fetchQuery({
+        queryKey: queryKeys.room(params.roomId),
+        queryFn: () => roomApi.get(params.roomId),
+      })
     } catch {
       return null
     }
+    // 未生成(受付中)は 404 になるので取りに行かない。prefetchQuery は失敗しても投げない。
+    if (room.status === 'GENERATED' || room.status === 'CLOSED') {
+      await qc.prefetchQuery({
+        queryKey: queryKeys.matches(params.roomId),
+        queryFn: () => matchApi.get(params.roomId),
+        retry: false,
+      })
+    }
+    return room
   },
   // 試合表のリンクカードは画像なし(テキストのみ)。リンクでよく共有するため、
   // og:image は足さず、twitter:card も設定しない。

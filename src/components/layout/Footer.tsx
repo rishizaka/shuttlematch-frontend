@@ -33,7 +33,7 @@ export function Footer() {
             Instagram
           </a>
         </nav>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-slate-500">
           © {currentYearJst()} {SITE_NAME}
         </p>
       </div>

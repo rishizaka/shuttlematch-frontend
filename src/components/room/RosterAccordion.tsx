@@ -37,7 +37,7 @@ export function RosterAccordion({
       >
         <Users className="h-4 w-4 text-slate-400" />
         <span className="text-sm font-semibold text-slate-800">参加者名簿</span>
-        <span className="text-xs text-slate-400">{participants.length}人</span>
+        <span className="text-xs text-slate-500">{participants.length}人</span>
         <ChevronDown
           className={
             'chevron-spring ml-auto h-4 w-4 shrink-0 text-slate-400 ' +

@@ -53,7 +53,7 @@ export function RoomCard({ room, roomId }: { room: PublicRoom; roomId?: string |
 
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-3.5">
         <div className="flex items-baseline gap-1">
-          <dt className="sr-only">参加人数</dt>
+          <span className="sr-only">参加人数</span>
           <span className="fig text-2xl text-slate-900">{room.participantCount}</span>
           {room.capacity ? (
             <span className="tab text-[13px] text-slate-400">/ {room.capacity}</span>
@@ -115,7 +115,7 @@ function StatusPill({ status }: { status: PublicRoom['status'] }) {
   }
 
   return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent-50 px-2.5 py-1 text-xs font-semibold text-accent-700">
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent-50 px-2.5 py-1 text-xs font-semibold text-accent-800">
       <LiveDot />
       {label}
     </span>
