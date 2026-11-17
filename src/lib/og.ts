@@ -23,14 +23,14 @@ export function shareOrigin(): string {
 export const SITE_NAME = 'シャトルマッチ'
 /** 2026-11 まで使っていた英字表記。同じサービスだと検索エンジンに伝えるため構造化データに残す。 */
 export const SITE_ALTERNATE_NAME = 'ShuttleMatch'
-// 「乱数表」を先に出す。「組み合わせ表」も検索でよく使われる表記なので併記する。
+// 「乱数表」を先に出す。「試合表」「組み合わせ表」も検索でよく使われる表記なので併記する。
 // 「自動作成」は誰でも名乗れる一般的な文言なので、狙って先頭には置かない
 // (TOP ページの head と同じ考え方。src/routes/index.tsx のコメント参照)。
 /** 公式 Instagram。フッターの導線と構造化データの sameAs で使う。 */
 export const INSTAGRAM_URL = 'https://www.instagram.com/shuttlematchnet/'
 
 export const SITE_DESCRIPTION =
-  'バドミントンの乱数表(ダブルスの組み合わせ表)を作って共有'
+  'バドミントンの乱数表・ダブルスの試合表(組み合わせ表)を作って共有'
 
 /**
  * サイト全体の構造化データ(JSON-LD)。全ページの head に入れる。
@@ -70,7 +70,7 @@ export const SITE_JSON_LD = {
       operatingSystem: 'Web',
       inLanguage: 'ja',
       description:
-        'バドミントン練習会のダブルスの組み合わせ(乱数表)を自動で作って共有できるウェブアプリ。出場回数は公平、同じ顔ぶれで固まらないように混ぜます。テニスなど4人1組で回す練習にも使えます。',
+        'バドミントン練習会のダブルスの試合表(乱数表・組み合わせ表)を自動で作って共有できるウェブアプリ。出場回数は公平、同じ顔ぶれで固まらないように混ぜます。テニスなど4人1組で回す練習にも使えます。',
       // 無料であることは検索結果にも出る要素なので明示する
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'JPY' },
       isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
