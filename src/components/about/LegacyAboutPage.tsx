@@ -120,7 +120,7 @@ export function LegacyAboutPage() {
           </Reveal>
           <Reveal delay={280}>
             <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
-              ShuttleMatch は、バドミントン練習会の試合表を
+              シャトルマッチは、バドミントン練習会の試合表を
               自動でつくって共有するサービスです。
               組み合わせに悩む時間を、ラリーの時間に。
             </p>
@@ -273,7 +273,7 @@ export function LegacyAboutPage() {
             </div>
           </Reveal>
           <p className="mt-16 text-xs text-slate-500">
-            ShuttleMatch — Spring Boot / React / Three.js
+            シャトルマッチ — Spring Boot / React / Three.js
           </p>
         </section>
       </div>

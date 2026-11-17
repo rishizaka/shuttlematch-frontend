@@ -10,10 +10,10 @@ import type { ReleaseTag } from '../lib/releases'
 export const Route = createFileRoute('/releases')({
   head: () => ({
     meta: [
-      { title: 'リリースノート — ShuttleMatch' },
+      { title: 'リリースノート — シャトルマッチ' },
       {
         name: 'description',
-        content: 'ShuttleMatch の新機能・改善・不具合修正のお知らせ一覧です。',
+        content: 'シャトルマッチの新機能・改善・不具合修正のお知らせ一覧です。',
       },
     ],
   }),
@@ -31,12 +31,12 @@ function ReleasesPage() {
   return (
     <div className="space-y-6">
       <Breadcrumbs
-        items={[{ label: 'ダブルス・組み合わせのShuttleMatch', to: '/' }, { label: 'リリースノート' }]}
+        items={[{ label: 'ダブルス・組み合わせのシャトルマッチ', to: '/' }, { label: 'リリースノート' }]}
       />
 
       <div>
         <h1 className="text-2xl font-bold text-slate-900">リリースノート</h1>
-        <p className="text-sm text-slate-500">ShuttleMatch の新機能・改善のお知らせです。</p>
+        <p className="text-sm text-slate-500">シャトルマッチの新機能・改善のお知らせです。</p>
       </div>
 
       {RELEASES.length === 0 ? (

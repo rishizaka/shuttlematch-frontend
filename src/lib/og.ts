@@ -20,7 +20,9 @@ export function shareOrigin(): string {
   return SITE_ORIGIN
 }
 
-export const SITE_NAME = 'ShuttleMatch'
+export const SITE_NAME = 'シャトルマッチ'
+/** 2026-11 まで使っていた英字表記。同じサービスだと検索エンジンに伝えるため構造化データに残す。 */
+export const SITE_ALTERNATE_NAME = 'ShuttleMatch'
 // 「乱数表」を先に出す。「組み合わせ表」も検索でよく使われる表記なので併記する。
 // 「自動作成」は誰でも名乗れる一般的な文言なので、狙って先頭には置かない
 // (TOP ページの head と同じ考え方。src/routes/index.tsx のコメント参照)。
@@ -44,6 +46,7 @@ export const SITE_JSON_LD = {
       '@id': `${SITE_ORIGIN}/#website`,
       url: SITE_ORIGIN,
       name: SITE_NAME,
+      alternateName: SITE_ALTERNATE_NAME,
       description: SITE_DESCRIPTION,
       inLanguage: 'ja',
       publisher: { '@id': `${SITE_ORIGIN}/#organization` },
@@ -54,6 +57,7 @@ export const SITE_JSON_LD = {
       '@id': `${SITE_ORIGIN}/#organization`,
       url: SITE_ORIGIN,
       name: SITE_NAME,
+      alternateName: SITE_ALTERNATE_NAME,
       sameAs: [INSTAGRAM_URL],
     },
     {
@@ -61,6 +65,7 @@ export const SITE_JSON_LD = {
       '@id': `${SITE_ORIGIN}/#app`,
       url: SITE_ORIGIN,
       name: SITE_NAME,
+      alternateName: SITE_ALTERNATE_NAME,
       applicationCategory: 'SportsApplication',
       operatingSystem: 'Web',
       inLanguage: 'ja',

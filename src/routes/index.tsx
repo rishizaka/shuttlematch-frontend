@@ -21,7 +21,7 @@ export const Route = createFileRoute('/')({
   head: () => ({
     meta: [
       {
-        title: 'バドミントンの乱数表・ダブルス組み合わせ表を無料作成 | ShuttleMatch',
+        title: 'バドミントンの乱数表・ダブルス組み合わせ表を無料作成 | シャトルマッチ',
       },
       {
         name: 'description',
@@ -296,7 +296,7 @@ function SiteIntro() {
             人数が増えるほど、出場回数を揃えながら顔ぶれも混ぜるのは手作業ではむずかしくなります。
           </p>
           <p className="mt-3">
-            ShuttleMatchなら、人数とコート数を入れるだけでこの乱数表を作れます。
+            シャトルマッチなら、人数とコート数を入れるだけでこの乱数表を作れます。
             できた試合表はリンクやQRコードで配れるので、参加者は自分がいつ・どのコートに入るかを各自のスマホで見られます。
           </p>
           <h3 className="jp-tight mt-6 text-[15px] font-semibold text-slate-900">

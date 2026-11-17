@@ -7,7 +7,7 @@ import { GAMES } from '../components/game/catalog'
 export const Route = createFileRoute('/game')({
   head: () => ({
     meta: [
-      { title: 'バドミントンのミニゲーム — 待ち時間に動体視力と反応を | ShuttleMatch' },
+      { title: 'バドミントンのミニゲーム — 待ち時間に動体視力と反応を | シャトルマッチ' },
       {
         name: 'description',
         content:

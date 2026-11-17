@@ -11,11 +11,11 @@ export const Route = createFileRoute('/past')({
   // description が並ぶ。
   head: () => ({
     meta: [
-      { title: '過去の開催 — バドミントン練習会の試合表の記録 | ShuttleMatch' },
+      { title: '過去の開催 — バドミントン練習会の試合表の記録 | シャトルマッチ' },
       {
         name: 'description',
         content:
-          'これまでに ShuttleMatch で作られたバドミントン練習会の試合表(ダブルスの組み合わせ)の記録です。終了した試合表は誰でも見られます。',
+          'これまでにシャトルマッチで作られたバドミントン練習会の試合表(ダブルスの組み合わせ)の記録です。終了した試合表は誰でも見られます。',
       },
     ],
   }),

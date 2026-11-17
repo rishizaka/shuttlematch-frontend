@@ -13,7 +13,7 @@ import type { SkiHandle, SkiSnapshot } from '../components/game/shatopokoSki'
 export const Route = createFileRoute('/game_/ski')({
   head: () => ({
     meta: [
-      { title: 'シャトポコのスキー — 待ち時間のミニゲーム | ShuttleMatch' },
+      { title: 'シャトポコのスキー — 待ち時間のミニゲーム | シャトルマッチ' },
       {
         name: 'description',
         content:

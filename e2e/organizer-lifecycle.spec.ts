@@ -26,7 +26,7 @@ test('運営者: 試合表表示 → 運営メニュー → 削除 → ホーム
     // 試合表が描画される(第1セットの開始ボタン・ヘッダーロゴ)。
     // 「第1セット」だけだと「次第1セット」ラベルにも当たって strict mode 違反になる。
     await expect(page.getByRole('button', { name: '第1セット開始' })).toBeVisible()
-    await expect(page.locator('header img[alt="ShuttleMatch"]')).toBeVisible()
+    await expect(page.locator('header img[alt="シャトルマッチ"]')).toBeVisible()
 
     // 運営者にだけ出る「運営メニュー」を開いてルーム削除。
     const menu = page.getByRole('button', { name: /運営メニュー/ })

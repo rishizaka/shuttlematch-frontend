@@ -52,9 +52,9 @@ export function Header() {
         <Link to="/" className="flex items-center" onClick={close}>
           <img
             src="/header-logo.png"
-            alt="ShuttleMatch"
+            alt="シャトルマッチ"
             className="h-8 w-auto"
-            width={437}
+            width={478}
             height={96}
           />
         </Link>
@@ -194,7 +194,7 @@ export function Header() {
                     className="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                   >
                     <Info className="h-4 w-4 text-slate-400" />
-                    ShuttleMatch について
+                    シャトルマッチについて
                   </Link>
                   {/* 外部サイトなので新しいタブで開く。ドロワーは閉じておく。 */}
                   <a

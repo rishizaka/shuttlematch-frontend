@@ -6,7 +6,7 @@
  */
 
 /** 運営者表記。個人名は出さず、サービス名義で表記する。 */
-export const OPERATOR_NAME = 'ShuttleMatch 運営'
+export const OPERATOR_NAME = 'シャトルマッチ運営'
 
 /**
  * 問い合わせ窓口。
@@ -16,8 +16,8 @@ export const OPERATOR_NAME = 'ShuttleMatch 運営'
 export const CONTACT_EMAIL = 'contact@s-match.net'
 
 /** 制定日・最終改定日 (JST)。改定したら必ず更新する。 */
-export const PRIVACY_UPDATED_AT = '2026-09-27'
-export const TERMS_UPDATED_AT = '2026-07-27'
+export const PRIVACY_UPDATED_AT = '2026-11-18'
+export const TERMS_UPDATED_AT = '2026-11-18'
 
 export type LegalSection = {
   heading: string
@@ -30,7 +30,7 @@ export type LegalSection = {
 }
 
 export const PRIVACY_LEAD =
-  `${OPERATOR_NAME}(以下「当方」といいます)は、ShuttleMatch(https://s-match.net、以下「本サービス」といいます)における利用者の情報の取り扱いについて、以下のとおり定めます。`
+  `${OPERATOR_NAME}(以下「当方」といいます)は、シャトルマッチ(https://s-match.net、以下「本サービス」といいます)における利用者の情報の取り扱いについて、以下のとおり定めます。`
 
 export const PRIVACY_SECTIONS: LegalSection[] = [
   {
@@ -153,7 +153,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   },
 ]
 
-export const TERMS_LEAD = `本規約は、${OPERATOR_NAME}(以下「当方」といいます)が提供する ShuttleMatch(以下「本サービス」といいます)の利用条件を定めるものです。本サービスをご利用になる方(以下「利用者」といいます)は、本規約に同意したうえでご利用ください。`
+export const TERMS_LEAD = `本規約は、${OPERATOR_NAME}(以下「当方」といいます)が提供するシャトルマッチ(以下「本サービス」といいます)の利用条件を定めるものです。本サービスをご利用になる方(以下「利用者」といいます)は、本規約に同意したうえでご利用ください。`
 
 export const TERMS_SECTIONS: LegalSection[] = [
   {

@@ -32,7 +32,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       // ページ側で head を持たないルート(ログインなど)の既定。
-      { title: 'ShuttleMatch — バドミントンの試合表・ダブルスの組み合わせ作成' },
+      { title: 'シャトルマッチ — バドミントンの試合表・ダブルスの組み合わせ作成' },
       ...defaultOgMeta(),
     ],
     links: [

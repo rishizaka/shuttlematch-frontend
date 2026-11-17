@@ -9,7 +9,7 @@ export const Route = createFileRoute('/guide/')({
   head: () => ({
     meta: [
       {
-        title: 'バドミントンの試合表・ダブルスの組み方ガイド一覧 | ShuttleMatch',
+        title: 'バドミントンの試合表・ダブルスの組み方ガイド一覧 | シャトルマッチ',
       },
       {
         name: 'description',
@@ -26,13 +26,13 @@ function GuidePage() {
   return (
     <div className="space-y-6">
       <Breadcrumbs
-        items={[{ label: 'ダブルス・組み合わせのShuttleMatch', to: '/' }, { label: '使い方ガイド' }]}
+        items={[{ label: 'ダブルス・組み合わせのシャトルマッチ', to: '/' }, { label: '使い方ガイド' }]}
       />
 
       <div>
         <h1 className="text-2xl font-bold text-slate-900">使い方ガイド</h1>
         <p className="text-sm text-slate-500">
-          バドミントンの試合表・ダブルスの組み方に関する読み物です。ShuttleMatch自体が
+          バドミントンの試合表・ダブルスの組み方に関する読み物です。シャトルマッチ自体が
           どんなツールかは<Link to="/about" className="font-medium text-brand-600 hover:underline">
             サービス紹介
           </Link>

@@ -19,7 +19,7 @@ export function Footer() {
     <footer className="mt-10 border-t border-slate-200 bg-white">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between">
         <nav className="flex flex-wrap gap-x-5 gap-y-2">
-          <FooterLink to="/about">ShuttleMatch について</FooterLink>
+          <FooterLink to="/about">シャトルマッチについて</FooterLink>
           <FooterLink to="/guide">使い方ガイド</FooterLink>
           <FooterLink to="/releases">リリースノート</FooterLink>
           <FooterLink to="/privacy">プライバシーポリシー</FooterLink>

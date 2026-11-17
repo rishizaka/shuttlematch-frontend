@@ -12,7 +12,7 @@ import type { GamePhase, ShuttleFlapHandle } from '../components/game/shuttleFla
 export const Route = createFileRoute('/game_/flap')({
   head: () => ({
     meta: [
-      { title: 'シャトルフラップ — 待ち時間のミニゲーム | ShuttleMatch' },
+      { title: 'シャトルフラップ — 待ち時間のミニゲーム | シャトルマッチ' },
       {
         name: 'description',
         content:

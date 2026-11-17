@@ -12,7 +12,7 @@ export function CreateRoomCta() {
     <Card className="border-brand-200 bg-brand-50">
       <CardBody className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm font-medium text-brand-800">
-          試合表はShuttleMatchで無料ですぐ作れます。
+          試合表はシャトルマッチで無料ですぐ作れます。
         </p>
         <Link
           to="/organizer/rooms/new"

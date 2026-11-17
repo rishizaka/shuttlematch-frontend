@@ -5,10 +5,10 @@ import { TERMS_LEAD, TERMS_SECTIONS, TERMS_UPDATED_AT } from '../lib/legal'
 export const Route = createFileRoute('/terms')({
   head: () => ({
     meta: [
-      { title: '利用規約 — ShuttleMatch' },
+      { title: '利用規約 — シャトルマッチ' },
       {
         name: 'description',
-        content: 'ShuttleMatch の利用条件を定めた利用規約です。',
+        content: 'シャトルマッチの利用条件を定めた利用規約です。',
       },
     ],
   }),

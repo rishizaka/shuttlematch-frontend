@@ -41,7 +41,7 @@ export const RELEASES: ReleaseNote[] = [
   {
     id: '2026-11-05-instagram',
     date: '2026-11-05',
-    title: 'ShuttleMatch の公式 Instagram をはじめました',
+    title: 'シャトルマッチの公式 Instagram をはじめました',
     summary:
       'シャトポコ、SNS はじめました。新しい機能やミニゲームのお知らせを Instagram でもお届けします。サイトのメニューやフッターからも開けます。',
     tags: ['新機能'],
@@ -55,7 +55,7 @@ export const RELEASES: ReleaseNote[] = [
     sections: [
       {
         paragraphs: [
-          'ShuttleMatch の公式 Instagram アカウント「@shuttlematchnet」を開設しました。新しい機能やミニゲームの追加、使い方のちょっとしたコツなどを、こちらでもお知らせしていきます。',
+          'シャトルマッチの公式 Instagram アカウント「@shuttlematchnet」を開設しました。新しい機能やミニゲームの追加、使い方のちょっとしたコツなどを、こちらでもお知らせしていきます。',
           'フォローしておくと、リリースノートを見に来なくても新しいお知らせに気づけます。',
         ],
       },
@@ -73,7 +73,7 @@ export const RELEASES: ReleaseNote[] = [
       {
         heading: 'アプリ内ブラウザでの乱数表づくりにご注意を',
         paragraphs: [
-          'Instagram のリンクから ShuttleMatch を開くと、Instagram アプリの中のブラウザで表示されます。この状態だと乱数表の作成に失敗することがあるため、画面上部の案内に従って Safari や Chrome で開き直してからお使いください。',
+          'Instagram のリンクからシャトルマッチを開くと、Instagram アプリの中のブラウザで表示されます。この状態だと乱数表の作成に失敗することがあるため、画面上部の案内に従って Safari や Chrome で開き直してからお使いください。',
         ],
       },
     ],

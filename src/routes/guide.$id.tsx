@@ -54,7 +54,7 @@ function GuideDetailPage() {
       />
       <Breadcrumbs
         items={[
-          { label: 'ダブルス・組み合わせのShuttleMatch', to: '/' },
+          { label: 'ダブルス・組み合わせのシャトルマッチ', to: '/' },
           { label: '使い方ガイド', to: '/guide' },
           { label: guide.title },
         ]}

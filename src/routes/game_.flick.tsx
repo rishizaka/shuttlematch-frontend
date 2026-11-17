@@ -12,7 +12,7 @@ import type { GamePhase, MiniGameHandle } from '../components/game/shared'
 export const Route = createFileRoute('/game_/flick')({
   head: () => ({
     meta: [
-      { title: '10円はじき — 待ち時間のミニゲーム | ShuttleMatch' },
+      { title: '10円はじき — 待ち時間のミニゲーム | シャトルマッチ' },
       {
         name: 'description',
         content:

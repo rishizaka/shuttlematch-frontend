@@ -12,7 +12,7 @@ import type { GamePhase, MiniGameHandle } from '../components/game/shared'
 export const Route = createFileRoute('/game_/rain')({
   head: () => ({
     meta: [
-      { title: 'スマッシュレイン — 待ち時間のミニゲーム | ShuttleMatch' },
+      { title: 'スマッシュレイン — 待ち時間のミニゲーム | シャトルマッチ' },
       {
         name: 'description',
         content:

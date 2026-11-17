@@ -36,7 +36,7 @@ function ReleaseDetailPage() {
     <div className="space-y-6">
       <Breadcrumbs
         items={[
-          { label: 'ダブルス・組み合わせのShuttleMatch', to: '/' },
+          { label: 'ダブルス・組み合わせのシャトルマッチ', to: '/' },
           { label: 'リリースノート', to: '/releases' },
           { label: release.title },
         ]}
