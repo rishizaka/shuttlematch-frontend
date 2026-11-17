@@ -51,7 +51,7 @@ export function Header() {
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link to="/" className="flex items-center" onClick={close}>
           <img
-            src="/header-logo.png"
+            src="/header-logo-kana.png"
             alt="シャトルマッチ"
             className="h-8 w-auto"
             width={478}
