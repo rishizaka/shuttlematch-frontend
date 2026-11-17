@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { ChevronRight, History, Plus } from 'lucide-react'
-import { useRoomList } from '../hooks/queries'
+import { homeRoomListQuery, useHomeRoomList } from '../hooks/queries'
 import { useMyRoomIdByPublicId } from '../hooks/useMyRoomIds'
 import { Card, CardBody } from '../components/ui/Card'
 import { ErrorBlock, LoadingBlock } from '../components/ui/Spinner'
@@ -33,6 +33,10 @@ export const Route = createFileRoute('/')({
       },
     ],
   }),
+  // 一覧を SSR の HTML に載せる。ブラウザで取ってから描くと、届いた瞬間に下の計算機などが
+  // 押し下げられ、モバイル計測で CLS 0.17 になっていた。取得に失敗しても TOP 自体は出す
+  // (prefetchQuery は投げない。画面側の useHomeRoomList が取り直してエラー表示する)。
+  loader: ({ context }) => context.queryClient.prefetchQuery(homeRoomListQuery),
   component: HomePage,
 })
 
@@ -41,7 +45,7 @@ function HomePage() {
   // heldAt は作成した時刻で固定され後から直せないので、前日の夜に作って翌日使う
   // ような場合に「開催中なのに TOP に出ない」ことが起きていた。
   // 終了済みは本日ぶんだけ(それ以前は /past にある)。
-  const all = useRoomList()
+  const all = useHomeRoomList()
   // 一覧に roomId は入っていない。自分が作成・参加したものだけリンクになる。
   const myRoomIds = useMyRoomIdByPublicId()
 

@@ -13,8 +13,9 @@ import {
   type CreateUserInput,
   type RoomListParams,
 } from "../lib/api";
+import { jstDayRange } from "../lib/format";
 import { addRoomId, setSelfParticipant } from "../lib/local-store";
-import type { Room } from "../lib/types";
+import type { PublicRoom, Room } from "../lib/types";
 
 /**
  * ライブ同期用のポーリング間隔 (ms)。
@@ -29,6 +30,8 @@ export const queryKeys = {
   matches: (id: string) => ["matches", id] as const,
   roomLists: ["rooms", "list"] as const,
   roomList: (params: RoomListParams) => ["rooms", "list", params] as const,
+  // roomLists の下に置き、ルーム作成などでの一覧の無効化がそのまま効くようにする。
+  homeRoomList: ["rooms", "list", "home"] as const,
   gameRanking: (game: string) => ["game", "ranking", game] as const,
 };
 
@@ -73,6 +76,33 @@ export function useRoomList(params: RoomListParams = {}) {
     queryKey: queryKeys.roomList(params),
     queryFn: () => roomApi.list(params),
   });
+}
+
+/**
+ * TOP に出すルーム(開催中すべて + 本日終了した分)。
+ *
+ * 以前は全件(終了済みを含め数百件・40KB 超、開催のたびに増え続ける)を取ってから
+ * 画面側で絞っていた。TOP の loader で SSR にも載せるので、必要な分だけを並列に取る。
+ * 開催中は日付で絞らない(前日の夜に作って翌日使うことがあるため。index.tsx 参照)。
+ */
+export const homeRoomListQuery = {
+  queryKey: queryKeys.homeRoomList,
+  queryFn: async (): Promise<PublicRoom[]> => {
+    const { from, to } = jstDayRange();
+    const lists = await Promise.all([
+      roomApi.list({ status: "PREPARING" }),
+      roomApi.list({ status: "OPEN" }),
+      roomApi.list({ status: "GENERATED" }),
+      roomApi.list({ status: "CLOSED", heldFrom: from, heldTo: to }),
+    ]);
+    return lists.flat();
+  },
+  // SSR で取った直後にブラウザがすぐ取り直さないよう、少しだけ新鮮とみなす。
+  staleTime: 30_000,
+};
+
+export function useHomeRoomList() {
+  return useQuery(homeRoomListQuery);
 }
 
 /** 複数 room をまとめて取得する (ダッシュボード用)。 */

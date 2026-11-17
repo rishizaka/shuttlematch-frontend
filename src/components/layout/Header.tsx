@@ -50,12 +50,17 @@ export function Header() {
     <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link to="/" className="flex items-center" onClick={close}>
+          {/* 多くのページで LCP になる画像。表示は高さ 32px(幅 160px)なので、
+              2x/3x 用の WebP を出し分ける(元の PNG 32KB → 5〜9KB)。 */}
           <img
-            src="/header-logo-kana.png"
+            src="/header-logo-kana-320.webp"
+            srcSet="/header-logo-kana-320.webp 320w, /header-logo-kana-478.webp 478w"
+            sizes="160px"
             alt="シャトルマッチ"
             className="h-8 w-auto"
             width={478}
             height={96}
+            fetchPriority="high"
           />
         </Link>
 
