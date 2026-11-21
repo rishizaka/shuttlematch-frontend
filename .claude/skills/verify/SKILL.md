@@ -40,14 +40,29 @@ fnm exec --using=22 npm run dev    # run_in_background で起動する
 ```
 
 **落とし穴（2026-11-21 に実際に踏んだ）**:
+- **開発中のブラウザは API を `http://localhost:8080` へ直接呼ぶ**（`src/lib/api.ts`。vite のプロキシは通らない）。
+  backend の CORS が許可しているのは既定で **`localhost:3000` と `localhost:5173` だけ**。
+  それ以外のポートで dev サーバーを動かすと、SSR の画面は出るのにブラウザからの API がすべて CORS で失敗し、
+  運営操作・参加などの E2E が一斉に落ちる（「backend が古い」と誤認しやすい。実際に誤認した）。
 - **3000 番が別の worktree / 別リポジトリの dev サーバーに使われていることがある**
   （`shuttlematch-frontend-preview` など）。`lsof -iTCP:3000 -sTCP:LISTEN` → `lsof -p <PID> | grep cwd` で
-  どのディレクトリのサーバーか確かめる。他人のサーバーは止めず、自分は空いたポートで起動する:
-  `fnm exec --using=22 npx vite dev --port 3100 --strictPort`。
-  Playwright は既定で 3000 を `reuseExistingServer` するので、そのままだと**別のコードを検証してしまう**。
-- **8080 の backend が古いことがある**（別ディレクトリから昔起動したものが残っている等）。
-  同じく `lsof` で cwd と起動時刻を見る。E2E が落ちたら、まず**変更前のコード（`git worktree add --detach <dir> origin/main`）
-  で同じ spec を流して比べる**。同じ件数だけ落ちるなら環境の問題で、今回の変更のせいではない。
+  どのディレクトリのサーバーか確かめる。他人のサーバーは止めない。Playwright は既定で 3000 を
+  `reuseExistingServer` するので、そのままだと**別のコードを検証してしまう**。
+  - 代わりに **5173 番**で起動する（CORS 許可済み）: `fnm exec --using=22 npx vite dev --port 5173 --strictPort`
+- **8080 の backend が今のコードとは限らない**（別ディレクトリから昔起動したものが残っている等。`lsof` で cwd と起動時刻を見る）。
+  最新の backend で確かめたいときは、既存のものは止めずに別ポートで起動し、フロントもそこへ向ける:
+  ```bash
+  # backend（~/Develop/shuttlematch）: ポートと CORS 許可元を環境変数で変える
+  SERVER_PORT=8081 APP_CORS_ALLOWED_ORIGINS=http://localhost:5173 JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew bootRun
+  # frontend: SSR・ブラウザの両方の API 先を 8081 に（VITE_API_BASE_URL は両方に効く）
+  VITE_API_BASE_URL=http://localhost:8081 fnm exec --using=22 npx vite dev --port 5173 --strictPort
+  ```
+- E2E が落ちたら、まず**変更前のコード（`git worktree add --detach <dir> origin/main`）を同じポート・同じ backend で
+  動かして同じ spec を流し、比べる**。同じテストが同じように落ちるなら今回の変更のせいではない。
+  ブラウザのコンソールを見れば CORS かどうかはすぐ分かるので、比べる前に一度見る。
+- **既知の失敗**（2026-11-21 時点、origin/main でも再現）: `e2e/participant-self-number.spec.ts` の4件。
+  試合表ページが SSR になってから、入力した名前がハイドレーションで消えて空のまま送信される
+  （テストがハイドレーション完了を待っていない）。直るまでは、この4件の失敗は変更の良し悪しの判断に使わない。
 
 ### 準備ができたかの確認
 ```bash
@@ -73,8 +88,8 @@ until curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ | grep -q 20
 
 ```bash
 fnm exec --using=22 npm run e2e -- e2e/<spec>.spec.ts   # 関係する spec だけでよい
-# 3000 以外で起動したサーバーに向けるとき（webServer の自動起動は無効になる）:
-E2E_BASE_URL=http://localhost:3100 E2E_API_BASE=http://localhost:8080 fnm exec --using=22 npx playwright test e2e/<spec>.spec.ts
+# 5173 で起動したサーバーに向けるとき（webServer の自動起動は無効になる。backend を 8081 にしたら E2E_API_BASE も合わせる）:
+E2E_BASE_URL=http://localhost:5173 E2E_API_BASE=http://localhost:8080 fnm exec --using=22 npx playwright test e2e/<spec>.spec.ts
 ```
 - 試合表の生成・再編成・早退/遅刻に触れたら `e2e/fairness.spec.ts` は必ず回す。
 - ルームを作る副作用があるので直列実行（設定済み）。**本番向け `e2e:prod` はユーザーに確認してから**。
