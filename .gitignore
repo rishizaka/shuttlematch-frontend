@@ -17,3 +17,6 @@ todos.json
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Claude Code のワークツリー(スキルは .claude/skills に置いてコミットする)
+/.claude/worktrees/

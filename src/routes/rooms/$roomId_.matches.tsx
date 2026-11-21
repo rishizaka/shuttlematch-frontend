@@ -158,8 +158,8 @@ function MatchesPage() {
           showToast('運営者用リンクが正しくないため、運営はできません')
         }
       })
-    // roomId ごとに一度だけ。showToast は安定している前提。
-  }, [roomId])
+    // roomId ごとに一度だけ。showToast は useCallback(..., []) で安定しているので依存に入れても再実行されない。
+  }, [roomId, showToast])
 
   // 再編成で途中参加者が試合表に現れたら、次の room ポーリングを待たずに
   // すぐ名前を解決できるよう room を取り直す (未知の ParticipantId を検知したときのみ)。

@@ -52,6 +52,7 @@ function RainPage() {
   useEffect(() => {
     const stored = Number(localStorage.getItem(BEST_KEY) ?? '0')
     if (Number.isFinite(stored) && stored > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage は SSR で読めないのでマウント後に読む(描画中に読むと hydration mismatch)
       setBest(stored)
       bestRef.current = stored
     }

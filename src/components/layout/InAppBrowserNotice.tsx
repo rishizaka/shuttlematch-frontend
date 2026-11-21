@@ -34,6 +34,7 @@ export function InAppBrowserNotice() {
     } catch {
       /* sessionStorage が使えない環境では毎回出す */
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- UA 判定と sessionStorage は SSR で読めないのでマウント後に読む(描画中に読むと hydration mismatch)
     setBrowser(detected)
     setDismissed(alreadyDismissed)
   }, [])

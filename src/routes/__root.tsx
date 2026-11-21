@@ -84,6 +84,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             サイト全体の情報なので全ページの head に置く(ページ固有の情報は入れない)。 */}
         <script
           type="application/ld+json"
+          // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- 自前の静的データを JSON.stringify した構造化データ(JSON-LD)。利用者の入力は含めない
           dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_JSON_LD) }}
         />
         {/* AdSense のサイト確認・広告配信スクリプトは、下の useEffect で

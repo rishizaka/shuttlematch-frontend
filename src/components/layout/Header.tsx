@@ -31,6 +31,7 @@ export function Header() {
   const [open, setOpen] = useState(false)
   // SSR/ハイドレーション時に createPortal を実行しないため、マウント後にのみ描画する。
   const [mounted, setMounted] = useState(false)
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- createPortal を SSR/ハイドレーション中に実行しないためのマウント判定
   useEffect(() => setMounted(true), [])
 
   const openMenu = () => setOpen(true)

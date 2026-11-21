@@ -30,11 +30,11 @@ export const Route = createFileRoute('/about')({
  */
 function startAboutStage(stage: HTMLElement): () => void {
 
-      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       // 画面を離れるときに全部止められるよう、登録したものを控えておく
-      var cleanups: Array<() => void> = [];
-      var rafIds: number[] = [];
-      var on = function (
+      const cleanups: Array<() => void> = [];
+      const rafIds: number[] = [];
+      const on = function (
         target: Window | HTMLElement,
         type: string,
         fn: EventListenerOrEventListenerObject,
@@ -43,12 +43,12 @@ function startAboutStage(stage: HTMLElement): () => void {
         target.addEventListener(type, fn, opts);
         cleanups.push(function () { target.removeEventListener(type, fn, opts); });
       };
-      var trackRaf = function (fn: FrameRequestCallback) {
-        var id = requestAnimationFrame(fn);
+      const trackRaf = function (fn: FrameRequestCallback) {
+        const id = requestAnimationFrame(fn);
         rafIds.push(id);
         return id;
       };
-      var clamp01 = function (v: number) { return v < 0 ? 0 : v > 1 ? 1 : v; };
+      const clamp01 = function (v: number) { return v < 0 ? 0 : v > 1 ? 1 : v; };
 
       /* =====================================================
          スクロール駆動の中核
@@ -60,9 +60,9 @@ function startAboutStage(stage: HTMLElement): () => void {
          本文や図表をここに入れると、読もうとして止めた位置で
          半透明のまま固定されてしまう。 */
       type ScrollItem = { el: HTMLElement; cover: boolean };
-      var items: ScrollItem[] = [];
+      const items: ScrollItem[] = [];
       stage.querySelectorAll('[data-scroll]').forEach(function (el) {
-        var kind = el.getAttribute('data-scroll');
+        const kind = el.getAttribute('data-scroll');
         items.push({ el: el as HTMLElement, cover: kind === 'cover' });
       });
 
@@ -81,34 +81,34 @@ function startAboutStage(stage: HTMLElement): () => void {
          なめらかなグラデーションになるので、ぼかし処理を一切かけずに
          流体のような混ざりが出せる(重いフィルタを使わなくて済む)。
          ===================================================== */
-      var bg = stage.querySelector('#bg') as HTMLCanvasElement | null;
+      const bg = stage.querySelector('#bg') as HTMLCanvasElement | null;
       const bgCtx: CanvasRenderingContext2D | null = bg ? bg.getContext('2d') : null;
-      var OFF = 120;
-      var off = document.createElement('canvas');
+      const OFF = 120;
+      const off = document.createElement('canvas');
       off.width = off.height = OFF;
       const oc = off.getContext('2d') as CanvasRenderingContext2D;
-      var bgW = 0, bgH = 0;
+      let bgW = 0, bgH = 0;
 
       // 紺側と紙側、それぞれの「文字・罫線の色」。背景の混ざり具合で補間する。
-      var INK_ON_NAVY  = [234, 240, 251];
-      var INK_ON_PAPER = [0, 20, 51];
-      var SOFT_ON_NAVY = [182, 200, 230];
-      var SOFT_ON_PAPER = [40, 62, 98];
-      var FAINT_ON_NAVY = [146, 168, 204];
-      var FAINT_ON_PAPER = [82, 101, 136];
+      const INK_ON_NAVY  = [234, 240, 251];
+      const INK_ON_PAPER = [0, 20, 51];
+      const SOFT_ON_NAVY = [182, 200, 230];
+      const SOFT_ON_PAPER = [40, 62, 98];
+      const FAINT_ON_NAVY = [146, 168, 204];
+      const FAINT_ON_PAPER = [82, 101, 136];
 
-      var mixRgb = function (a: number[], b: number[], t: number) {
+      const mixRgb = function (a: number[], b: number[], t: number) {
         return [
           Math.round(a[0] + (b[0] - a[0]) * t),
           Math.round(a[1] + (b[1] - a[1]) * t),
           Math.round(a[2] + (b[2] - a[2]) * t),
         ];
       };
-      var rgb = function (c: number[]) { return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; };
+      const rgb = function (c: number[]) { return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; };
 
       function sizeBg() {
         if (!bg || !bgCtx) return;
-        var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         bgW = window.innerWidth;
         bgH = window.innerHeight;
         bg.width = Math.round(bgW * dpr);
@@ -119,7 +119,7 @@ function startAboutStage(stage: HTMLElement): () => void {
 
       /** ぼかした円。中心が濃く、外へ向かって透明に抜ける。 */
       function blob(x: number, y: number, r: number, color: string, alpha: number) {
-        var g = oc.createRadialGradient(x, y, 0, x, y, r);
+        const g = oc.createRadialGradient(x, y, 0, x, y, r);
         g.addColorStop(0, 'rgba(' + color + ',' + alpha + ')');
         g.addColorStop(0.55, 'rgba(' + color + ',' + alpha * 0.5 + ')');
         g.addColorStop(1, 'rgba(' + color + ',0)');
@@ -135,7 +135,7 @@ function startAboutStage(stage: HTMLElement): () => void {
         if (!bgCtx) return;
 
         // 下地: 上が持ち上がった紺、下へ向かって深く沈む
-        var base = oc.createLinearGradient(0, 0, OFF * 0.35, OFF);
+        const base = oc.createLinearGradient(0, 0, OFF * 0.35, OFF);
         base.addColorStop(0, '#0b2c58');
         base.addColorStop(0.45, '#001b42');
         base.addColorStop(1, '#00081a');
@@ -152,13 +152,13 @@ function startAboutStage(stage: HTMLElement): () => void {
 
         // 紙。画面の中央から滲み出し、paper が上がるほど広く濃くなる。
         if (paper > 0.001) {
-          var pk = smoothstep(0, 1, paper);
-          var cx = OFF * (0.5 + Math.sin(time * 0.07) * 0.035);
-          var cy = OFF * (0.48 + Math.cos(time * 0.06) * 0.035);
-          var pr = OFF * (0.46 + pk * 0.34);
+          const pk = smoothstep(0, 1, paper);
+          const cx = OFF * (0.5 + Math.sin(time * 0.07) * 0.035);
+          const cy = OFF * (0.48 + Math.cos(time * 0.06) * 0.035);
+          const pr = OFF * (0.46 + pk * 0.34);
 
           // 縁のなじみ(暖色)を先に、広めに置く
-          var gw = oc.createRadialGradient(cx, cy, 0, cx, cy, pr * 1.45);
+          const gw = oc.createRadialGradient(cx, cy, 0, cx, cy, pr * 1.45);
           gw.addColorStop(0, 'rgba(226,214,190,' + pk * 0.4 + ')');
           gw.addColorStop(0.6, 'rgba(226,214,190,' + pk * 0.26 + ')');
           gw.addColorStop(1, 'rgba(226,214,190,0)');
@@ -167,8 +167,8 @@ function startAboutStage(stage: HTMLElement): () => void {
 
           // 紙本体。中心から 72% までは減衰させず、そこから一気に抜く。
           // こうすると画面の左右端まで紙が届き、混ざりは四隅だけで起きる。
-          var a = Math.min(pk * 1.25, 1);
-          var gp = oc.createRadialGradient(cx, cy, 0, cx, cy, pr);
+          const a = Math.min(pk * 1.25, 1);
+          const gp = oc.createRadialGradient(cx, cy, 0, cx, cy, pr);
           gp.addColorStop(0, 'rgba(247,244,236,' + a + ')');
           gp.addColorStop(0.72, 'rgba(247,244,236,' + a + ')');
           gp.addColorStop(1, 'rgba(247,244,236,0)');
@@ -187,7 +187,7 @@ function startAboutStage(stage: HTMLElement): () => void {
 
       /** 背景の混ざり具合に合わせて、文字と罫線の色を追従させる。 */
       function applyInk(paper: number) {
-        var root = stage.style;
+        const root = stage.style;
         root.setProperty('--ink', rgb(mixRgb(INK_ON_NAVY, INK_ON_PAPER, paper)));
         root.setProperty('--ink-soft', rgb(mixRgb(SOFT_ON_NAVY, SOFT_ON_PAPER, paper)));
         root.setProperty('--ink-faint', rgb(mixRgb(FAINT_ON_NAVY, FAINT_ON_PAPER, paper)));
@@ -205,8 +205,8 @@ function startAboutStage(stage: HTMLElement): () => void {
         );
       }
 
-      var smoothstep = function (a: number, b: number, x: number) {
-        var t = clamp01((x - a) / (b - a));
+      const smoothstep = function (a: number, b: number, x: number) {
+        const t = clamp01((x - a) / (b - a));
         return t * t * (3 - 2 * t);
       };
 
@@ -222,34 +222,34 @@ function startAboutStage(stage: HTMLElement): () => void {
        * 読む位置では常に paper = 1(紙・濃い文字)に落ち着く。
        */
       function paperness() {
-        var sets = stage.querySelectorAll('.set');
+        const sets = stage.querySelectorAll('.set');
         if (!sets.length) return 0;
-        var vh = window.innerHeight;
-        var span = vh * 0.34;
+        const vh = window.innerHeight;
+        const span = vh * 0.34;
 
         // 入りは表紙(cover)の抜け際を基準にする。本文の先頭で測ると、
         // 表紙のテキストがまだ画面に残っているうちに地色が紙へ変わり、
         // 明るい前提の見出しが紙の上に乗って読めなくなる。
-        var enter = 1;
-        var cover = stage.querySelector('.cover');
+        let enter = 1;
+        const cover = stage.querySelector('.cover');
         if (cover) enter = smoothstep(0, span, vh * 0.45 - cover.getBoundingClientRect().bottom);
 
         // 抜けは本文の末尾ではなく巻末セクションを基準にする。
         // 本文末尾で測ると、巻末(紺)が画面に入ってきても本文の下端がまだ
         // 画面内に残っているため、いつまでも紙のままになる。
-        var exit = 1;
-        var colo = stage.querySelector('.colophon-cover');
+        let exit = 1;
+        const colo = stage.querySelector('.colophon-cover');
         if (colo) exit = smoothstep(0, span, colo.getBoundingClientRect().top - vh * 0.34);
 
         return Math.min(enter, exit);
       }
 
-      var bgTime = 0;
-      var lastPaper = -1;
+      let bgTime = 0;
+      let lastPaper = -1;
       function bgFrame(now: number) {
         trackRaf(bgFrame);
         bgTime = now / 1000;
-        var pv = paperness();
+        const pv = paperness();
         paintBg(pv, bgTime);
         // 色の書き換えは変化があったときだけ(毎フレームの再計算を避ける)
         if (Math.abs(pv - lastPaper) > 0.004) {
@@ -266,7 +266,7 @@ function startAboutStage(stage: HTMLElement): () => void {
           // 動きを減らす設定では、時間による漂いを止めて一度だけ描く
           paintBg(paperness(), 0);
           window.addEventListener('scroll', function () {
-            var pv = paperness();
+            const pv = paperness();
             paintBg(pv, 0);
             applyInk(pv);
           }, { passive: true });
@@ -275,11 +275,11 @@ function startAboutStage(stage: HTMLElement): () => void {
         }
       }
 
-      var revealTargets = stage.querySelectorAll('.reveal');
+      const revealTargets = stage.querySelectorAll('.reveal');
       if (reduce || !('IntersectionObserver' in window)) {
         revealTargets.forEach(function (el) { el.classList.add('shown'); });
       } else {
-        var revealIO = new IntersectionObserver(
+        const revealIO = new IntersectionObserver(
           function (entries) {
             entries.forEach(function (e) {
               if (!e.isIntersecting) return;
@@ -294,55 +294,55 @@ function startAboutStage(stage: HTMLElement): () => void {
         revealTargets.forEach(function (el) { revealIO.observe(el); });
       }
 
-      var railLabel = stage.querySelector('#railLabel') as HTMLElement | null;
+      const railLabel = stage.querySelector('#railLabel') as HTMLElement | null;
       type Chapter = { el: Element; text: string };
-      var chapters: Chapter[] = Array.prototype.map.call(
+      const chapters: Chapter[] = Array.prototype.map.call(
         stage.querySelectorAll('[data-chapter]'),
         function (el: Element): Chapter {
           return { el: el, text: el.getAttribute('data-chapter') || '' };
         },
       ) as Chapter[];
-      var currentChapter = '';
+      let currentChapter = '';
 
-      var progressBar = stage.querySelector('.progress') as HTMLElement | null;
+      const progressBar = stage.querySelector('.progress') as HTMLElement | null;
 
       function update() {
-        var vh = window.innerHeight;
+        const vh = window.innerHeight;
 
         /* --- ページ全体の進捗(上端のバー + 章インジケーターの金線) --- */
-        var max = document.documentElement.scrollHeight - vh;
-        var sp = max > 0 ? clamp01(window.scrollY / max) : 0;
+        const max = document.documentElement.scrollHeight - vh;
+        const sp = max > 0 ? clamp01(window.scrollY / max) : 0;
         if (progressBar) progressBar.style.setProperty('--sp', sp.toFixed(4));
-        var rail = stage.querySelector('.rail') as HTMLElement | null;
+        const rail = stage.querySelector('.rail') as HTMLElement | null;
         if (rail) rail.style.setProperty('--sp', sp.toFixed(4));
 
         /* --- 各要素の進行度 --- */
-        for (var i = 0; i < items.length; i++) {
-          var it = items[i];
-          var r = it.el.getBoundingClientRect();
-          var p;
+        for (let i = 0; i < items.length; i++) {
+          const it = items[i];
+          const r = it.el.getBoundingClientRect();
+          let p: number;
           if (it.cover) {
             // 表紙は「画面から出ていくまで」を 0→1 にして、退場の視差に使う
             p = clamp01(-r.top / Math.max(r.height * 0.85, 1));
           } else {
             // 本文は下から入り始めて画面の 45% に達するまでを 0→1
-            var start = vh * 0.95;
-            var end = vh * 0.42;
+            const start = vh * 0.95;
+            const end = vh * 0.42;
             p = clamp01((start - r.top) / (start - end));
           }
           it.el.style.setProperty('--p', p.toFixed(4));
         }
 
         /* --- 章インジケーターの文字を、画面中央に近い章に合わせる --- */
-        var best: Chapter | null = null;
-        var bestDist = Infinity;
-        for (var c = 0; c < chapters.length; c++) {
-          var cr = chapters[c].el.getBoundingClientRect();
+        let best: Chapter | null = null;
+        let bestDist = Infinity;
+        for (let c = 0; c < chapters.length; c++) {
+          const cr = chapters[c].el.getBoundingClientRect();
           if (cr.bottom < 0 || cr.top > vh) continue;
-          var dist = Math.abs(cr.top + cr.height / 2 - vh / 2);
+          const dist = Math.abs(cr.top + cr.height / 2 - vh / 2);
           if (dist < bestDist) { bestDist = dist; best = chapters[c]; }
         }
-        var next = best ? best.text : 'ABOUT SHUTTLEMATCH';
+        const next = best ? best.text : 'ABOUT SHUTTLEMATCH';
         if (next !== currentChapter && railLabel) {
           const label = railLabel;
           currentChapter = next;
@@ -354,7 +354,7 @@ function startAboutStage(stage: HTMLElement): () => void {
         }
       }
 
-      var queued = false;
+      let queued = false;
       function onScroll() {
         if (queued) return;
         queued = true;
@@ -375,18 +375,18 @@ function startAboutStage(stage: HTMLElement): () => void {
          終端速度は約 6.2 m/s。上りは伸びて下りは急に落ちる——
          放物線ではないこの弧が、シャトルだけが持つ形。
          ===================================================== */
-      var DRAG_K = 0.252;
-      var G = 9.81;
+      const DRAG_K = 0.252;
+      const G = 9.81;
 
       function buildTrail() {
-        var vx = 16 + Math.random() * 16;
-        var vy = 17 + Math.random() * 12;
-        var dir = Math.random() < 0.5 ? 1 : -1;
-        var x = dir > 0 ? 0.5 : 12.9;
-        var y = 1.0 + Math.random() * 0.5;
-        var pts = [];
-        for (var i = 0; i < 1500; i++) {
-          var sp = Math.hypot(vx, vy);
+        let vx = 16 + Math.random() * 16;
+        let vy = 17 + Math.random() * 12;
+        const dir = Math.random() < 0.5 ? 1 : -1;
+        let x = dir > 0 ? 0.5 : 12.9;
+        let y = 1.0 + Math.random() * 0.5;
+        const pts = [];
+        for (let i = 0; i < 1500; i++) {
+          const sp = Math.hypot(vx, vy);
           vx += -DRAG_K * sp * vx * (1 / 120);
           vy += (-DRAG_K * sp * vy - G) * (1 / 120);
           x += dir * vx * (1 / 120);
@@ -403,14 +403,14 @@ function startAboutStage(stage: HTMLElement): () => void {
         const maybeCtx = canvas.getContext('2d');
         if (!maybeCtx) return;
         const ctx: CanvasRenderingContext2D = maybeCtx;
-        var w = 0, h = 0;
-        var trails: Array<{ pts: number[][]; age: number; life: number; draw: number }> = [];
-        var raf = 0, spawnAt = 0, t = 0;
+        let w = 0, h = 0;
+        let trails: Array<{ pts: number[][]; age: number; life: number; draw: number }> = [];
+        let raf = 0, spawnAt = 0, t = 0;
 
         function resize() {
-          var r = canvas.getBoundingClientRect();
+          const r = canvas.getBoundingClientRect();
           if (!r.width || !r.height) return;
-          var dpr = Math.min(window.devicePixelRatio || 1, 2);
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
           w = r.width; h = r.height;
           canvas.width = Math.round(w * dpr);
           canvas.height = Math.round(h * dpr);
@@ -420,9 +420,9 @@ function startAboutStage(stage: HTMLElement): () => void {
         if ('ResizeObserver' in window) new ResizeObserver(resize).observe(canvas);
 
         if (reduce) {
-          for (var k = 0; k < 3; k++) {
-            var pts = buildTrail();
-            for (var j = 1; j < pts.length; j++) {
+          for (let k = 0; k < 3; k++) {
+            const pts = buildTrail();
+            for (let j = 1; j < pts.length; j++) {
               ctx.strokeStyle = 'rgba(237,187,78,0.22)';
               ctx.lineWidth = 1.1;
               ctx.beginPath();
@@ -436,7 +436,7 @@ function startAboutStage(stage: HTMLElement): () => void {
 
         function frame(now: number) {
           raf = trackRaf(frame);
-          var dt = t ? Math.min((now - t) / 1000, 0.05) : 0.016;
+          const dt = t ? Math.min((now - t) / 1000, 0.05) : 0.016;
           t = now;
           if (now > spawnAt) {
             trails.push({ pts: buildTrail(), age: 0, life: 7.5, draw: 0 });
@@ -444,16 +444,16 @@ function startAboutStage(stage: HTMLElement): () => void {
             spawnAt = now + 1500 + Math.random() * 1600;
           }
           ctx.clearRect(0, 0, w, h);
-          for (var i = 0; i < trails.length; i++) {
-            var tr = trails[i];
+          for (let i = 0; i < trails.length; i++) {
+            const tr = trails[i];
             tr.age += dt;
             tr.draw = Math.min(tr.draw + dt / 1.5, 1);
-            var n = Math.floor(tr.pts.length * tr.draw);
+            const n = Math.floor(tr.pts.length * tr.draw);
             if (n < 2) continue;
-            var fade = tr.age > tr.life - 2 ? Math.max((tr.life - tr.age) / 2, 0) : 1;
-            for (var j2 = 1; j2 < n; j2++) {
-              var p0 = tr.pts[j2 - 1], p1 = tr.pts[j2];
-              var a = (j2 / n) * 0.5 * fade;
+            const fade = tr.age > tr.life - 2 ? Math.max((tr.life - tr.age) / 2, 0) : 1;
+            for (let j2 = 1; j2 < n; j2++) {
+              const p0 = tr.pts[j2 - 1], p1 = tr.pts[j2];
+              const a = (j2 / n) * 0.5 * fade;
               ctx.strokeStyle = 'rgba(237,187,78,' + a.toFixed(3) + ')';
               ctx.lineWidth = 0.6 + (j2 / n) * 1.5;
               ctx.beginPath();
@@ -461,7 +461,7 @@ function startAboutStage(stage: HTMLElement): () => void {
               ctx.lineTo(p1[0] * w, p1[1] * h);
               ctx.stroke();
             }
-            var tip = tr.pts[n - 1];
+            const tip = tr.pts[n - 1];
             ctx.fillStyle = 'rgba(247,224,168,' + (0.85 * fade).toFixed(3) + ')';
             ctx.beginPath();
             ctx.arc(tip[0] * w, tip[1] * h, 2.1, 0, Math.PI * 2);
@@ -600,15 +600,15 @@ function AboutPage() {
                     <rect className="frame" x="1" y="1" width="198" height="80" />
                     <line className="mid" x1="100" y1="1" x2="100" y2="81" />
                     <path className="tie" d="M52,26 V56" stroke="var(--gold)" />
-                    <circle cx="52" cy="26" r="11" fill="var(--gold)" stroke="var(--gold)" stroke-width="1.4" />
-                    <text x="52" y="26" fill="#241500" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">1</text>
-                    <circle cx="52" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" stroke-width="1.4" />
-                    <text x="52" y="56" fill="var(--ink-soft)" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">2</text>
+                    <circle cx="52" cy="26" r="11" fill="var(--gold)" stroke="var(--gold)" strokeWidth="1.4" />
+                    <text x="52" y="26" fill="#241500" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">1</text>
+                    <circle cx="52" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" strokeWidth="1.4" />
+                    <text x="52" y="56" fill="var(--ink-soft)" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">2</text>
                     <path className="tie" d="M148,26 V56" stroke="var(--ink-faint)" />
-                    <circle cx="148" cy="26" r="11" fill="var(--card)" stroke="var(--ink-faint)" stroke-width="1.4" />
-                    <text x="148" y="26" fill="var(--ink-soft)" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">3</text>
-                    <circle cx="148" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" stroke-width="1.4" />
-                    <text x="148" y="56" fill="var(--ink-soft)" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">4</text>
+                    <circle cx="148" cy="26" r="11" fill="var(--card)" stroke="var(--ink-faint)" strokeWidth="1.4" />
+                    <text x="148" y="26" fill="var(--ink-soft)" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">3</text>
+                    <circle cx="148" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" strokeWidth="1.4" />
+                    <text x="148" y="56" fill="var(--ink-soft)" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">4</text>
                   </svg>
                 </div>
                 <div className="court-row" style={{ '--d': '.1' } as CSSProperties}>
@@ -617,15 +617,15 @@ function AboutPage() {
                     <rect className="frame" x="1" y="1" width="198" height="80" />
                     <line className="mid" x1="100" y1="1" x2="100" y2="81" />
                     <path className="tie" d="M52,26 V56" stroke="var(--gold)" />
-                    <circle cx="52" cy="26" r="11" fill="var(--gold)" stroke="var(--gold)" stroke-width="1.4" />
-                    <text x="52" y="26" fill="#241500" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">1</text>
-                    <circle cx="52" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" stroke-width="1.4" />
-                    <text x="52" y="56" fill="var(--ink-soft)" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">3</text>
+                    <circle cx="52" cy="26" r="11" fill="var(--gold)" stroke="var(--gold)" strokeWidth="1.4" />
+                    <text x="52" y="26" fill="#241500" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">1</text>
+                    <circle cx="52" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" strokeWidth="1.4" />
+                    <text x="52" y="56" fill="var(--ink-soft)" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">3</text>
                     <path className="tie" d="M148,26 V56" stroke="var(--ink-faint)" />
-                    <circle cx="148" cy="26" r="11" fill="var(--card)" stroke="var(--ink-faint)" stroke-width="1.4" />
-                    <text x="148" y="26" fill="var(--ink-soft)" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">2</text>
-                    <circle cx="148" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" stroke-width="1.4" />
-                    <text x="148" y="56" fill="var(--ink-soft)" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">4</text>
+                    <circle cx="148" cy="26" r="11" fill="var(--card)" stroke="var(--ink-faint)" strokeWidth="1.4" />
+                    <text x="148" y="26" fill="var(--ink-soft)" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">2</text>
+                    <circle cx="148" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" strokeWidth="1.4" />
+                    <text x="148" y="56" fill="var(--ink-soft)" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">4</text>
                   </svg>
                 </div>
                 <div className="court-row" style={{ '--d': '.2' } as CSSProperties}>
@@ -634,15 +634,15 @@ function AboutPage() {
                     <rect className="frame" x="1" y="1" width="198" height="80" />
                     <line className="mid" x1="100" y1="1" x2="100" y2="81" />
                     <path className="tie" d="M52,26 V56" stroke="var(--gold)" />
-                    <circle cx="52" cy="26" r="11" fill="var(--gold)" stroke="var(--gold)" stroke-width="1.4" />
-                    <text x="52" y="26" fill="#241500" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">1</text>
-                    <circle cx="52" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" stroke-width="1.4" />
-                    <text x="52" y="56" fill="var(--ink-soft)" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">4</text>
+                    <circle cx="52" cy="26" r="11" fill="var(--gold)" stroke="var(--gold)" strokeWidth="1.4" />
+                    <text x="52" y="26" fill="#241500" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">1</text>
+                    <circle cx="52" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" strokeWidth="1.4" />
+                    <text x="52" y="56" fill="var(--ink-soft)" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">4</text>
                     <path className="tie" d="M148,26 V56" stroke="var(--ink-faint)" />
-                    <circle cx="148" cy="26" r="11" fill="var(--card)" stroke="var(--ink-faint)" stroke-width="1.4" />
-                    <text x="148" y="26" fill="var(--ink-soft)" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">2</text>
-                    <circle cx="148" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" stroke-width="1.4" />
-                    <text x="148" y="56" fill="var(--ink-soft)" font-size="12" font-weight="800" text-anchor="middle" dominant-baseline="central">3</text>
+                    <circle cx="148" cy="26" r="11" fill="var(--card)" stroke="var(--ink-faint)" strokeWidth="1.4" />
+                    <text x="148" y="26" fill="var(--ink-soft)" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">2</text>
+                    <circle cx="148" cy="56" r="11" fill="var(--card)" stroke="var(--ink-faint)" strokeWidth="1.4" />
+                    <text x="148" y="56" fill="var(--ink-soft)" fontSize="12" fontWeight="800" textAnchor="middle" dominantBaseline="central">3</text>
                   </svg>
                 </div>
               </div>
