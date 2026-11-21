@@ -33,7 +33,7 @@ import {
 import { useCurrentUser, useHasOrganizerToken } from '../../hooks/useCurrentUser'
 import { ApiError, isNetworkError, matchApi, roomApi } from '../../lib/api'
 import type { Room } from '../../lib/types'
-import { readOrganizerTokenFromHash } from '../../lib/organizer-link'
+import { OrganizerLinkSection, readOrganizerTokenFromHash } from '../../features/organizer-link'
 import {
   addRoomId,
   getSelfParticipant,
@@ -57,7 +57,6 @@ import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { RosterAccordion } from '../../components/room/RosterAccordion'
 import { ShareButtons } from '../../components/room/ShareButtons'
-import { OrganizerLinkSection } from '../../components/room/OrganizerLinkSection'
 import { MatchScheduleList } from '../../components/match/MatchScheduleList'
 import { MatchesSkeleton } from '../../components/match/MatchesSkeleton'
 import { SetStartAnnouncement } from '../../components/match/SetStartAnnouncement'
