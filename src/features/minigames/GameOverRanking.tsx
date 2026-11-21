@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useGameRanking, useSubmitScore } from '../../hooks/queries'
-import { canEnterRanking, rankForScore } from '../../lib/ranking'
+import { canEnterRanking, rankForScore } from './ranking'
 import { ArcadeScreen } from './ArcadeScreen'
 import { NameEntryModal } from './NameEntryModal'
 import { PLAYER_NAME_KEY } from './playerName'

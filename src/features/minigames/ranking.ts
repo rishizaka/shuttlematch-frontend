@@ -1,4 +1,4 @@
-import type { RankingEntry } from './types'
+import type { RankingEntry } from '../../lib/types'
 
 /** ランキングに残る件数。バックエンドの Ranking.SIZE と揃える。 */
 export const RANKING_SIZE = 5

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GAMES } from '../components/game/catalog'
+import { GAMES } from './game-catalog'
 import { GUIDES } from './guides'
 
 describe('guides', () => {

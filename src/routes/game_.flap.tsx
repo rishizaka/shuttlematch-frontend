@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, Crown, RotateCcw, Share2 } from 'lucide-react'
-import { createShuttleFlapGame, levelOf } from '../components/game/shuttleFlap'
-import { AdSlot } from '../components/game/AdSlot'
-import { GameGuide } from '../components/game/GameGuide'
-import { GameOverRanking } from '../components/game/GameOverRanking'
-import { RankingModal } from '../components/game/RankingModal'
+import { createShuttleFlapGame, levelOf, AdSlot, GameGuide, GameOverRanking, RankingModal } from '../features/minigames'
+import type { GamePhase, ShuttleFlapHandle } from '../features/minigames'
 import { useToast } from '../components/ui/Toast'
-import type { GamePhase, ShuttleFlapHandle } from '../components/game/shuttleFlap'
 
 export const Route = createFileRoute('/game_/flap')({
   head: () => ({

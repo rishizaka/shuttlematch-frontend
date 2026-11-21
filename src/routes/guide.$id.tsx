@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react'
 import { Breadcrumbs } from '../components/ui/Breadcrumbs'
 import { Card, CardBody } from '../components/ui/Card'
 import { CreateRoomCta } from '../components/ui/CreateRoomCta'
-import { GAMES } from '../components/game/catalog'
+import { GAMES } from '../lib/game-catalog'
 import { guideOgMeta, SITE_NAME, SITE_ORIGIN } from '../lib/og'
 import { GUIDE_AUTHOR, GUIDES, formatGuideDate } from '../lib/guides'
 

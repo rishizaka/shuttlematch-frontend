@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronRight } from 'lucide-react'
-import { GAMES } from '../game/catalog'
+import { GAMES } from '../../lib/game-catalog'
 
 /** アナウンスを自動で閉じるまでの時間 (ms)。 */
 const AUTO_CLOSE_MS = 5000

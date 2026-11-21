@@ -1,14 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, Crown, RotateCcw, Share2 } from 'lucide-react'
-import { TIME_LIMIT, createShatopokoSkiGame, skiLevelOf } from '../components/game/shatopokoSki'
-import { AdSlot } from '../components/game/AdSlot'
-import { GameGuide } from '../components/game/GameGuide'
-import { GameOverRanking } from '../components/game/GameOverRanking'
-import { RankingModal } from '../components/game/RankingModal'
+import { TIME_LIMIT, createShatopokoSkiGame, skiLevelOf, AdSlot, GameGuide, GameOverRanking, RankingModal } from '../features/minigames'
+import type { GamePhase, SkiHandle, SkiSnapshot } from '../features/minigames'
 import { useToast } from '../components/ui/Toast'
-import type { GamePhase } from '../components/game/shared'
-import type { SkiHandle, SkiSnapshot } from '../components/game/shatopokoSki'
 
 export const Route = createFileRoute('/game_/ski')({
   head: () => ({

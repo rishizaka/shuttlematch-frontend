@@ -7,7 +7,7 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 - 作業の最初に **`docs/feature-map.md`**（機能→ファイル→検証方法の地図）で触る場所と検証レベルを決める。
 - 完了を報告する前に **`/verify`** の手順で自分で検証し、証拠（コマンド結果・スクショ）を添える。
 - 機能・ルートを足したり動かしたりしたら **`/maintain-feature-map`** で地図を直す。
-- **コードは機能（フィーチャー）単位で `src/features/<名前>/` にまとめる**（2026-11-21〜移行中。移行済み: `practice-planner`・`organizer-link`）。
+- **コードは機能（フィーチャー）単位で `src/features/<名前>/` にまとめる**（2026-11-21〜移行中。移行済み: `practice-planner`・`organizer-link`・`minigames`）。
   - その機能の部品・ロジック・テストを全部そのディレクトリに置く。公開するものは `index.ts` で export する。
   - 機能の外（routes・別の機能）からは **`index.ts` 経由でだけ** import する。中のファイルを直接 import しない。
   - `components/ui`・`lib/api`・`lib/types` などの共通部品は今の場所のまま。依存は「機能 → 共通」の向きだけで、
@@ -53,15 +53,17 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 ## ミニゲーム
 
 現在5本（`flap` / `rain` / `coin` / `flick` / `ski`）。1本につき
-**ページ `src/routes/game_.{slug}.tsx` とコア `src/components/game/{name}.ts` の対**で、
+**ページ `src/routes/game_.{slug}.tsx` とコア `src/features/minigames/{name}.ts` の対**で、
 コアは canvas だけを受け取り React に依存しない（描画とゲームロジックはコア、
-スコア表示・ランキング・シェアはページ側）。共通の型と体育館背景は `components/game/shared.ts`。
+スコア表示・ランキング・シェアはページ側）。共通の型と体育館背景は `features/minigames/shared.ts`。
 
 - 描画は**論理幅 360px 固定**で、`resize()` が DPR とクライアント幅から `scale` を出して
   `ctx.setTransform` する。高さ `LH` は縦横比から毎回決まるので、レイアウトを縦にも横にも
   効かせたいものは `LH` 基準で置く。
-- 一覧は `components/game/catalog.ts` の 1 エントリ。ここに足すと `/game` のハブと
+- 一覧は `src/lib/game-catalog.ts` の 1 エントリ。ここに足すと `/game` のハブと
   セット開始アナウンスの「待ち時間にどうぞ」の両方に出る。
+- ルートは `src/features/minigames/index.ts` 経由でだけ import する（中のファイルを直接 import すると
+  `src/test/architecture.test.ts` が落ちる）。新しいゲームのコアを足したら `index.ts` から export する。
 - **ランキングを持たせるなら backend の `MiniGame` enum に同じスラッグを足す**。
   忘れると登録 API が 400 を返し、結果画面のランキング欄だけが壊れる。
 - 新しいルートを足したら `npm run generate-routes`（`tsr generate`）。忘れると
@@ -73,7 +75,7 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 
 **マネタイズはミニゲーム（`/game`）のページだけに閉じる。試合表や TOP には広告を出さない。**
 
-- 広告枠の実体は `src/components/game/AdSlot.tsx`。現在はダミー（`AD SPACE` のプレースホルダ）。
+- 広告枠の実体は `src/features/minigames/AdSlot.tsx`。現在はダミー（`AD SPACE` のプレースホルダ）。
   各ゲームページは canvas → `GameGuide`（遊び方・コツの本文）→ `<AdSlot />` 1つ、の順に並ぶ。
   canvas とのあいだの緩衝はレイアウトの `space-y-4`（1rem）のみなので、ゲームオーバーの
   モーダル操作直後に広告へ誤タップしやすい構成になっている点は把握しておくこと

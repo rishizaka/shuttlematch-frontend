@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronRight, Trophy } from 'lucide-react'
-import { AdSlot } from '../components/game/AdSlot'
-import { GAMES } from '../components/game/catalog'
+import { AdSlot } from '../features/minigames'
+import { GAMES } from '../lib/game-catalog'
 
 export const Route = createFileRoute('/game')({
   head: () => ({

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { canEnterRanking, rankForScore } from './ranking'
-import type { RankingEntry } from './types'
+import type { RankingEntry } from '../../lib/types'
 
 const entries = (...scores: number[]): RankingEntry[] =>
   scores.map((score, i) => ({

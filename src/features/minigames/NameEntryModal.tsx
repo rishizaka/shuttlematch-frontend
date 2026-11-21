@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { RANKING_SIZE } from '../../lib/ranking'
+import { RANKING_SIZE } from './ranking'
 import { ArcadeScreen } from './ArcadeScreen'
 import { PLAYER_NAME_MAX } from './playerName'
 
