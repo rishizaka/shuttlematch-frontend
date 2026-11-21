@@ -7,6 +7,8 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 - 作業の最初に **`docs/feature-map.md`**（機能→ファイル→検証方法の地図）で触る場所と検証レベルを決める。
 - 完了を報告する前に **`/verify`** の手順で自分で検証し、証拠（コマンド結果・スクショ）を添える。
 - 機能・ルートを足したり動かしたりしたら **`/maintain-feature-map`** で地図を直す。
+- 出すときは **`/ship`**（最新の origin/main から worktree → 目的1つの小さな PR → CI 確認）。
+  **エージェントは main に直接 push しない。マージ（＝本番デプロイ）はユーザーが指示したときだけ。**
 - **ルールは「お願い」より機械チェックで守る。** 一般的なコード規約は ESLint（`eslint.config.js`）、
   このリポジトリ固有の構造ルールで、ソースを読めば判定できるものは
   `src/test/architecture.test.ts` に入れる（現在: ゲームページの `GameGuide` 必須・`AdSlot` ちょうど1つ、
@@ -118,6 +120,7 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 
 > **main に push すれば自動デプロイされる**（`.github/workflows/ci.yml`）。以下の手動手順は
 > Actions が使えないときの緊急用。backend も同じ方式（`shuttlematch-backend` の `ci.yml`）。
+> 変更は `/ship` で PR にして出し、PR がマージされたときにデプロイされる形にする（CI は PR でも走る）。
 
 **CI/CD（GitHub Actions）**
 - `build`: Node22 で `npm ci` → `typecheck` → `lint` → `vitest` → `build`。main への push と PR で発火。
