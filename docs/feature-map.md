@@ -31,10 +31,10 @@
 ### 1-2. 試合表を見る・運営する
 - 入口: `/rooms/{id}/matches`（旧 `/rooms/{id}` はここへリダイレクト）
 - ファイル: `src/routes/rooms/$roomId_.matches.tsx`, `src/routes/rooms/$roomId.tsx`,
-  `src/components/match/`（`MatchScheduleList` / `MatchCard` / `SetStartAnnouncement` / `MatchesSkeleton`）,
+  `src/features/match-schedule/`（試合表の表示。フィーチャー構成。`MatchScheduleList` / `MatchCard` / `SetStartAnnouncement` / `MatchesSkeleton`）,
   `src/components/room/`（`Lobby` / `ParticipantManager` / `RosterAccordion` / `ShareButtons` / `QrModal` / `FixedPairEditor` / `RenameModal`）
 - 操作: セット開始・取り消し、セット追加、早退・遅刻（復帰）、再編成、末尾参加者の削除（開始前のみ）
-- 検証: L1 `src/components/match/*.test.*`, L3 `e2e/fairness.spec.ts`（公平性: 出場/休み回数・連続出場・ペア偏り）,
+- 検証: L1 `src/features/match-schedule/` のテスト, L3 `e2e/fairness.spec.ts`（公平性: 出場/休み回数・連続出場・ペア偏り）,
   `e2e/redirect.spec.ts`
 - 注意: 運営操作は運営者トークンが要る。E2E では `e2e/helpers.ts` の `createRoomAsOrganizer` / `actAsOrganizer` を使う
 
@@ -53,7 +53,7 @@
 
 ### 1-5. 印刷用の試合表
 - 入口: `/rooms/{id}/matches/print`
-- ファイル: `src/routes/rooms/$roomId_.matches_.print.tsx`, `src/components/match/MatchScheduleList.tsx`
+- ファイル: `src/routes/rooms/$roomId_.matches_.print.tsx`, `src/features/match-schedule/MatchScheduleList.tsx`
 - 検証: L2（印刷プレビューで1ページに収まるか）
 
 ### 1-6. 過去の開催・自分のルーム一覧
