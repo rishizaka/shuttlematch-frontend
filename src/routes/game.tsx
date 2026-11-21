@@ -27,6 +27,7 @@ function GameHubPage() {
       const v = Number(localStorage.getItem(g.bestKey) ?? '0')
       if (Number.isFinite(v) && v > 0) next[g.bestKey] = v
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage は SSR で読めないのでマウント後に読む(描画中に読むと hydration mismatch)
     setBests(next)
   }, [])
 

@@ -37,6 +37,7 @@ function GuideDetailPage() {
     <div className="space-y-6">
       <script
         type="application/ld+json"
+        // eslint-disable-next-line react-dom/no-dangerously-set-innerhtml -- 自前の静的データを JSON.stringify した構造化データ(JSON-LD)。利用者の入力は含めない
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',

@@ -41,6 +41,7 @@ export function Lobby({ room, isOrganizer }: { room: Room; isOrganizer: boolean 
   // マウント後に「自分の参加者ID」を localStorage から読む(参加済みか判定)。
   useEffect(() => {
     const stored = getSelfParticipant(room.id)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage は SSR で読めないのでマウント後に読む(描画中に読むと hydration mismatch)
     if (stored?.participantId) setSelfId(stored.participantId)
   }, [room.id])
 

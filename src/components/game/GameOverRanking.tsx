@@ -49,6 +49,7 @@ export function GameOverRanking({
   // 前回の名前を引き継ぐ(毎回入れ直さなくてよいように)。
   useEffect(() => {
     const stored = localStorage.getItem(PLAYER_NAME_KEY)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage は SSR で読めないのでマウント後に読む(描画中に読むと hydration mismatch)
     if (stored) setName(stored)
   }, [])
 
@@ -59,6 +60,7 @@ export function GameOverRanking({
   // ランキングが分かった時点で、名前入力より先に祝福を出す(ゲーセンと同じ順番)。
   useEffect(() => {
     if (celebrated || !data) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- ランキング取得完了を一度だけ検知して祝福演出を始めるための状態遷移
     setCelebrated(true)
     const predicted = rankForScore(data.entries, score)
     if (score > 0 && predicted != null) setCelebratingRank(predicted)

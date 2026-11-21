@@ -35,6 +35,7 @@ function AdminPage() {
 
   // マウント後に、この端末の保存状態を反映する。
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage は SSR で読めないのでマウント後に読む(描画中に読むと hydration mismatch)
     setEnabled(getAdminToken() !== null)
   }, [])
 
