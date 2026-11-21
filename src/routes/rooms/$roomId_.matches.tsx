@@ -57,9 +57,7 @@ import { Lobby } from '../../components/room/Lobby'
 import { ParticipantManager } from '../../components/room/ParticipantManager'
 import { RosterAccordion } from '../../components/room/RosterAccordion'
 import { ShareButtons } from '../../components/room/ShareButtons'
-import { MatchScheduleList } from '../../components/match/MatchScheduleList'
-import { MatchesSkeleton } from '../../components/match/MatchesSkeleton'
-import { SetStartAnnouncement } from '../../components/match/SetStartAnnouncement'
+import { MatchScheduleList, MatchesSkeleton, SetStartAnnouncement } from '../../features/match-schedule'
 
 export const Route = createFileRoute('/rooms/$roomId_/matches')({
   // LINE 等のアプリ内ブラウザから既定ブラウザで開かせるためのパラメータ。

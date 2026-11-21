@@ -1,4 +1,4 @@
-import { Skeleton } from '../ui/Skeleton'
+import { Skeleton } from '../../components/ui/Skeleton'
 
 /**
  * 試合表の読み込み中に出す骨組み。

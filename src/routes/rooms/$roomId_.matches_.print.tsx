@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo } from 'react'
 import { useMatches, useRoom } from '../../hooks/queries'
-import { groupMatchesBySet } from '../../components/match/MatchScheduleList'
+import { groupMatchesBySet } from '../../features/match-schedule'
 import type { Match } from '../../lib/types'
 
 export const Route = createFileRoute('/rooms/$roomId_/matches_/print')({
