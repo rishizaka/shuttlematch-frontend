@@ -2,12 +2,12 @@ import { Suspense, lazy, useState } from 'react'
 import { Copy, KeyRound, QrCode } from 'lucide-react'
 import { copyToClipboard } from '../../lib/clipboard'
 import { getOrganizerToken } from '../../lib/local-store'
-import { organizerLinkUrl } from '../../lib/organizer-link'
+import { organizerLinkUrl } from './organizer-link'
 import { shareOrigin } from '../../lib/og'
-import { Button } from '../ui/Button'
-import { useToast } from '../ui/Toast'
+import { Button } from '../../components/ui/Button'
+import { useToast } from '../../components/ui/Toast'
 
-const QrModal = lazy(() => import('./QrModal'))
+const QrModal = lazy(() => import('../../components/room/QrModal'))
 
 /**
  * 運営メニューの「運営者用リンク」。この端末の運営者トークンを入れたリンクを、

@@ -47,8 +47,9 @@
 
 ### 1-4. 運営権を別の端末・共同運営者に渡す（運営者用リンク）
 - 入口: 試合表ページの「運営者用リンク」（形は `/rooms/{id}/matches#organizer={トークン}`）
-- ファイル: `src/components/room/OrganizerLinkSection.tsx`, `src/lib/organizer-link.ts`, `src/lib/local-store.ts`（運営者トークンの保存）
-- 検証: L1 `src/lib/organizer-link.test.ts`, L3 `e2e/organizer-link.spec.ts`
+- ファイル: `src/features/organizer-link/`（フィーチャー構成。公開は `OrganizerLinkSection` と `readOrganizerTokenFromHash`）,
+  共通部品 `src/lib/local-store.ts`（運営者トークンの保存）・`src/components/room/QrModal.tsx`
+- 検証: L1 `src/features/organizer-link/organizer-link.test.ts`, L3 `e2e/organizer-link.spec.ts`
 
 ### 1-5. 印刷用の試合表
 - 入口: `/rooms/{id}/matches/print`

@@ -7,7 +7,7 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 - 作業の最初に **`docs/feature-map.md`**（機能→ファイル→検証方法の地図）で触る場所と検証レベルを決める。
 - 完了を報告する前に **`/verify`** の手順で自分で検証し、証拠（コマンド結果・スクショ）を添える。
 - 機能・ルートを足したり動かしたりしたら **`/maintain-feature-map`** で地図を直す。
-- **コードは機能（フィーチャー）単位で `src/features/<名前>/` にまとめる**（2026-11-21〜移行中。移行済み: `practice-planner`）。
+- **コードは機能（フィーチャー）単位で `src/features/<名前>/` にまとめる**（2026-11-21〜移行中。移行済み: `practice-planner`・`organizer-link`）。
   - その機能の部品・ロジック・テストを全部そのディレクトリに置く。公開するものは `index.ts` で export する。
   - 機能の外（routes・別の機能）からは **`index.ts` 経由でだけ** import する。中のファイルを直接 import しない。
   - `components/ui`・`lib/api`・`lib/types` などの共通部品は今の場所のまま。依存は「機能 → 共通」の向きだけで、
@@ -117,7 +117,7 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
   付ける API は backend の `@RequiresOrganizer` と揃えること（rename・claim-next・参照には付けない）。
 - 運営メニューの出し分けは「トークンを持つ or 作成者（`createdBy`）」。導入前のランダム表はトークンが無いので作成者判定で残す。
 - トークンは作成したブラウザにしか無い。別端末・共同運営者へは運営メニューの「運営者用リンク」
-  （`/rooms/{id}/matches#organizer={token}`、`src/lib/organizer-link.ts`）で渡す。`#` 以降なのでサーバーに送られない。
+  （`/rooms/{id}/matches#organizer={token}`、`src/features/organizer-link/`）で渡す。`#` 以降なのでサーバーに送られない。
   開いた側は試合表ページでトークンを `roomApi.checkOrganizer` で確かめてから保存し、アドレスバーから消す。
   リンクは持つ人全員が運営者になれるので、参加者向けの共有とは見た目・文言を分けている。
 - **E2E**: API で作ったルームを運営者として扱うときは `e2e/helpers.ts` の `actAsOrganizer` でトークンも注入する。
