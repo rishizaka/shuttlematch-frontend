@@ -6,7 +6,7 @@ import { useMyRoomIdByPublicId } from '../hooks/useMyRoomIds'
 import { Card, CardBody } from '../components/ui/Card'
 import { ErrorBlock, LoadingBlock } from '../components/ui/Spinner'
 import { RoomCard, LiveDot } from '../components/room/RoomCard'
-import { DoublesPracticePlanner } from '../components/home/DoublesPracticePlanner'
+import { DoublesPracticePlanner } from '../features/practice-planner'
 import { jstDayRange } from '../lib/format'
 import type { PublicRoom } from '../lib/types'
 
