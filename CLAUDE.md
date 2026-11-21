@@ -2,11 +2,29 @@
 
 ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR）。
 
+## エージェントの作業ループ（ゴール + 検証方法）
+
+- 作業の最初に **`docs/feature-map.md`**（機能→ファイル→検証方法の地図）で触る場所と検証レベルを決める。
+- 完了を報告する前に **`/verify`** の手順で自分で検証し、証拠（コマンド結果・スクショ）を添える。
+- 機能・ルートを足したり動かしたりしたら **`/maintain-feature-map`** で地図を直す。
+- **ルールは「お願い」より機械チェックで守る。** 一般的なコード規約は ESLint（`eslint.config.js`）、
+  このリポジトリ固有の構造ルールで、ソースを読めば判定できるものは
+  `src/test/architecture.test.ts` に入れる（現在: ゲームページの `GameGuide` 必須・`AdSlot` ちょうど1つ、
+  catalog とルートの対応、`AdSlot` は /game 配下のみ、AdSense の `<script>` を JSX に書かない、
+  フィーチャーマップのパス実在とルート網羅）。エージェントのミスを見つけたら、ここに指示を書き足す前に
+  チェックにできないかを考える。テストが落ちたらテストを緩めず構造を直す。
+
 ## ローカル開発
 
 - Node.js **22 以上が必須**。マシンのデフォルト node は v20 で、そのままだと vitest が起動エラー（`styleText` の `ERR_INVALID_ARG_VALUE`）になる。fnm に v22 が入っているので `fnm exec --using=22 <cmd>` で実行する。
 - 開発: `fnm exec --using=22 npm run dev`（http://localhost:3000）
 - 型チェック: `npm run typecheck`（v20 でも可）
+- lint: `fnm exec --using=22 npm run lint`（ESLint 10 / flat config `eslint.config.js`。CI で必須）。
+  **warn は使わず全部 error**。例外の行は `// eslint-disable-next-line <rule> -- 理由` と理由を書く
+  （不要になった disable は `reportUnusedDisableDirectives` でエラーになる）。
+  localStorage をマウント後に読む SSR 対策は新規なら `useSyncExternalStore` で書く
+  （既存の `useEffect`+`setState` は `react-hooks/set-state-in-effect` を理由つきで disable 済み）。
+  JSX の SVG/HTML 属性は camelCase（`strokeWidth` 等。`stroke-width` は `react-dom/no-unknown-property` で落ちる）。
 - テスト（単体・vitest）: `fnm exec --using=22 npm run test`
 - E2E（Playwright, ブラウザ操作）:
   - ローカル: **backend を 8080 で起動**したうえで `fnm exec --using=22 npm run e2e`
@@ -102,7 +120,7 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 > Actions が使えないときの緊急用。backend も同じ方式（`shuttlematch-backend` の `ci.yml`）。
 
 **CI/CD（GitHub Actions）**
-- `build`: Node22 で `npm ci` → `typecheck` → `vitest` → `build`。main への push と PR で発火。
+- `build`: Node22 で `npm ci` → `typecheck` → `lint` → `vitest` → `build`。main への push と PR で発火。
   `dist.tgz` を artifact 化。
 - `deploy`: **main への push のときだけ**実行（PR では走らない）。`concurrency` で直列化。
   - `dist` を差し替え → VPS上で `npm ci --omit=dev` → `systemctl restart` → health check（最大120秒リトライ）
