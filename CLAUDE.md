@@ -121,6 +121,13 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 > **main に push すれば自動デプロイされる**（`.github/workflows/ci.yml`）。以下の手動手順は
 > Actions が使えないときの緊急用。backend も同じ方式（`shuttlematch-backend` の `ci.yml`）。
 > 変更は `/ship` で PR にして出し、PR がマージされたときにデプロイされる形にする（CI は PR でも走る）。
+>
+> **main はブランチ保護済み**（2026-11-21 設定。**管理者にも適用**）: PR 必須（承認は 0 人でよい）、
+> CI の `Build & Test`（GitHub Actions）成功が必須、force push・削除は禁止。エージェントは利用者の
+> GitHub アカウント（管理者）で push するので、管理者を除外するとエージェントの直接 push も素通りする。そのため管理者にも適用している。
+> 緊急時（Actions が落ちていて PR をマージできない等）は、管理者への適用だけを一時的に外し、済んだら必ず戻す:
+> `gh api -X DELETE repos/rishizaka/shuttlematch-frontend/branches/main/protection/enforce_admins`
+> → 作業 → `gh api -X POST repos/rishizaka/shuttlematch-frontend/branches/main/protection/enforce_admins`
 
 **CI/CD（GitHub Actions）**
 - `build`: Node22 で `npm ci` → `typecheck` → `lint` → `vitest` → `build`。main への push と PR で発火。
