@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Button } from '../ui/Button'
+import { Button } from '../../components/ui/Button'
 
 /**
  * 自分のニックネームを変更するモーダル(受付モード)。

@@ -2,12 +2,12 @@ import { Suspense, lazy, useState } from 'react'
 import { QrCode, Share2 } from 'lucide-react'
 import { copyToClipboard } from '../../lib/clipboard'
 import { shareOrigin } from '../../lib/og'
-import { Button } from '../ui/Button'
-import { useToast } from '../ui/Toast'
+import { Button } from '../../components/ui/Button'
+import { useToast } from '../../components/ui/Toast'
 
 // QR の生成ライブラリごと、開いたときに初めて読み込む。試合表のページは参加者全員が
 // 開くので、実際に押した人だけが払うコストにする(既定のバンドルには載せない)。
-const QrModal = lazy(() => import('./QrModal'))
+const QrModal = lazy(() => import('../../components/room/QrModal'))
 
 /**
  * 試合表の共有リンク・QRコード表示。

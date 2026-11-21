@@ -51,12 +51,14 @@ import { Card, CardBody } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { ErrorBlock } from '../../components/ui/Spinner'
 import { useToast } from '../../components/ui/Toast'
-import { ClaimNumberModal } from '../../components/room/ClaimNumberModal'
-import { QuickJoinBanner } from '../../components/room/QuickJoinBanner'
-import { Lobby } from '../../components/room/Lobby'
-import { ParticipantManager } from '../../components/room/ParticipantManager'
-import { RosterAccordion } from '../../components/room/RosterAccordion'
-import { ShareButtons } from '../../components/room/ShareButtons'
+import {
+  ClaimNumberModal,
+  Lobby,
+  ParticipantManager,
+  QuickJoinBanner,
+  RosterAccordion,
+  ShareButtons,
+} from '../../features/room'
 import { MatchScheduleList, MatchesSkeleton, SetStartAnnouncement } from '../../features/match-schedule'
 
 export const Route = createFileRoute('/rooms/$roomId_/matches')({

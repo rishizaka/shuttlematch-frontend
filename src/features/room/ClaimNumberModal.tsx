@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Participant } from '../../lib/types'
 import { FREE_SLOT, isClaimableSlot, VISITOR_PLACEHOLDER } from '../../lib/guests'
-import { Button } from '../ui/Button'
+import { Button } from '../../components/ui/Button'
 
 /**
  * 番号を選んで自分に割り当てるモーダル。人数を指定して作ったルーム(番号だけ)でも、
