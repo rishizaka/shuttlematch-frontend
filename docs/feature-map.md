@@ -10,6 +10,9 @@
   - `src/routes/` のルートファイルは全部、この文書のどこかに書かれている
   - ルートを足したのにここへ書き忘れると `npm run test` が落ちる。
 
+**フィーチャー構成への移行中**: src/features/（機能名）/ に移った機能は、そのディレクトリを見れば全体が分かる。
+まだ `components/` `lib/` に散らばっている機能は、下の各項目に列挙したファイルを見る。
+
 検証レベルの凡例:
 - **L1** = `npm run typecheck` + `fnm exec --using=22 npm run lint` + `fnm exec --using=22 npm run test`（常に必須）
 - **L2** = dev サーバーで実際に画面を開いて確認（`/verify` の手順）
@@ -59,8 +62,8 @@
 
 ### 1-7. 練習会の見積もり計算機・乱数表の例
 - 入口: `/`
-- ファイル: `src/components/home/DoublesPracticePlanner.tsx`, `src/lib/doubles-practice-plan.ts`, `src/lib/doubles-practice-example.ts`
-- 検証: L1 `src/lib/doubles-practice-plan.test.ts`, `src/lib/doubles-practice-example.test.ts`
+- ファイル: `src/features/practice-planner/`（フィーチャー構成。公開は `DoublesPracticePlanner` のみ）
+- 検証: L1 `src/features/practice-planner/doubles-practice-plan.test.ts`, `src/features/practice-planner/doubles-practice-example.test.ts`
 
 ## 2. アカウント・管理者
 - 入口: `/login`, `/signup`

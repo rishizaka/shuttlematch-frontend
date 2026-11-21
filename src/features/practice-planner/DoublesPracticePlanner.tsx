@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { ArrowRight } from 'lucide-react'
-import { createDoublesPracticePlan } from '../../lib/doubles-practice-plan'
-import { createDoublesPracticeExample } from '../../lib/doubles-practice-example'
+import { createDoublesPracticePlan } from './doubles-practice-plan'
+import { createDoublesPracticeExample } from './doubles-practice-example'
 
 /** 組み合わせ例として見せるセット数。見出しの「最初の3セット」と揃える。 */
 const EXAMPLE_SET_COUNT = 3

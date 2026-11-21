@@ -7,6 +7,15 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 - 作業の最初に **`docs/feature-map.md`**（機能→ファイル→検証方法の地図）で触る場所と検証レベルを決める。
 - 完了を報告する前に **`/verify`** の手順で自分で検証し、証拠（コマンド結果・スクショ）を添える。
 - 機能・ルートを足したり動かしたりしたら **`/maintain-feature-map`** で地図を直す。
+- **コードは機能（フィーチャー）単位で `src/features/<名前>/` にまとめる**（2026-11-21〜移行中。移行済み: `practice-planner`）。
+  - その機能の部品・ロジック・テストを全部そのディレクトリに置く。公開するものは `index.ts` で export する。
+  - 機能の外（routes・別の機能）からは **`index.ts` 経由でだけ** import する。中のファイルを直接 import しない。
+  - `components/ui`・`lib/api`・`lib/types` などの共通部品は今の場所のまま。依存は「機能 → 共通」の向きだけで、
+    **共通側（components/lib/hooks/integrations）から機能を import しない**（共通側が機能を必要とするなら、
+    それは共通部品なので共通側に置く。例: `lib/in-app-browser.ts` は `lib/api.ts` が使うので共通側）。
+  - ルートファイルは TanStack Router の都合で `src/routes/` に残し、機能の `index.ts` を import するだけの薄い層にする。
+  - 新しい機能は最初から `src/features/` に作る。既存の機能を移すときは1機能 = 1 PR で、`git mv` で移す。
+  - 以上は `src/test/architecture.test.ts` が機械的に確認する（`index.ts` の有無・直接 import・依存の向き）。
 - 出すときは **`/ship`**（最新の origin/main から worktree → 目的1つの小さな PR → CI 確認）。
   **エージェントは main に直接 push しない。マージ（＝本番デプロイ）はユーザーが指示したときだけ。**
 - **ルールは「お願い」より機械チェックで守る。** 一般的なコード規約は ESLint（`eslint.config.js`）、

@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { dirname, join, relative, resolve } from 'node:path'
 import { GAMES } from '../components/game/catalog'
 
 const ROOT = process.cwd()
@@ -93,5 +93,68 @@ describe('フィーチャーマップ(docs/feature-map.md)が腐っていない'
     const unlisted = routeFiles.map(rel).filter((p) => !map.includes(`\`${p}\``))
     // __root.tsx も「全ページ共通」として地図に載せる
     expect(unlisted).toEqual([])
+  })
+})
+
+describe('フィーチャー構成(src/features)の境界', () => {
+  const FEATURES = join(SRC, 'features')
+  const features = existsSync(FEATURES)
+    ? readdirSync(FEATURES).filter((n) => statSync(join(FEATURES, n)).isDirectory())
+    : []
+  // テストも含めた全ソース(テストが機能の中身を直接触るのも境界違反として扱う)
+  const allFiles = walk(SRC).filter((p) => /\.(ts|tsx)$/.test(p) && !p.endsWith('routeTree.gen.ts'))
+  /** 機能を import してはいけない共通側。依存の向きは「機能 → 共通」だけ。 */
+  const SHARED = ['components', 'lib', 'hooks', 'integrations'].map((d) => join(SRC, d))
+
+  /** import 指定子を src 内の絶対パスに解決する(外部パッケージは null)。 */
+  function resolveSpecifier(from: string, spec: string): string | null {
+    if (spec.startsWith('.')) return resolve(dirname(from), spec)
+    const alias = spec.match(/^[#@]\/(.*)$/)
+    return alias ? join(SRC, alias[1]) : null
+  }
+  function importsOf(file: string): string[] {
+    const src = read(file)
+    return [
+      ...src.matchAll(/(?:import|export)\s[^'"]*?from\s*['"]([^'"]+)['"]/g),
+      ...src.matchAll(/import\(\s*['"]([^'"]+)['"]\s*\)/g),
+    ].map((m) => m[1])
+  }
+  /** パスが属する機能名(機能の外なら null)。 */
+  const featureOf = (p: string) => {
+    const r = relative(FEATURES, p)
+    return r.startsWith('..') || r === '' ? null : r.split('/')[0]
+  }
+
+  it.each(features.map((f) => [f]))('features/%s は公開窓口の index.ts を持つ', (f) => {
+    expect(existsSync(join(FEATURES, f, 'index.ts'))).toBe(true)
+  })
+
+  it('機能の外からは index.ts 経由でだけ import する(中のファイルを直接 import しない)', () => {
+    const offenders: string[] = []
+    for (const file of allFiles) {
+      for (const spec of importsOf(file)) {
+        const target = resolveSpecifier(file, spec)
+        if (!target) continue
+        const f = featureOf(target)
+        if (!f || featureOf(file) === f) continue // 機能の外への import / 同じ機能の中どうしは自由
+        const viaIndex = [join(FEATURES, f), join(FEATURES, f, 'index'), join(FEATURES, f, 'index.ts')]
+        if (!viaIndex.includes(target)) offenders.push(`${rel(file)} → ${spec}`)
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  it('共通側(components/lib/hooks/integrations)は機能を import しない', () => {
+    const offenders = allFiles
+      .filter((file) => SHARED.some((d) => file.startsWith(d + '/')))
+      .flatMap((file) =>
+        importsOf(file)
+          .filter((spec) => {
+            const t = resolveSpecifier(file, spec)
+            return t !== null && featureOf(t) !== null
+          })
+          .map((spec) => `${rel(file)} → ${spec}`),
+      )
+    expect(offenders).toEqual([])
   })
 })
