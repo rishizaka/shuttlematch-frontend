@@ -76,21 +76,23 @@
 
 ### 3-1. ゲームハブ
 - 入口: `/game`
-- ファイル: `src/routes/game.tsx`, `src/components/game/catalog.ts`, `src/components/game/AdSlot.tsx`
+- ファイル: `src/routes/game.tsx`, `src/lib/game-catalog.ts`（一覧データ。sitemap・ガイド・セット開始アナウンスも使う共通データなので lib）,
+  `src/features/minigames/AdSlot.tsx`
 - 検証: L1 `src/test/architecture.test.ts`（catalog とルートの対応）, L2
 
 ### 3-2. 各ゲーム（ページ＋コアの対）
+コード本体は `src/features/minigames/`（フィーチャー構成。ルートは `index.ts` 経由でだけ import する）。
 | ゲーム | ページ | コア |
 |---|---|---|
-| シャトルフラップ | `src/routes/game_.flap.tsx` | `src/components/game/shuttleFlap.ts` |
-| スマッシュレイン | `src/routes/game_.rain.tsx` | `src/components/game/smashRain.ts` |
-| 10円ゲーム | `src/routes/game_.coin.tsx` | `src/components/game/coinDrop.ts` |
-| 10円はじき | `src/routes/game_.flick.tsx` | `src/components/game/coinFlick.ts` |
-| シャトポコのスキー | `src/routes/game_.ski.tsx` | `src/components/game/shatopokoSki.ts` |
+| シャトルフラップ | `src/routes/game_.flap.tsx` | `src/features/minigames/shuttleFlap.ts` |
+| スマッシュレイン | `src/routes/game_.rain.tsx` | `src/features/minigames/smashRain.ts` |
+| 10円ゲーム | `src/routes/game_.coin.tsx` | `src/features/minigames/coinDrop.ts` |
+| 10円はじき | `src/routes/game_.flick.tsx` | `src/features/minigames/coinFlick.ts` |
+| シャトポコのスキー | `src/routes/game_.ski.tsx` | `src/features/minigames/shatopokoSki.ts` |
 
-- 共通: `src/components/game/shared.ts`, `src/components/game/GameGuide.tsx`,
-  ランキング `src/components/game/RankingBoard.tsx` / `src/components/game/GameOverRanking.tsx` / `src/lib/ranking.ts`
-- 検証: L1 `src/components/game/shuttleFlap.test.ts`, `src/components/game/shatopokoSki.test.ts`,
+- 共通: `src/features/minigames/shared.ts`, `src/features/minigames/GameGuide.tsx`,
+  ランキング `src/features/minigames/RankingBoard.tsx` / `src/features/minigames/GameOverRanking.tsx` / `src/features/minigames/ranking.ts`
+- 検証: L1 `src/features/minigames/shuttleFlap.test.ts`, `src/features/minigames/shatopokoSki.test.ts`, `src/features/minigames/ranking.test.ts`,
   `src/test/architecture.test.ts`（GameGuide 必須・AdSlot はちょうど1つ）, L2（実際に1プレイしてゲームオーバー→ランキング表示まで）
 
 ## 4. コンテンツ（SEO・審査対策）

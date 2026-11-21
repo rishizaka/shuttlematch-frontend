@@ -33,9 +33,29 @@ function sitemap(): Plugin {
   }
 }
 
+/**
+ * 各機能の src/features/(機能名)/index.ts(公開窓口)を「副作用なし」として扱わせる。
+ *
+ * Rollup は既定で窓口ファイルにも副作用があるとみなすので、ルートが窓口から1つ import しただけで
+ * 窓口が re-export しているモジュールが全部ついてくる(2026-11-22、ミニゲームを features に移したら
+ * 5本のコアが1つの 65KB チャンクにまとまり、各ゲームページと /game が全ゲーム分を読むようになった)。
+ * 窓口が `export ... from` だけでできていることは src/test/architecture.test.ts が固定しているので、
+ * この宣言は嘘にならない。
+ */
+function featureIndexHasNoSideEffects(): Plugin {
+  const isFeatureIndex = /\/src\/features\/[^/]+\/index\.ts$/
+  return {
+    name: 'shuttlematch-feature-index-no-side-effects',
+    transform(code, id) {
+      if (!isFeatureIndex.test(id)) return null
+      return { code, map: null, moduleSideEffects: false }
+    },
+  }
+}
+
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
-  plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact(), sitemap()],
+  plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact(), sitemap(), featureIndexHasNoSideEffects()],
   server: {
     // `npm run dev:host` で LAN に公開してスマホ実機から見るとき用。ブラウザ側から
     // localhost:8080 には届かないので、/api を dev サーバー経由で backend に中継する

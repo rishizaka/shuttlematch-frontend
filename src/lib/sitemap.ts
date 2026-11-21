@@ -1,4 +1,4 @@
-import { GAMES } from '../components/game/catalog'
+import { GAMES } from './game-catalog'
 import { GUIDES } from './guides'
 import { RELEASES } from './releases'
 

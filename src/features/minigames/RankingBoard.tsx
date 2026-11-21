@@ -1,5 +1,5 @@
 import type { RankingEntry } from '../../lib/types'
-import { RANKING_SIZE } from '../../lib/ranking'
+import { RANKING_SIZE } from './ranking'
 
 /** 順位の表記。アーケードのハイスコア表に合わせて 1ST / 2ND … と出す。 */
 const ORDINAL = ['1ST', '2ND', '3RD', '4TH', '5TH']

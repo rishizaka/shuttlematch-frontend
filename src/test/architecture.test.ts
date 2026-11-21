@@ -8,7 +8,7 @@
 import { describe, expect, it } from 'vitest'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
-import { GAMES } from '../components/game/catalog'
+import { GAMES } from '../lib/game-catalog'
 
 const ROOT = process.cwd()
 const SRC = join(ROOT, 'src')
@@ -52,7 +52,7 @@ describe('ミニゲーム', () => {
     },
   )
 
-  it('catalog.ts のエントリと game_.{slug}.tsx が1対1で対応する', () => {
+  it('lib/game-catalog.ts のエントリと game_.{slug}.tsx が1対1で対応する', () => {
     const fromCatalog = GAMES.map((g) => g.to.replace(/^\/game\//, '')).sort()
     const fromRoutes = gamePages.map((p) => p.match(/game_\.([a-z]+)\.tsx$/)![1]).sort()
     expect(fromCatalog).toEqual(fromRoutes)
@@ -128,6 +128,18 @@ describe('フィーチャー構成(src/features)の境界', () => {
   it.each(features.map((f) => [f]))('features/%s は公開窓口の index.ts を持つ', (f) => {
     expect(existsSync(join(FEATURES, f, 'index.ts'))).toBe(true)
   })
+
+  it.each(features.map((f) => [f]))(
+    'features/%s/index.ts は `export ... from` だけ(vite.config.ts で副作用なしと宣言しているため)',
+    (f) => {
+      const body = read(join(FEATURES, f, 'index.ts'))
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/.*$/gm, '')
+      const statements = body.split(/\n(?=\S)/).map((s) => s.trim()).filter(Boolean)
+      const notReExport = statements.filter((s) => !/^export\s+(type\s+)?(\{[^}]*\}|\*(\s+as\s+\w+)?)\s+from\s+['"][^'"]+['"];?$/.test(s))
+      expect(notReExport).toEqual([])
+    },
+  )
 
   it('機能の外からは index.ts 経由でだけ import する(中のファイルを直接 import しない)', () => {
     const offenders: string[] = []

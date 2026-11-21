@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { ChevronLeft, Crown, RotateCcw, Share2 } from 'lucide-react'
-import { coinLevelOf, createCoinDropGame } from '../components/game/coinDrop'
-import { AdSlot } from '../components/game/AdSlot'
-import { GameGuide } from '../components/game/GameGuide'
-import { GameOverRanking } from '../components/game/GameOverRanking'
-import { RankingModal } from '../components/game/RankingModal'
+import { coinLevelOf, createCoinDropGame, AdSlot, GameGuide, GameOverRanking, RankingModal } from '../features/minigames'
+import type { GamePhase, MiniGameHandle } from '../features/minigames'
 import { useToast } from '../components/ui/Toast'
-import type { GamePhase, MiniGameHandle } from '../components/game/shared'
 
 export const Route = createFileRoute('/game_/coin')({
   head: () => ({

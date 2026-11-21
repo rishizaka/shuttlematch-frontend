@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { SetStartAnnouncement } from './SetStartAnnouncement'
-import { GAMES } from '../game/catalog'
+import { GAMES } from '../../lib/game-catalog'
 
 describe('SetStartAnnouncement', () => {
   it('出場するセットではコートと4人の番号を表示する', () => {
