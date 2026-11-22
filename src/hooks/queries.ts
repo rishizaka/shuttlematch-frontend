@@ -1,4 +1,5 @@
 import {
+  queryOptions,
   useMutation,
   useQueries,
   useQuery,
@@ -35,6 +36,33 @@ export const queryKeys = {
   gameRanking: (game: string) => ["game", "ranking", game] as const,
 };
 
+/**
+ * SSR の loader で取ったデータを、クライアントで受け取った直後にもう一度取りに行かないための鮮度。
+ * staleTime 0 だとハイドレーション直後のマウントで即再取得が走る。ポーリング間隔より短くして、
+ * 他端末の操作が反映されるまでの遅れは増やさない(mutation 後の invalidate は staleTime を無視する)。
+ */
+const SSR_STALE_TIME = 5_000;
+
+/** ルーム1件。useRoom と、試合表ページの loader(SSR で先に取る)で共有する。 */
+export function roomQueryOptions(roomId: string) {
+  return queryOptions({
+    queryKey: queryKeys.room(roomId),
+    queryFn: () => roomApi.get(roomId),
+    staleTime: SSR_STALE_TIME,
+  });
+}
+
+/** 試合表。useMatches と、試合表ページの loader(SSR で先に取る)で共有する。 */
+export function matchesQueryOptions(roomId: string) {
+  return queryOptions({
+    queryKey: queryKeys.matches(roomId),
+    queryFn: () => matchApi.get(roomId),
+    staleTime: SSR_STALE_TIME,
+    // まだ生成されていない場合は 404 になるため、リトライしない。
+    retry: false,
+  });
+}
+
 // ---- User ----
 
 export function useUser(userId: string | undefined) {
@@ -58,8 +86,7 @@ export function useRoom(
   options?: { live?: boolean },
 ) {
   return useQuery({
-    queryKey: queryKeys.room(roomId ?? ""),
-    queryFn: () => roomApi.get(roomId as string),
+    ...roomQueryOptions(roomId ?? ""),
     enabled: !!roomId,
     // live 時は定期再取得。終了済みルームは変化しないので停止する。
     // (タブが非アクティブの間は TanStack Query の既定で停止する)
@@ -335,11 +362,8 @@ export function useMatches(
 ) {
   const qc = useQueryClient();
   return useQuery({
-    queryKey: queryKeys.matches(roomId ?? ""),
-    queryFn: () => matchApi.get(roomId as string),
+    ...matchesQueryOptions(roomId ?? ""),
     enabled: !!roomId,
-    // まだ生成されていない場合は 404 になるため、リトライしない。
-    retry: false,
     // live 時は定期再取得。ルームが存在して終了済みでなければ常にポーリングする:
     // 受付中(OPEN)は未生成(404)でも運営者の生成を検知でき、参加者のロビーが生成後に
     // 自動で試合表へ切り替わる。終了済み(CLOSED)は変化しないので停止する。

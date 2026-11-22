@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { queryKeys } from '../../hooks/queries'
-import { matchApi, roomApi } from '../../lib/api'
+import { matchesQueryOptions, roomQueryOptions } from '../../hooks/queries'
 import type { Room } from '../../lib/types'
 import { roomOgMeta } from '../../lib/og'
 import { MatchesSkeleton } from '../../features/match-schedule'
@@ -23,20 +22,14 @@ export const Route = createFileRoute('/rooms/$roomId_/matches')({
     const qc = context.queryClient
     let room: Room
     try {
-      room = await qc.fetchQuery({
-        queryKey: queryKeys.room(params.roomId),
-        queryFn: () => roomApi.get(params.roomId),
-      })
+      // staleTime 付きの共有オプションを使う(ハイドレーション直後に同じものを取り直さない)。
+      room = await qc.fetchQuery(roomQueryOptions(params.roomId))
     } catch {
       return null
     }
     // 未生成(受付中)は 404 になるので取りに行かない。prefetchQuery は失敗しても投げない。
     if (room.status === 'GENERATED' || room.status === 'CLOSED') {
-      await qc.prefetchQuery({
-        queryKey: queryKeys.matches(params.roomId),
-        queryFn: () => matchApi.get(params.roomId),
-        retry: false,
-      })
+      await qc.prefetchQuery(matchesQueryOptions(params.roomId))
     }
     return room
   },
