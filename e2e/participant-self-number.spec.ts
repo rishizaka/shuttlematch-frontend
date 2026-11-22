@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { API_BASE, deleteRoom, organizerHeaders, quickCreateRoom } from './helpers'
+import { API_BASE, deleteRoom, organizerHeaders, quickCreateRoom, gotoMatches } from './helpers'
 
 // 参加者(非運営者)視点。新しいコンテキスト(localStorage 空)で開くので運営者にはならない。
 
@@ -11,7 +11,7 @@ test('参加者: 1セット目前は「参加する」導線になり、押し�
   const room = await quickCreateRoom(request, { participantCount: 10, courtCount: 2 })
   const roomId: string = room.id
   try {
-    await page.goto(`/rooms/${roomId}/matches`)
+    await gotoMatches(page, roomId)
 
     // 「自分の番号を入力しましょう」ではなく「参加する」が出る。
     const joinButton = page.getByRole('button', { name: '参加する' })
@@ -45,7 +45,7 @@ test('参加者: 「参加する」は名前が空だと送信されず、案内
   const room = await quickCreateRoom(request, { participantCount: 4, courtCount: 1 })
   const roomId: string = room.id
   try {
-    await page.goto(`/rooms/${roomId}/matches`)
+    await gotoMatches(page, roomId)
 
     const joinButton = page.getByRole('button', { name: '参加する' })
     await expect(joinButton).toBeVisible()
@@ -74,7 +74,7 @@ test('参加者: 1セット目が始まったあとは番号を選ぶ導線に�
       headers: organizerHeaders(roomId),
     })
 
-    await page.goto(`/rooms/${roomId}/matches`)
+    await gotoMatches(page, roomId)
 
     // 「参加する」ではなく従来の「自分の番号を入力しましょう」に戻る。
     await expect(page.getByRole('button', { name: '参加する' })).toBeHidden()
@@ -103,7 +103,7 @@ test('参加者: 名前を変更で違う番号に選び直すと、元の番号
   const room = await quickCreateRoom(request, { participantCount: 10, courtCount: 2 })
   const roomId: string = room.id
   try {
-    await page.goto(`/rooms/${roomId}/matches`)
+    await gotoMatches(page, roomId)
 
     // 参加する → 一番若い1番が割り当たる。
     await page.getByPlaceholder('あなたの名前').fill('たろう')
@@ -140,7 +140,7 @@ test('参加者: 早退するボタンで自分の番号がフリーになり、
   const room = await quickCreateRoom(request, { participantCount: 10, courtCount: 2 })
   const roomId: string = room.id
   try {
-    await page.goto(`/rooms/${roomId}/matches`)
+    await gotoMatches(page, roomId)
 
     // 参加する → 一番若い1番として「はなこ」を名乗る。
     await page.getByPlaceholder('あなたの名前').fill('はなこ')
@@ -183,7 +183,7 @@ test('参加者: 参加するが失敗したら、念のため番号を選ぶ導
       })
     }
 
-    await page.goto(`/rooms/${roomId}/matches`)
+    await gotoMatches(page, roomId)
 
     // QuickJoinBanner は出るが、名前を入れて押しても空きが無いのでエラーになる。
     const joinButton = page.getByRole('button', { name: '参加する' })
@@ -212,7 +212,7 @@ test('参加者: 運営者でなくても試合表の共有・QR表示ができ�
   const room = await quickCreateRoom(request, { participantCount: 4, courtCount: 1 })
   const roomId: string = room.id
   try {
-    await page.goto(`/rooms/${roomId}/matches`)
+    await gotoMatches(page, roomId)
 
     // 運営メニューは出ない(=このブラウザは運営者ではない)が、共有・QRボタンは出る。
     await expect(page.getByRole('button', { name: /運営メニュー/ })).toBeHidden()

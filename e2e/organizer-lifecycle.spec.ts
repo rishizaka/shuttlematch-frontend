@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { API_BASE, actAsOrganizer, deleteRoom, rememberOrganizerToken } from './helpers'
+import { API_BASE, actAsOrganizer, deleteRoom, rememberOrganizerToken, gotoMatches } from './helpers'
 
 // 運営者視点の主要UI: 試合表表示 → 運営メニュー → ルーム削除 → ホームへ。
 // SSR 作成フォームはハイドレーション待ちが不安定なため、ルームは API で用意し、
@@ -21,7 +21,7 @@ test('運営者: 試合表表示 → 運営メニュー → 削除 → ホーム
   await actAsOrganizer(page, { id: uid, name: 'e2e-organizer' }, room)
 
   try {
-    await page.goto(`/rooms/${roomId}/matches`)
+    await gotoMatches(page, room.id)
 
     // 試合表が描画される(第1セットの開始ボタン・ヘッダーロゴ)。
     // 「第1セット」だけだと「次第1セット」ラベルにも当たって strict mode 違反になる。
@@ -65,7 +65,7 @@ test('運営者: 生成後・未開始のあいだは末尾の参加者を削除
   await actAsOrganizer(page, { id: uid, name: 'e2e-organizer2' }, room)
 
   try {
-    await page.goto(`/rooms/${roomId}/matches`)
+    await gotoMatches(page, roomId)
     await expect(page.getByRole('button', { name: '第1セット開始' })).toBeVisible()
 
     const menu = page.getByRole('button', { name: /運営メニュー/ })

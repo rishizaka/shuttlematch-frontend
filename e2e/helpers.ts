@@ -70,6 +70,17 @@ export function roomIdFromUrl(url: string): string | null {
   return m ? m[1] : null
 }
 
+/**
+ * 試合表ページを開き、ハイドレーションが済むまで待つ。
+ * 試合表は SSR で中身ごと描画され、ハイドレーションまではページ全体が inert(操作不可)になっている。
+ * Playwright の fill は inert を無視して値を入れてしまい、その値はハイドレーションで消えるので、
+ * inert が外れてから操作する。
+ */
+export async function gotoMatches(page: Page, roomId: string, baseURL = '') {
+  await page.goto(`${baseURL}/rooms/${roomId}/matches`)
+  await expect(page.locator('main [inert]')).toHaveCount(0)
+}
+
 /** ゲストユーザーを発行して id を返す。 */
 export async function createGuest(request: APIRequestContext): Promise<string> {
   const res = await request.post(`${API_BASE}/api/v1/users/guest`, {
