@@ -102,7 +102,7 @@
 - ガイド記事: `/guide`, `/guide/{id}` — `src/routes/guide.tsx`, `src/routes/guide.index.tsx`, `src/routes/guide.$id.tsx`, `src/lib/guides.ts`
   （検証: L1 `src/lib/guides.test.ts`）
 - リリースノート: `/releases`, `/release/{id}` — `src/routes/releases.tsx`, `src/routes/release.$id.tsx`, `src/lib/releases.ts`
-- サービス紹介: `/about` — `src/routes/about.tsx`, `src/components/about/`
+- サービス紹介: `/about` — `src/routes/about.tsx`（ページ専用の CSS は `src/styles/about.css`）
 - OGP / sitemap: `src/lib/og.ts`, `src/lib/sitemap.ts`
 - 検証: L1 `src/lib/sitemap.test.ts`, L2（`<title>` と OG メタを確認）
 
