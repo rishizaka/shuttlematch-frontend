@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { LegalDocument } from '../components/legal/LegalDocument'
-import { TERMS_LEAD, TERMS_SECTIONS, TERMS_UPDATED_AT } from '../lib/legal'
+import { LegalDocument, TERMS_LEAD, TERMS_SECTIONS, TERMS_UPDATED_AT } from '../features/legal'
 
 export const Route = createFileRoute('/terms')({
   head: () => ({

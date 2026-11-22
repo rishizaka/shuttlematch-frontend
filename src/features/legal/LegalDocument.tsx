@@ -1,6 +1,6 @@
-import { Card, CardBody } from '../ui/Card'
+import { Card, CardBody } from '../../components/ui/Card'
 import { formatJapaneseDate } from '../../lib/date'
-import type { LegalSection } from '../../lib/legal'
+import type { LegalSection } from './legal'
 
 /**
  * プライバシーポリシー / 利用規約の表示。
