@@ -184,16 +184,6 @@ export const authApi = {
 
 // ---- Room (room) ----
 
-export interface CreateRoomInput {
-  title: string
-  /** ISO-8601 (OffsetDateTime)。 */
-  heldAt: string
-  location?: string | null
-  capacity?: number | null
-  courtCount?: number | null
-  createdBy: string
-}
-
 export interface AddParticipantInput {
   /** 登録ユーザーの参加なら userId、ゲストなら guestName を指定する。 */
   userId?: string | null
@@ -216,11 +206,6 @@ export const adminApi = {
 }
 
 export const roomApi = {
-  create: (input: CreateRoomInput) =>
-    request<Room>('/api/v1/rooms', {
-      method: 'POST',
-      body: JSON.stringify(input),
-    }).then(rememberOrganizerToken),
   /**
    * 条件でルーム一覧を取得する(公開)。
    * 返るのは `PublicRoom` で **roomId も shareCode も入っていない**(理由は型の説明を参照)。
@@ -284,12 +269,6 @@ export const roomApi = {
         method: 'DELETE',
         headers: organizerHeaders(roomId),
       }),
-  /** 受付中ルームに本人が参加する(名前必須)。参加順で番号が自動採番される。 */
-  join: (roomId: string, name: string) =>
-    request<JoinResult>(`/api/v1/rooms/${roomId}/participants/join`, {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-    }),
   /**
    * 簡易作成ルームの「番号のまま」の枠に、一番若い空き番号で自動参加する(名前は任意)。
    * 同時に複数人が押しても、サーバー側でそれぞれ別の番号が割り当てられる。
@@ -352,12 +331,6 @@ export const roomApi = {
 // ---- Match ----
 
 export const matchApi = {
-  generate: (roomId: string, matchCount?: number) =>
-    request<MatchSchedule>(`/api/v1/rooms/${roomId}/matches/generate`, {
-      method: 'POST',
-      headers: organizerHeaders(roomId),
-      body: JSON.stringify(matchCount != null ? { matchCount } : {}),
-    }),
   get: (roomId: string) => request<MatchSchedule>(`/api/v1/rooms/${roomId}/matches`),
   startSet: (roomId: string, setNumber: number) =>
     request<MatchSchedule>(`/api/v1/rooms/${roomId}/matches/sets/${setNumber}/start`, {
