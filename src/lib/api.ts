@@ -224,7 +224,7 @@ export const roomApi = {
   /**
    * 条件でルーム一覧を取得する(公開)。
    * 返るのは `PublicRoom` で **roomId も shareCode も入っていない**(理由は型の説明を参照)。
-   * リンクを張るには `lib/public-room-id.ts` で手元の roomId と `publicId` を突き合わせる。
+   * リンクを張るには `features/room-list/public-room-id.ts` で手元の roomId と `publicId` を突き合わせる。
    */
   list: (params: RoomListParams = {}) => {
     const qs = new URLSearchParams()

@@ -7,7 +7,7 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
 - 作業の最初に **`docs/feature-map.md`**（機能→ファイル→検証方法の地図）で触る場所と検証レベルを決める。
 - 完了を報告する前に **`/verify`** の手順で自分で検証し、証拠（コマンド結果・スクショ）を添える。
 - 機能・ルートを足したり動かしたりしたら **`/maintain-feature-map`** で地図を直す。
-- **コードは機能（フィーチャー）単位で `src/features/<名前>/` にまとめる**（2026-11-21〜移行中。移行済み: `practice-planner`・`organizer-link`・`minigames`・`match-schedule`・`room`・`matches-page`・`legal`）。
+- **コードは機能（フィーチャー）単位で `src/features/<名前>/` にまとめる**（2026-11-21〜移行中。移行済み: `practice-planner`・`organizer-link`・`minigames`・`match-schedule`・`room`・`matches-page`・`legal`・`room-list`）。
   - その機能の部品・ロジック・テストを全部そのディレクトリに置く。公開するものは `index.ts` で export する。
   - 機能の外（routes・別の機能）からは **`index.ts` 経由でだけ** import する。中のファイルを直接 import しない。
   - `components/ui`・`lib/api`・`lib/types` などの共通部品は今の場所のまま。依存は「機能 → 共通」の向きだけで、
