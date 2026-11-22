@@ -71,7 +71,7 @@ export interface Room {
  * **roomId と shareCode は含まれない。** 一覧は認証なしで誰でも取得できるため、
  * サーバーが意図的に落としている(roomId が割れると誰でも削除・改変できてしまう)。
  * かわりに `publicId` (= roomId の SHA-256 先頭16桁) が入っていて、既にその roomId を
- * 知っている端末だけが `lib/public-room-id.ts` で突き合わせてリンクを張れる。
+ * 知っている端末だけが `features/room-list/public-room-id.ts` で突き合わせてリンクを張れる。
  */
 export interface PublicRoom {
   publicId: string

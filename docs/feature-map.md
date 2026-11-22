@@ -44,7 +44,7 @@
 - 入口: 共有リンク（短縮URL `/r/{code}`）→ 試合表ページで番号を選ぶ
 - ファイル: `src/routes/r.$code.tsx`,
   `src/features/room/ClaimNumberModal.tsx`, `src/features/room/QuickJoinBanner.tsx`,
-  `src/lib/public-room-id.ts`, `src/lib/guests.ts`
+  `src/lib/guests.ts`
 - 検証: L1 `src/features/room/ClaimNumberModal.test.tsx`, L3 `e2e/participant-self-number.spec.ts`
 
 ### 1-4. 運営権を別の端末・共同運営者に渡す（運営者用リンク）
@@ -60,8 +60,9 @@
 
 ### 1-6. 過去の開催・自分のルーム一覧
 - 入口: `/past`, `/`（自分のルーム）
-- ファイル: `src/routes/past.tsx`, `src/hooks/useMyRoomIds.ts`, `src/components/room/RoomCard.tsx`
-- 検証: L2
+- ファイル: `src/routes/past.tsx`, `src/features/room-list/`（フィーチャー構成。`RoomCard` / `useMyRoomIdByPublicId`。
+  公開一覧は roomId を返さないので `src/features/room-list/public-room-id.ts` で手元の roomId と突き合わせる）
+- 検証: L1 `src/features/room-list/public-room-id.test.ts`, L2
 
 ### 1-7. 練習会の見積もり計算機・乱数表の例
 - 入口: `/`

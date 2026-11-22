@@ -1,9 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useRoomList } from '../hooks/queries'
-import { useMyRoomIdByPublicId } from '../hooks/useMyRoomIds'
 import { Card, CardBody } from '../components/ui/Card'
 import { ErrorBlock, LoadingBlock } from '../components/ui/Spinner'
-import { RoomCard } from '../components/room/RoomCard'
+import { RoomCard, useMyRoomIdByPublicId } from '../features/room-list'
 import type { PublicRoom } from '../lib/types'
 
 export const Route = createFileRoute('/past')({

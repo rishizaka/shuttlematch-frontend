@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useKnownRoomIds } from './useCurrentUser'
-import { publicRoomIdMap } from '../lib/public-room-id'
+import { useKnownRoomIds } from '../../hooks/useCurrentUser'
+import { publicRoomIdMap } from './public-room-id'
 
 /**
  * 一覧の `publicId` から手元の roomId を引くための対応表を作る。
