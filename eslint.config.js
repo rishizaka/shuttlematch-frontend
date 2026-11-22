@@ -43,7 +43,7 @@ export default tseslint.config(
       // React Compiler 系を含む推奨ルール一式。既定で warn のものも error に上げる。
       // set-state-in-effect: SSR では読めない localStorage を「マウント後に読んで setState」する箇所は
       // 意図的な例外として行ごとに理由つきで disable している。新規コードでは
-      // useSyncExternalStore（$roomId_.matches.tsx 参照）を使うこと。
+      // useSyncExternalStore（src/features/matches-page/MatchesPage.tsx 参照）を使うこと。
       ...Object.fromEntries(
         Object.keys(reactHooks.configs['recommended-latest'].rules).map((r) => [r, 'error']),
       ),

@@ -30,7 +30,8 @@
 
 ### 1-2. 試合表を見る・運営する
 - 入口: `/rooms/{id}/matches`（旧 `/rooms/{id}` はここへリダイレクト）
-- ファイル: `src/routes/rooms/$roomId_.matches.tsx`, `src/routes/rooms/$roomId.tsx`,
+- ファイル: `src/routes/rooms/$roomId_.matches.tsx`（ルーティング・SSR の loader・OGP だけ）, `src/routes/rooms/$roomId.tsx`,
+  `src/features/matches-page/`（画面本体。下の2つと運営者用リンクを組み合わせる）,
   `src/features/match-schedule/`（試合表の表示。フィーチャー構成。`MatchScheduleList` / `MatchCard` / `SetStartAnnouncement` / `MatchesSkeleton`）,
   `src/features/room/`（ルームの運営と参加。フィーチャー構成。`Lobby` / `ParticipantManager` / `ParticipantList` / `FixedPairEditor` / `RenameModal` / `RosterAccordion` / `ShareButtons`）,
   `src/components/room/QrModal.tsx`（運営者用リンクと共用）
