@@ -106,7 +106,7 @@
 - 検証: L1 `src/lib/sitemap.test.ts`, L2（`<title>` と OG メタを確認）
 
 ## 5. 法務・広告・全体レイアウト
-- 法務: `/privacy`, `/terms` — `src/routes/privacy.tsx`, `src/routes/terms.tsx`, `src/lib/legal.ts`
+- 法務: `/privacy`, `/terms` — `src/routes/privacy.tsx`, `src/routes/terms.tsx`, `src/features/legal/`（文面 `src/features/legal/legal.ts`）
   （改定時は `PRIVACY_UPDATED_AT` / `TERMS_UPDATED_AT` も更新）
 - 全ページ共通: `src/routes/__root.tsx`（AdSense スクリプトはマウント後に DOM で追加。JSX に置かない）,
   `src/components/layout/Header.tsx`, `src/components/layout/Footer.tsx`（法務ページへの導線は審査要件）,
@@ -115,5 +115,5 @@
   `src/lib/in-app-browser.ts`（Cloudflare のボット対策でアプリ内ブラウザからの作成が 403 になるため外のブラウザへ誘導）
   — 検証: L1 `src/lib/in-app-browser.test.ts`
 - 広告設定: `src/lib/ads.ts`, `public/ads.txt`
-- 検証: L1 `src/components/legal/LegalDocument.test.tsx`, `src/test/architecture.test.ts`
+- 検証: L1 `src/features/legal/LegalDocument.test.tsx`, `src/test/architecture.test.ts`
   （AdSlot は /game 配下のみ・AdSense の `<script>` を JSX に書かない）
