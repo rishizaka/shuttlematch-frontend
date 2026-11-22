@@ -135,8 +135,13 @@ describe('フィーチャー構成(src/features)の境界', () => {
       const body = read(join(FEATURES, f, 'index.ts'))
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/\/\/.*$/gm, '')
-      const statements = body.split(/\n(?=\S)/).map((s) => s.trim()).filter(Boolean)
-      const notReExport = statements.filter((s) => !/^export\s+(type\s+)?(\{[^}]*\}|\*(\s+as\s+\w+)?)\s+from\s+['"][^'"]+['"];?$/.test(s))
+      // 正しい re-export(複数行の { } も含む)を全部取り除き、何か残れば違反。
+      const reExport = /export\s+(?:type\s+)?(?:\{[^}]*\}|\*(?:\s+as\s+\w+)?)\s+from\s+['"][^'"]+['"];?/g
+      const notReExport = body
+        .replace(reExport, '')
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean)
       expect(notReExport).toEqual([])
     },
   )

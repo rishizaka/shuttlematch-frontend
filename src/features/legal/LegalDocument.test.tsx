@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { LegalDocument } from './LegalDocument'
-import { PRIVACY_LEAD, PRIVACY_SECTIONS, PRIVACY_UPDATED_AT } from '../../lib/legal'
+import { PRIVACY_LEAD, PRIVACY_SECTIONS, PRIVACY_UPDATED_AT } from './legal'
 
 describe('LegalDocument', () => {
   it('見出し・段落・箇条書き・参照リンクを描画する', () => {
