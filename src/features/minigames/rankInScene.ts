@@ -11,7 +11,7 @@
  * three.js はこのモジュール内で動的 import する(SSR と初期バンドルに載せない)。
  * このモジュール自体も呼び出し側から動的 import される前提なので、
  * 静的 import されるもの(演出の長さなど)は rankInTiers.ts に置くこと。
- * 呼び出し側は dispose() を必ず呼ぶこと。About ページの badmintonScene.ts と同じ流儀。
+ * 呼び出し側は dispose() を必ず呼ぶこと。
  */
 import { createCosmicStage } from './rankInCosmicStage'
 import { createContinentStage } from './rankInContinentStage'
