@@ -1,4 +1,4 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link, useHydrated, useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import {
@@ -69,6 +69,18 @@ import { MatchScheduleList, MatchesSkeleton, SetStartAnnouncement } from '../../
  *   読み込み中の骨組みに本物のルーム名とコート数を出すのに使い回す。
  */
 export function MatchesPage({ roomId, seed }: { roomId: string; seed: Room | null }) {
+  // 試合表は loader が SSR で取るので、JS が動く前から「参加する」などのボタンや入力欄が見えている。
+  // その間に押しても何も起きず、入力した名前もハイドレーションで初期値に戻されてしまうため、
+  // ハイドレーションが済むまでは inert で操作だけ止めておく(表示は SSR のまま速く出る)。
+  const hydrated = useHydrated()
+  return (
+    <div inert={!hydrated}>
+      <MatchesContent roomId={roomId} seed={seed} />
+    </div>
+  )
+}
+
+function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null }) {
   const { user } = useCurrentUser()
   const { showToast } = useToast()
   // ポーリングで他端末の操作 (セット開始・ニックネーム変更・出入り) をリロードなしで反映する。

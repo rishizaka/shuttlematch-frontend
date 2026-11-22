@@ -7,6 +7,7 @@ import {
   getSchedule,
   numberMap,
   playersOf,
+  gotoMatches,
 } from './helpers'
 
 // ブラウザから実際に試合表を生成・操作し、その結果の試合表に偏りが無いかを検証する。
@@ -63,7 +64,7 @@ for (const { n, courts, label } of configs) {
     const roomId: string = room.id
     const nums = numberMap(room.participants)
     try {
-      await page.goto(`/rooms/${roomId}/matches`)
+      await gotoMatches(page, roomId)
       await expect(page.getByRole('button', { name: '第1セット開始' })).toBeVisible()
 
       // UI からセットを +6 追加(既定のDEFAULT_SET_COUNT → +6)。
@@ -96,7 +97,7 @@ test('偏りなし(10人2コート): 早退・遅刻・再編成しても公平'
   const room = await createRoomAsOrganizer(page, request, { participantCount: 10, courtCount: 2 })
   const roomId: string = room.id
   try {
-    await page.goto(`/rooms/${roomId}/matches`)
+    await gotoMatches(page, roomId)
     await expect(page.getByRole('button', { name: '第1セット開始' })).toBeVisible()
     await openOrganizerMenu(page)
 

@@ -39,6 +39,7 @@
 - 検証: L1 `src/features/match-schedule/` と `src/features/room/` のテスト, L3 `e2e/fairness.spec.ts`（公平性: 出場/休み回数・連続出場・ペア偏り）,
   `e2e/redirect.spec.ts`
 - 注意: 運営操作は運営者トークンが要る。E2E では `e2e/helpers.ts` の `createRoomAsOrganizer` / `actAsOrganizer` を使う
+- 注意: SSR で中身ごと描画し、ハイドレーションが済むまでは画面全体が `inert`（操作不可）。E2E は `e2e/helpers.ts` の `gotoMatches` で inert が外れるのを待ってから操作する
 
 ### 1-3. 参加者として自分の番号を知る
 - 入口: 共有リンク（短縮URL `/r/{code}`）→ 試合表ページで番号を選ぶ
