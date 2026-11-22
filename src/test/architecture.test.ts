@@ -94,6 +94,30 @@ describe('フィーチャーマップ(docs/feature-map.md)が腐っていない'
     // __root.tsx も「全ページ共通」として地図に載せる
     expect(unlisted).toEqual([])
   })
+
+  it('e2e/ の spec が全部書かれている', () => {
+    const specs = readdirSync(join(ROOT, 'e2e'))
+      .filter((n) => n.endsWith('.spec.ts'))
+      .map((n) => `e2e/${n}`)
+    expect(specs.length).toBeGreaterThan(0)
+    expect(specs.filter((p) => !map.includes(`\`${p}\``))).toEqual([])
+  })
+
+  it('src/ のテストが全部、ファイルか親ディレクトリの形で書かれている', () => {
+    const tests = walk(SRC).filter((p) => /\.test\.tsx?$/.test(p)).map(rel)
+    expect(tests.length).toBeGreaterThan(0)
+    const listed = (p: string) => {
+      if (map.includes(`\`${p}\``)) return true
+      // 親ディレクトリは src/features/room/ のように3階層以上のものだけ認める
+      // （`src/` や `src/lib/` で丸ごと済ませると、このチェックが空振りするため）
+      const parts = p.split('/')
+      for (let i = parts.length - 1; i >= 3; i--) {
+        if (map.includes(`\`${parts.slice(0, i).join('/')}/\``)) return true
+      }
+      return false
+    }
+    expect(tests.filter((p) => !listed(p))).toEqual([])
+  })
 })
 
 describe('フィーチャー構成(src/features)の境界', () => {

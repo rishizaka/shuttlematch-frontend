@@ -8,7 +8,9 @@
 - **機械的に固定していること**（`src/test/architecture.test.ts`）:
   - この文書にバッククォートで書いたパス（`src/` `e2e/` `public/` `docs/` で始まるもの）は実在する
   - `src/routes/` のルートファイルは全部、この文書のどこかに書かれている
-  - ルートを足したのにここへ書き忘れると `npm run test` が落ちる。
+  - `e2e/` の spec は全部、どこかの「検証」欄に書かれている
+  - `src/` のテスト（`*.test.ts(x)`）は全部、ファイルそのものか親ディレクトリ（`src/features/room/` など）の形で書かれている
+  - ルートやテストを足したのにここへ書き忘れると `npm run test` が落ちる。
 
 **フィーチャー構成への移行中**: src/features/（機能名）/ に移った機能は、そのディレクトリを見れば全体が分かる。
 まだ `components/` `lib/` に散らばっている機能は、下の各項目に列挙したファイルを見る。
@@ -46,13 +48,13 @@
 - ファイル: `src/routes/r.$code.tsx`,
   `src/features/room/ClaimNumberModal.tsx`, `src/features/room/QuickJoinBanner.tsx`,
   `src/lib/guests.ts`
-- 検証: L1 `src/features/room/ClaimNumberModal.test.tsx`, L3 `e2e/participant-self-number.spec.ts`
+- 検証: L1 `src/features/room/ClaimNumberModal.test.tsx`, `src/lib/guests.test.ts`, L3 `e2e/participant-self-number.spec.ts`
 
 ### 1-4. 運営権を別の端末・共同運営者に渡す（運営者用リンク）
 - 入口: 試合表ページの「運営者用リンク」（形は `/rooms/{id}/matches#organizer={トークン}`）
 - ファイル: `src/features/organizer-link/`（フィーチャー構成。公開は `OrganizerLinkSection` と `readOrganizerTokenFromHash`）,
   共通部品 `src/lib/local-store.ts`（運営者トークンの保存）・`src/components/room/QrModal.tsx`
-- 検証: L1 `src/features/organizer-link/organizer-link.test.ts`, L3 `e2e/organizer-link.spec.ts`
+- 検証: L1 `src/features/organizer-link/organizer-link.test.ts`, `src/lib/api.test.ts`（運営者トークンを `X-Organizer-Token` で添える）, L3 `e2e/organizer-link.spec.ts`
 
 ### 1-5. 印刷用の試合表
 - 入口: `/rooms/{id}/matches/print`
@@ -119,3 +121,13 @@
 - 広告設定: `src/lib/ads.ts`, `public/ads.txt`
 - 検証: L1 `src/features/legal/LegalDocument.test.tsx`, `src/test/architecture.test.ts`
   （AdSlot は /game 配下のみ・AdSense の `<script>` を JSX に書かない）
+
+## 6. 共通部品（機能ではないもの）
+- UI 部品 `src/components/ui/`、型 `src/lib/types.ts`、API クライアント `src/lib/api.ts`、
+  表示用の整形 `src/lib/format.ts`（日時・参加者名・ルームの既定タイトル）、`src/lib/date.ts`、`src/lib/clipboard.ts`、`src/lib/cn.ts`
+- アクセス解析 `src/lib/analytics.ts`
+- 検証: L1 `src/lib/api.test.ts`, `src/lib/format.test.ts`。触ったら、使っている機能の検証もやる（`grep -rn` で使い手を探す）
+
+## リリース前の回帰セット
+試合表まわり（1-1〜1-4）に触った PR は、L1 に加えて次の E2E を流す（backend が必要。手順は `/verify` の L3）:
+`e2e/fairness.spec.ts`, `e2e/organizer-lifecycle.spec.ts`, `e2e/participant-self-number.spec.ts`, `e2e/organizer-link.spec.ts`, `e2e/redirect.spec.ts`
