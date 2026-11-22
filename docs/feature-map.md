@@ -33,7 +33,7 @@
 - ファイル: `src/routes/rooms/$roomId_.matches.tsx`（ルーティング・SSR の loader・OGP だけ）, `src/routes/rooms/$roomId.tsx`,
   `src/features/matches-page/`（画面本体。下の2つと運営者用リンクを組み合わせる）,
   `src/features/match-schedule/`（試合表の表示。フィーチャー構成。`MatchScheduleList` / `MatchCard` / `SetStartAnnouncement` / `MatchesSkeleton`）,
-  `src/features/room/`（ルームの運営と参加。フィーチャー構成。`Lobby` / `ParticipantManager` / `ParticipantList` / `FixedPairEditor` / `RenameModal` / `RosterAccordion` / `ShareButtons`）,
+  `src/features/room/`（ルームの運営と参加。フィーチャー構成。`ParticipantManager` / `ParticipantList` / `FixedPairEditor` / `RenameModal` / `RosterAccordion` / `ShareButtons`）,
   `src/components/room/QrModal.tsx`（運営者用リンクと共用）
 - 操作: セット開始・取り消し、セット追加、早退・遅刻（復帰）、再編成、末尾参加者の削除（開始前のみ）
 - 検証: L1 `src/features/match-schedule/` と `src/features/room/` のテスト, L3 `e2e/fairness.spec.ts`（公平性: 出場/休み回数・連続出場・ペア偏り）,

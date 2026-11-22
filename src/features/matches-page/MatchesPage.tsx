@@ -52,7 +52,6 @@ import { ErrorBlock } from '../../components/ui/Spinner'
 import { useToast } from '../../components/ui/Toast'
 import {
   ClaimNumberModal,
-  Lobby,
   ParticipantManager,
   QuickJoinBanner,
   RosterAccordion,
@@ -311,13 +310,6 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
     return max
   }, [schedule])
 
-  // 受付中(未生成)のロビーは matches クエリのローディング状態に依存させない。
-  // 依存すると 10 秒ごとのポーリングで isLoading が一瞬 true になり、LoadingBlock を
-  // 挟んでロビーが再マウントし、入力中の名前が消えてしまう(全画面が再読込される感覚)。
-  // room さえ取れていれば status で判定して安定表示する。
-  if (room && room.status !== 'GENERATED' && room.status !== 'CLOSED') {
-    return <Lobby room={room} isOrganizer={isOrganizer} />
-  }
   // 試合表が届くまでの場所取り。リンクから開くと数秒かかることがあり、
   // スピナーだけだと真っ白なページに見えてしまう。
   const skeleton = (
@@ -344,16 +336,16 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
       }
       return skeleton
     }
-    // 生成済みだがスケジュール取得待ち(生成直後など)はロビー、終了済みはエラー。
-    if (room.status !== 'CLOSED') {
-      return <Lobby room={room} isOrganizer={isOrganizer} />
-    }
+    // ルームはあるのに試合表が無い。ルームはかんたん作成で試合表と同時に作られるので、
+    // ふつうは取得の失敗(再試行を出す)。昔の受付で作って生成しなかったルーム(準備中・受付中)は
+    // 試合表が 404 になるだけなので、その旨だけを出す。
+    const generated = room.status === 'GENERATED' || room.status === 'CLOSED'
     return (
       <ErrorBlock
         message={
-          error instanceof Error ? error.message : 'この試合表はまだ生成されていません'
+          generated && error instanceof Error ? error.message : 'この試合表はまだ生成されていません'
         }
-        onRetry={error ? () => void refetchMatches() : undefined}
+        onRetry={generated && error ? () => void refetchMatches() : undefined}
       />
     )
   }

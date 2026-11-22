@@ -172,25 +172,8 @@ export function useDeleteRoom(roomId: string, shareCode: string | undefined) {
 }
 
 /**
- * 受付中ルームに本人が参加する(名前必須)。参加すると番号が自動採番される。
- * 参加した本人の participantId を localStore に保存し、自分の試合ハイライトに使う。
- */
-export function useJoinRoom(roomId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (name: string) => roomApi.join(roomId, name),
-    onSuccess: (result) => {
-      setSelfParticipant(roomId, result.participantId);
-      qc.setQueryData(queryKeys.room(roomId), result.room);
-      addRoomId(roomId);
-    },
-  });
-}
-
-/**
  * 簡易作成ルームの「番号のまま」の枠に、一番若い空き番号で自動参加する(名前は任意)。
- * useJoinRoom と同じ形(participantId・番号・room を受け取り、自分として localStore に保存する)
- * だが、参加者を新規作成するのではなく既存の空き番号枠に割り当てる点が違う。
+ * 割り当てられた participantId を自分として localStore に保存し、自分の試合ハイライトに使う。
  */
 export function useClaimNextParticipant(roomId: string) {
   const qc = useQueryClient();
@@ -364,9 +347,8 @@ export function useMatches(
   return useQuery({
     ...matchesQueryOptions(roomId ?? ""),
     enabled: !!roomId,
-    // live 時は定期再取得。ルームが存在して終了済みでなければ常にポーリングする:
-    // 受付中(OPEN)は未生成(404)でも運営者の生成を検知でき、参加者のロビーが生成後に
-    // 自動で試合表へ切り替わる。終了済み(CLOSED)は変化しないので停止する。
+    // live 時は定期再取得。ルームが存在して終了済みでなければポーリングする。
+    // 終了済み(CLOSED)は変化しないので停止する。
     // ルーム未取得時は、存在しないルームを叩き続けないよう取得済みの場合のみ継続する。
     refetchInterval: options?.live
       ? (query) => {
@@ -375,17 +357,6 @@ export function useMatches(
           return query.state.data ? LIVE_REFETCH_INTERVAL : false;
         }
       : undefined,
-  });
-}
-
-export function useGenerateMatches(roomId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (matchCount?: number) => matchApi.generate(roomId, matchCount),
-    onSuccess: (schedule) => {
-      qc.setQueryData(queryKeys.matches(roomId), schedule);
-      qc.invalidateQueries({ queryKey: queryKeys.room(roomId) });
-    },
   });
 }
 
