@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import { burst } from '../../lib/motion'
 import { UserPlus } from 'lucide-react'
-import { Button } from '../ui/Button'
-import { ErrorBlock } from '../ui/Spinner'
+import { Button } from '../../components/ui/Button'
+import { ErrorBlock } from '../../components/ui/Spinner'
 
 /**
  * 簡易作成ルームで、1セット目が始まる前だけ出す参加導線。

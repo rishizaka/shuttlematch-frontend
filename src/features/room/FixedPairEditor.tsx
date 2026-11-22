@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Link2, Plus, X } from 'lucide-react'
 import type { FixedPair, Participant } from '../../lib/types'
 import { useAddFixedPair, useRemoveFixedPair } from '../../hooks/queries'
-import { Button } from '../ui/Button'
-import { ConfirmModal } from '../ui/ConfirmModal'
-import { ErrorBlock } from '../ui/Spinner'
-import { useToast } from '../ui/Toast'
+import { Button } from '../../components/ui/Button'
+import { ConfirmModal } from '../../components/ui/ConfirmModal'
+import { ErrorBlock } from '../../components/ui/Spinner'
+import { useToast } from '../../components/ui/Toast'
 
 /**
  * 固定ペア(常に同じチームで組む2人)の追加・解除UI。

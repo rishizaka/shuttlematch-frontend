@@ -1,7 +1,7 @@
 import { LogOut, RotateCcw, Trash2, Undo2, Unlink } from 'lucide-react'
 import type { Participant } from '../../lib/types'
 import { FREE_SLOT, displayGuestName } from '../../lib/guests'
-import { Badge } from '../ui/Badge'
+import { Badge } from '../../components/ui/Badge'
 
 /**
  * 「フリーにする」を出してよい在席枠か。

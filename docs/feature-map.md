@@ -32,18 +32,19 @@
 - 入口: `/rooms/{id}/matches`（旧 `/rooms/{id}` はここへリダイレクト）
 - ファイル: `src/routes/rooms/$roomId_.matches.tsx`, `src/routes/rooms/$roomId.tsx`,
   `src/features/match-schedule/`（試合表の表示。フィーチャー構成。`MatchScheduleList` / `MatchCard` / `SetStartAnnouncement` / `MatchesSkeleton`）,
-  `src/components/room/`（`Lobby` / `ParticipantManager` / `RosterAccordion` / `ShareButtons` / `QrModal` / `FixedPairEditor` / `RenameModal`）
+  `src/features/room/`（ルームの運営と参加。フィーチャー構成。`Lobby` / `ParticipantManager` / `ParticipantList` / `FixedPairEditor` / `RenameModal` / `RosterAccordion` / `ShareButtons`）,
+  `src/components/room/QrModal.tsx`（運営者用リンクと共用）
 - 操作: セット開始・取り消し、セット追加、早退・遅刻（復帰）、再編成、末尾参加者の削除（開始前のみ）
-- 検証: L1 `src/features/match-schedule/` のテスト, L3 `e2e/fairness.spec.ts`（公平性: 出場/休み回数・連続出場・ペア偏り）,
+- 検証: L1 `src/features/match-schedule/` と `src/features/room/` のテスト, L3 `e2e/fairness.spec.ts`（公平性: 出場/休み回数・連続出場・ペア偏り）,
   `e2e/redirect.spec.ts`
 - 注意: 運営操作は運営者トークンが要る。E2E では `e2e/helpers.ts` の `createRoomAsOrganizer` / `actAsOrganizer` を使う
 
 ### 1-3. 参加者として自分の番号を知る
 - 入口: 共有リンク（短縮URL `/r/{code}`）→ 試合表ページで番号を選ぶ
 - ファイル: `src/routes/r.$code.tsx`,
-  `src/components/room/ClaimNumberModal.tsx`, `src/components/room/QuickJoinBanner.tsx`,
+  `src/features/room/ClaimNumberModal.tsx`, `src/features/room/QuickJoinBanner.tsx`,
   `src/lib/public-room-id.ts`, `src/lib/guests.ts`
-- 検証: L1 `src/components/room/*.test.*`, L3 `e2e/participant-self-number.spec.ts`
+- 検証: L1 `src/features/room/ClaimNumberModal.test.tsx`, L3 `e2e/participant-self-number.spec.ts`
 
 ### 1-4. 運営権を別の端末・共同運営者に渡す（運営者用リンク）
 - 入口: 試合表ページの「運営者用リンク」（形は `/rooms/{id}/matches#organizer={トークン}`）
