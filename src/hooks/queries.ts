@@ -111,14 +111,16 @@ export function useRoomList(params: RoomListParams = {}) {
  * 以前は全件(終了済みを含め数百件・40KB 超、開催のたびに増え続ける)を取ってから
  * 画面側で絞っていた。TOP の loader で SSR にも載せるので、必要な分だけを並列に取る。
  * 開催中は日付で絞らない(前日の夜に作って翌日使うことがあるため。index.tsx 参照)。
+ *
+ * 開催中は GENERATED だけを取る。ルームはかんたん作成で試合表と同時に作られ、準備中(PREPARING)・
+ * 受付中(OPEN)を通らない(受付から始める流れと backend の POST /rooms は 2026-11 に廃止)。
+ * 以前はこの2つも取っていたが、常に0件で、TOP を開くたびに API を2本余計に叩いていた。
  */
 export const homeRoomListQuery = {
   queryKey: queryKeys.homeRoomList,
   queryFn: async (): Promise<PublicRoom[]> => {
     const { from, to } = jstDayRange();
     const lists = await Promise.all([
-      roomApi.list({ status: "PREPARING" }),
-      roomApi.list({ status: "OPEN" }),
       roomApi.list({ status: "GENERATED" }),
       roomApi.list({ status: "CLOSED", heldFrom: from, heldTo: to }),
     ]);
