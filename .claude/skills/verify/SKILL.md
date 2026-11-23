@@ -84,6 +84,14 @@ until curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ | grep -q 20
 - スクリーンショットをスクラッチパッドに保存し、報告にパスを書く（変更前/後があるとなおよい）。
 - 実行したコマンドと結果（テスト件数・HTTP ステータス・コンソールエラーの有無）を報告に含める。
 
+### UI 回帰（backend 不要。UI を変えたら必ず）
+```bash
+fnm exec --using=22 npm run e2e:ui
+```
+- スクショの差分で落ちたら、`test-results/` の diff 画像を見て意図した変更か判断する。意図どおりなら
+  基準画像を CI で作り直す（手順は `docs/feature-map.md` の「UI 回帰」）。Mac で作った画像はコミットしない。
+- アクセシビリティ違反を直したら `e2e/ui/axe-known-violations.json` からも消す。
+
 ## 3. L3: E2E（backend が必要）
 
 ```bash

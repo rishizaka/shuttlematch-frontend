@@ -20,3 +20,7 @@ todos.json
 
 # Claude Code のワークツリー(スキルは .claude/skills に置いてコミットする)
 /.claude/worktrees/
+
+# UI 回帰の基準画像は Linux(CI)で作ったものだけをコミットする
+/e2e/ui/__screenshots__/**/*-darwin.png
+/e2e/ui/__screenshots__/**/*-win32.png

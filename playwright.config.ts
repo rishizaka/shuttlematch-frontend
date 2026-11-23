@@ -8,6 +8,7 @@ const isLocal = !process.env.E2E_BASE_URL
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: 'ui/**', // UI 回帰は playwright.ui.config.ts(モック API で動かす)
   timeout: 30_000,
   expect: { timeout: 10_000 },
   fullyParallel: false, // ルームを作る副作用があるので直列で安定させる

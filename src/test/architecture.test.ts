@@ -96,9 +96,10 @@ describe('フィーチャーマップ(docs/feature-map.md)が腐っていない'
   })
 
   it('e2e/ の spec が全部書かれている', () => {
-    const specs = readdirSync(join(ROOT, 'e2e'))
-      .filter((n) => n.endsWith('.spec.ts'))
-      .map((n) => `e2e/${n}`)
+    // e2e/ui/(UI 回帰)などのサブディレクトリも含める
+    const specs = walk(join(ROOT, 'e2e'))
+      .filter((p) => p.endsWith('.spec.ts'))
+      .map(rel)
     expect(specs.length).toBeGreaterThan(0)
     expect(specs.filter((p) => !map.includes(`\`${p}\``))).toEqual([])
   })
