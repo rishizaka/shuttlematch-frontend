@@ -15,7 +15,8 @@ export default defineConfig({
   timeout: 30_000,
   expect: {
     timeout: 10_000,
-    toHaveScreenshot: { maxDiffPixelRatio: 0.002 },
+    // 許容は既定(違う画素 0 個・画素ごとの色差 0.2)。以前は画素の 0.2% まで許していたが、
+    // 小さな文字の色の変化(約300px)を見逃したため外した。基準画像は CI と同じ Linux で作るので揺れない。
   },
   workers: 1,
   retries: 0, // 揺れを retry で隠さない。揺れたらテストかデータを直す
