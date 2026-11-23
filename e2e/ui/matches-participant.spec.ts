@@ -67,7 +67,8 @@ test('アクセシビリティ違反が既知のものから増えていない',
   await openMatches(page)
   const results = await new AxeBuilder({ page }).analyze()
   const found = [...new Set(results.violations.map((v) => v.id))].sort()
-  const known = [...axeKnown.matchesParticipant].sort()
+  // リストが空だと JSON の型が never[] になるので string[] として扱う
+  const known: string[] = [...axeKnown.matchesParticipant].sort()
   const added = found.filter((id) => !known.includes(id))
   const fixed = known.filter((id) => !found.includes(id))
   const detail = results.violations
