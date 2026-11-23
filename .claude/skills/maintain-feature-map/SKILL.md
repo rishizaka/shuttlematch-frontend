@@ -5,7 +5,7 @@ description: docs/feature-map.md（機能→ファイル→検証方法の地図
 
 # /maintain-feature-map — 地図を腐らせない
 
-`docs/feature-map.md` は放っておくと実物とずれる。パスの実在とルートの網羅は
+`docs/feature-map.md` は放っておくと実物とずれる。パスの実在・ルートの網羅・e2e spec と単体テストの網羅は
 `src/test/architecture.test.ts` が機械的に見ているので、**このスキルはテストでは見えないずれ**を点検する。
 
 ## 手順
@@ -14,13 +14,13 @@ description: docs/feature-map.md（機能→ファイル→検証方法の地図
    ```bash
    fnm exec --using=22 npx vitest run src/test/architecture.test.ts
    ```
-   落ちていたら、消えたパスを地図から外す／新しいルートを地図に足す。
+   落ちていたら、消えたパスを地図から外す／新しいルート・spec・テストを地図の該当機能に足す。
 
 2. **地図に載っていないコードを探す**
    - `src/components/` `src/lib/` `src/hooks/` のうち、地図のどの機能にも書かれていないディレクトリ・主要ファイル
      （`git log --since=<前回の点検> --name-only` で最近増えたものから見ると早い）
-   - `e2e/` の spec が全部どこかの「検証」欄に書かれているか
-   - `*.test.*` が対応する機能の「検証」欄に書かれているか
+   - spec・テストは載っていること自体はテストが保証する。**正しい機能の欄に載っているか**だけ見る
+   - 「リリース前の回帰セット」に、試合表まわりの spec が漏れなく入っているか
 
 3. **書かれている内容が今も正しいか見る**
    - 入口 URL・操作の説明が実際の画面と合っているか（怪しければ `/verify` の L2 で開いて確かめる）

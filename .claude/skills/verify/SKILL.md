@@ -60,9 +60,9 @@ fnm exec --using=22 npm run dev    # run_in_background で起動する
 - E2E が落ちたら、まず**変更前のコード（`git worktree add --detach <dir> origin/main`）を同じポート・同じ backend で
   動かして同じ spec を流し、比べる**。同じテストが同じように落ちるなら今回の変更のせいではない。
   ブラウザのコンソールを見れば CORS かどうかはすぐ分かるので、比べる前に一度見る。
-- **既知の失敗**（2026-11-21 時点、origin/main でも再現）: `e2e/participant-self-number.spec.ts` の4件。
-  試合表ページが SSR になってから、入力した名前がハイドレーションで消えて空のまま送信される
-  （テストがハイドレーション完了を待っていない）。直るまでは、この4件の失敗は変更の良し悪しの判断に使わない。
+- 試合表ページを開く E2E は `e2e/helpers.ts` の `gotoMatches` を使う（ハイドレーション前の `inert` が外れるのを待つ）。
+  `page.goto` だけで操作すると、Playwright の `fill` が inert を無視して値を入れ、ハイドレーションで消える
+  （2026-11-21 に `participant-self-number` が4件落ちた原因。PR #16 で解消済み）。
 
 ### 準備ができたかの確認
 ```bash
@@ -92,6 +92,9 @@ fnm exec --using=22 npm run e2e -- e2e/<spec>.spec.ts   # 関係する spec だ�
 E2E_BASE_URL=http://localhost:5173 E2E_API_BASE=http://localhost:8080 fnm exec --using=22 npx playwright test e2e/<spec>.spec.ts
 ```
 - 試合表の生成・再編成・早退/遅刻に触れたら `e2e/fairness.spec.ts` は必ず回す。
+- 試合表まわり（作成・運営・参加・運営者用リンク）に触れた PR は、`docs/feature-map.md` の
+  「リリース前の回帰セット」を全部回す。**既知の失敗は無い**ので、落ちたら回帰として扱う
+  （環境のせいか迷ったら、上の「変更前のコードで同じ spec を流して比べる」をやる）。
 - ルームを作る副作用があるので直列実行（設定済み）。**本番向け `e2e:prod` はユーザーに確認してから**。
 
 ## 4. 後片付け
