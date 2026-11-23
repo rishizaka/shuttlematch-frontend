@@ -19,6 +19,7 @@
 - **L1** = `npm run typecheck` + `fnm exec --using=22 npm run lint` + `fnm exec --using=22 npm run test`（常に必須）
 - **L2** = dev サーバーで実際に画面を開いて確認（`/verify` の手順）
 - **L3** = E2E（backend 8080 が必要。`fnm exec --using=22 npm run e2e -- <spec>`）
+- **UI** = UI 回帰（`fnm exec --using=22 npm run e2e:ui`。backend 不要、CI で毎回走る）。下の「UI 回帰」参照
 
 ---
 
@@ -39,7 +40,7 @@
   `src/components/room/QrModal.tsx`（運営者用リンクと共用）
 - 操作: セット開始・取り消し、セット追加、早退・遅刻（復帰）、再編成、末尾参加者の削除（開始前のみ）
 - 検証: L1 `src/features/match-schedule/` と `src/features/room/` のテスト, L3 `e2e/fairness.spec.ts`（公平性: 出場/休み回数・連続出場・ペア偏り）,
-  `e2e/redirect.spec.ts`
+  `e2e/redirect.spec.ts`, UI `e2e/ui/matches-participant.spec.ts`（参加者視点・スマホ幅）
 - 注意: 運営操作は運営者トークンが要る。E2E では `e2e/helpers.ts` の `createRoomAsOrganizer` / `actAsOrganizer` を使う
 - 注意: SSR で中身ごと描画し、ハイドレーションが済むまでは画面全体が `inert`（操作不可）。E2E は `e2e/helpers.ts` の `gotoMatches` で inert が外れるのを待ってから操作する
 
@@ -131,3 +132,17 @@
 ## リリース前の回帰セット
 試合表まわり（1-1〜1-4）に触った PR は、L1 に加えて次の E2E を流す（backend が必要。手順は `/verify` の L3）:
 `e2e/fairness.spec.ts`, `e2e/organizer-lifecycle.spec.ts`, `e2e/participant-self-number.spec.ts`, `e2e/organizer-link.spec.ts`, `e2e/redirect.spec.ts`
+
+## UI 回帰（良くしたら、テストで固定する）
+UI/UX を直したら、その改善が後の変更で戻らないようにテストで固定する。
+- 仕組み: モック API `e2e/ui/mock-api.mjs`（固定データ `e2e/ui/fixtures/`）＋ 本番と同じビルドを `playwright.ui.config.ts` で開く。
+  CI の「UI regression」（`.github/workflows/ui-regression.yml`）が PR ごとに走る。
+- 見ているもの（画面ごとに1 spec。今は `e2e/ui/matches-participant.spec.ts` だけ）:
+  コンソールエラー（hydration mismatch を含む）、スマホ幅での横スクロール、アクセシビリティ違反、スクショ。
+- **アクセシビリティ違反は減らす一方にする**: 今ある違反は `e2e/ui/axe-known-violations.json` に載せて許容し、
+  新しい違反が出たら落ちる。直したらリストからも消す（消し忘れもテストが落とす）。リストが改善の候補一覧。
+- **見た目を意図して変えたら基準画像を更新する**: PR の UI regression が落ち、artifact `ui-regression-report` に差分画像が出る。
+  意図どおりなら Actions → UI regression → Run workflow（`update_snapshots`）→ artifact `ui-screenshots` を
+  `e2e/ui/__screenshots__/` に上書きコミット。基準画像は Linux 製だけが正（Mac で作った `-darwin.png` は gitignore 済み）。
+- 画面を足すとき: 本物の backend の応答を取り、ID と時刻を固定値に置き換えて fixture にする。モックに無い API は 404 とログ（`[mock-api] 未定義`）になる。
+

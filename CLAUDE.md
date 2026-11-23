@@ -49,6 +49,9 @@ ShuttleMatch のフロントエンド（TanStack Start + Vite + React 19、SSR�
     - `organizer-lifecycle`（作成→試合表→削除）、`participant-self-number`（番号ハイライト）、
       `redirect`（旧URL→試合表）。
   - ルームを作る副作用があるので直列実行(`workers: 1`)。成果物は `.gitignore` 済み。
+- UI 回帰（`e2e/ui/`, `fnm exec --using=22 npm run e2e:ui`）: モック API + 本番ビルドで、スクショ・横スクロール・
+  アクセシビリティ・コンソールエラーを確かめる。backend 不要で **CI（UI regression）で毎回走る**。
+  UI/UX を直したらここで固定する（アクセシビリティの既知違反リストは減らす一方）。詳細は `docs/feature-map.md` の「UI 回帰」。
 
 ## ミニゲーム
 
