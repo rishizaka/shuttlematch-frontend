@@ -10,7 +10,7 @@ export const Route = createFileRoute('/about')({
       {
         name: 'description',
         content:
-          'シャトルマッチはバドミントン練習会のダブルスの組み合わせ(乱数表)を自動生成・共有するサービス。出場回数は常に公平、同じ顔ぶれで固まらないマッチング、受付モードや再編成で当日運営もかんたん。テニスなど4人1組で回す練習にも使えます。',
+          'シャトルマッチはバドミントン練習会のダブルスの組み合わせ(乱数表)を自動生成・共有するサービス。出場回数は常に公平、同じ顔ぶれで固まらないマッチング、共有リンク・QRコードや再編成で当日運営もかんたん。テニスなど4人1組で回す練習にも使えます。',
       },
     ],
     // このページでしか使わないので、ルート単位で読み込む
@@ -690,7 +690,7 @@ function AboutPage() {
             <ul className="ops reveal">
               <li style={{ '--d': '0' } as CSSProperties}>
                 <span className="ops-no num">01</span>
-                <div><h3>受付モード</h3><p>リンクを共有するだけ。参加者が名前を書くと番号が決まります。</p></div>
+                <div><h3>共有リンク・QRコード</h3><p>配るだけで参加者のスマホに試合表。自分の番号を選べば、自分の試合が光ります。</p></div>
               </li>
               <li style={{ '--d': '.08' } as CSSProperties}>
                 <span className="ops-no num">02</span>
