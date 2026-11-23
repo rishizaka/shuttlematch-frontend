@@ -1,0 +1,62 @@
+name: UI regression
+
+# 試合表などの画面を、モック API + 本番と同じビルドで開いて、見た目(スクショ)と
+# UX の性質(横スクロール・アクセシビリティ・コンソールエラー)を確かめる。backend 不要・副作用なし。
+# 仕様は e2e/ui/、設定は playwright.ui.config.ts。
+#
+# 見た目を意図して変えたとき(基準画像の更新):
+#   Actions → UI regression → Run workflow で対象ブランチを選び update_snapshots にチェック
+#   → artifact「ui-screenshots」をダウンロードして e2e/ui/__screenshots__/ に上書きコミットする。
+#   基準画像は Linux で作ったものだけが正(フォント描画が OS で違うため、Mac で作ったものはコミットしない)。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: 基準画像を作り直す(差分があっても落とさず、新しい画像を artifact に出す)
+        type: boolean
+        default: false
+
+jobs:
+  ui:
+    name: UI regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run UI regression
+        run: npm run e2e:ui -- ${{ inputs.update_snapshots && '--update-snapshots' || '' }}
+
+      # 基準画像(更新時・初回で無いときは、ここに新しい画像が書かれている)
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-screenshots
+          path: e2e/ui/__screenshots__/
+          retention-days: 7
+
+      # 失敗時の差分画像(expected / actual / diff)とトレース
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-regression-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
