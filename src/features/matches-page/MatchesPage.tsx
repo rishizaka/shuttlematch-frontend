@@ -892,7 +892,7 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
               <button
                 type="button"
                 onClick={() => setAddingSets(true)}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 transition hover:text-brand-700"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-brand-700"
               >
                 <ListPlus className="h-4 w-4" />
                 セットを追加
@@ -900,7 +900,7 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
               <button
                 type="button"
                 onClick={() => setConfirmingClose(true)}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 transition hover:text-red-600"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-red-600"
               >
                 <Archive className="h-4 w-4" />
                 ランダム表を終了
