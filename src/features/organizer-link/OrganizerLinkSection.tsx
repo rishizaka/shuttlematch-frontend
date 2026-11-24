@@ -38,7 +38,7 @@ export function OrganizerLinkSection({ roomId }: { roomId: string }) {
     <div className="px-4 py-4 sm:px-5">
       <div className="mb-1 flex items-center gap-2">
         <KeyRound className="h-4 w-4 text-amber-500" />
-        <h3 className="text-sm font-semibold text-slate-800">運営者用リンク</h3>
+        <h2 className="text-sm font-semibold text-slate-800">運営者用リンク</h2>
       </div>
       <p className="text-xs text-slate-500">
         別の端末や共同運営者もこのランダム表を運営できるようにするリンクです。

@@ -638,7 +638,7 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
               <div className="px-4 py-4 sm:px-5">
                 <div className="mb-3 flex items-center gap-2">
                   <Users className="h-4 w-4 text-slate-400" />
-                  <h3 className="text-sm font-semibold text-slate-800">参加者</h3>
+                  <h2 className="text-sm font-semibold text-slate-800">参加者</h2>
                 </div>
                 <ParticipantManager
                   roomId={roomId}
@@ -658,9 +658,9 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <RefreshCw className="h-4 w-4 text-slate-400" />
-                      <h3 className="text-sm font-semibold text-slate-800">
+                      <h2 className="text-sm font-semibold text-slate-800">
                         未開始セットを再編成
-                      </h3>
+                      </h2>
                       {hasLeftParticipant ? (
                         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
                           早退者あり
@@ -704,9 +704,9 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <Camera className="h-4 w-4 text-slate-400" />
-                      <h3 className="text-sm font-semibold text-slate-800">
+                      <h2 className="text-sm font-semibold text-slate-800">
                         スクショ用ページ
-                      </h3>
+                      </h2>
                     </div>
                     <p className="text-xs text-slate-500">
                       セット・コート・番号だけの一覧を別タブで開きます。
@@ -730,7 +730,7 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <Trash2 className="h-4 w-4 text-red-500" />
-                      <h3 className="text-sm font-semibold text-red-700">ランダム表を削除</h3>
+                      <h2 className="text-sm font-semibold text-red-700">ランダム表を削除</h2>
                     </div>
                     <p className="text-xs text-slate-500">
                       参加者・試合表を含めてすべて完全に削除します。元に戻せません。

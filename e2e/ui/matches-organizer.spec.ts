@@ -49,6 +49,11 @@ test.describe('運営メニューを開いた状態', () => {
     const toggle = page.getByRole('button', { name: /運営メニュー/ })
     await toggle.click()
     await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    // 開くアニメーション(半透明から不透明へ)が終わるまで待つ。途中で axe を回すと、
+    // 半透明の文字を「コントラスト不足」と数えてしまう(以前はこれで 26 件の誤検出になっていた)
+    await page
+      .locator('.animate-accordion-in')
+      .evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
   })
 
   test('スマホ幅で横スクロールが出ない', async ({ page }) => {
