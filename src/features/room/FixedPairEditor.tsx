@@ -92,7 +92,7 @@ export function FixedPairEditor({
         <Link2 className="h-4 w-4" />
         固定ペア
       </div>
-      <p className="mt-1 text-xs text-slate-400">
+      <p className="mt-1 text-xs text-slate-500">
         設定した2人は必ず同じチーム(味方)で一緒に出場し、休憩も同時になります(1人1ペアまで)。
       </p>
 
@@ -124,6 +124,7 @@ export function FixedPairEditor({
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <select
           className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700"
+          aria-label="固定ペアの1人目"
           value={pairA}
           onChange={(e) => setPairA(e.target.value)}
         >
@@ -139,6 +140,7 @@ export function FixedPairEditor({
         <span className="text-sm text-slate-400">&amp;</span>
         <select
           className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700"
+          aria-label="固定ペアの2人目"
           value={pairB}
           onChange={(e) => setPairB(e.target.value)}
         >
