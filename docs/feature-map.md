@@ -60,7 +60,9 @@
 ### 1-5. 印刷用の試合表
 - 入口: `/rooms/{id}/matches/print`
 - ファイル: `src/routes/rooms/$roomId_.matches_.print.tsx`, `src/features/match-schedule/MatchScheduleList.tsx`
-- 検証: L2（印刷プレビューで1ページに収まるか）
+- 検証: UI `e2e/ui/matches-print.spec.ts`（白い覆いが全画面を覆い、全セットが見える）, L2（印刷プレビューで1ページに収まるか）
+- 注意: 覆い（`position: fixed`）は body 直下へポータルで出す。ルートの中身は `animate-page-in`（transform）で包まれていて、
+  その中の fixed は画面ではなくその要素が基準になる（モーダル類が全部ポータルなのも同じ理由）
 
 ### 1-6. 過去の開催・自分のルーム一覧
 - 入口: `/past`, `/`（自分のルーム）

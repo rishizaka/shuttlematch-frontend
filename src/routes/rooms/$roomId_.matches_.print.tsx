@@ -1,5 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useHydrated } from '@tanstack/react-router'
 import { useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useMatches, useRoom } from '../../hooks/queries'
 import { groupMatchesBySet } from '../../features/match-schedule'
 import type { Match } from '../../lib/types'
@@ -14,11 +15,17 @@ export const Route = createFileRoute('/rooms/$roomId_/matches_/print')({
  * スクショ用の試合表。セット・コート・番号のみを表で表示する。
  * ヘッダーや操作ボタンは一切出さない(全画面の白背景でアプリのレイアウトを覆う)。
  * 戻るときはブラウザバック。
+ *
+ * 覆いは body 直下へポータルで出す(モーダル類と同じ)。ルートの中身は `animate-page-in`(transform の
+ * アニメーション)で包まれていて、その中の `position: fixed` は画面ではなくその要素が基準になる。
+ * ポータル化する前は、覆いの高さがほぼ 0 になって表が1行目の途中で切れ、ヘッダーとフッターも見えていた。
+ * ポータルは SSR できないので、ハイドレーションが済んでから描画する(このページの中身はどのみちクライアントで取る)。
  */
 function PrintPage() {
   const { roomId } = Route.useParams()
   const { data: room } = useRoom(roomId)
   const { data: schedule, isLoading, isError } = useMatches(roomId)
+  const hydrated = useHydrated()
 
   // 参加者一覧の並び順を 1 始まりの番号として割り当てる(試合表ページと同じ規則)。
   const indexByParticipantId = useMemo(() => {
@@ -46,7 +53,9 @@ function PrintPage() {
       (id) => indexByParticipantId.get(id) ?? '?',
     )
 
-  return (
+  if (!hydrated) return null
+
+  return createPortal(
     <div className="fixed inset-0 z-50 overflow-auto bg-white p-3">
       {isLoading ? (
         <p className="text-sm text-slate-500">読み込み中…</p>
@@ -95,6 +104,7 @@ function PrintPage() {
           </tbody>
         </table>
       )}
-    </div>
+    </div>,
+    document.body,
   )
 }
