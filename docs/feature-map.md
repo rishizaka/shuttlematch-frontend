@@ -40,7 +40,7 @@
   `src/components/room/QrModal.tsx`（運営者用リンクと共用）
 - 操作: セット開始・取り消し、セット追加、早退・遅刻（復帰）、再編成、末尾参加者の削除（開始前のみ）
 - 検証: L1 `src/features/match-schedule/` と `src/features/room/` のテスト, L3 `e2e/fairness.spec.ts`（公平性: 出場/休み回数・連続出場・ペア偏り）,
-  `e2e/redirect.spec.ts`, UI `e2e/ui/matches-participant.spec.ts`（参加者視点・スマホ幅）
+  `e2e/redirect.spec.ts`, UI `e2e/ui/matches-participant.spec.ts`（参加者視点・スマホ幅）・`e2e/ui/matches-organizer.spec.ts`（運営者視点）
 - 注意: 運営操作は運営者トークンが要る。E2E では `e2e/helpers.ts` の `createRoomAsOrganizer` / `actAsOrganizer` を使う
 - 注意: SSR で中身ごと描画し、ハイドレーションが済むまでは画面全体が `inert`（操作不可）。E2E は `e2e/helpers.ts` の `gotoMatches` で inert が外れるのを待ってから操作する
 
@@ -139,7 +139,7 @@
 UI/UX を直したら、その改善が後の変更で戻らないようにテストで固定する。
 - 仕組み: モック API `e2e/ui/mock-api.mjs`（固定データ `e2e/ui/fixtures/`）＋ 本番と同じビルドを `playwright.ui.config.ts` で開く。
   CI の「UI regression」（`.github/workflows/ui-regression.yml`）が PR ごとに走る。
-- 見ているもの（画面ごとに1 spec。今は `e2e/ui/matches-participant.spec.ts` だけ）:
+- 見ているもの（画面ごとに1 spec。共通部品は `e2e/ui/helpers.ts`。spec の `test()` は helpers に移さない＝基準画像の置き場所が spec ファイルごとに決まるため）:
   コンソールエラー（hydration mismatch を含む）、スマホ幅での横スクロール、アクセシビリティ違反、スクショ。
 - **アクセシビリティ違反は減らす一方にする**: 今ある違反は `e2e/ui/axe-known-violations.json` に載せて許容し、
   新しい違反が出たら落ちる。直したらリストからも消す（消し忘れもテストが落とす）。リストが改善の候補一覧。
