@@ -116,7 +116,7 @@ function SetGroupView({
           ) : null}
           第{group.setNumber}セット
           {startedTime ? (
-            <span className="text-[10px] font-medium text-slate-400 tabular-nums">
+            <span className="text-[10px] font-medium text-slate-600 tabular-nums">
               {startedTime}〜
             </span>
           ) : null}
@@ -164,7 +164,7 @@ function SetGroupView({
             <button
               type="button"
               onClick={() => setConfirmingRevert(true)}
-              className="inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+              className="inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-800"
             >
               <RotateCcw className="h-2.5 w-2.5" />
               戻す
