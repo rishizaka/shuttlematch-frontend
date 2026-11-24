@@ -41,3 +41,25 @@ test('見た目が基準画像と一致する', async ({ page }) => {
   await openMatches(page)
   await expect(page).toHaveScreenshot('matches-organizer.png', { fullPage: true })
 })
+
+/** 運営メニューを開いた状態。参加者の出入り・セット追加・運営者用リンクなど、畳まれていると見えない部品を固定する。 */
+test.describe('運営メニューを開いた状態', () => {
+  test.beforeEach(async ({ page }) => {
+    await openMatches(page)
+    const toggle = page.getByRole('button', { name: /運営メニュー/ })
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  test('スマホ幅で横スクロールが出ない', async ({ page }) => {
+    await expectNoHorizontalOverflow(page)
+  })
+
+  test('アクセシビリティ違反が既知のものから増えていない', async ({ page }) => {
+    await expectAxeWithinKnown(page, 'matchesOrganizerMenu')
+  })
+
+  test('見た目が基準画像と一致する', async ({ page }) => {
+    await expect(page).toHaveScreenshot('matches-organizer-menu.png', { fullPage: true })
+  })
+})

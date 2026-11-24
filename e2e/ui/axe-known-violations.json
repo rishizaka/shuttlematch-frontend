@@ -1,4 +1,5 @@
 {
   "matchesParticipant": [],
-  "matchesOrganizer": []
+  "matchesOrganizer": [],
+  "matchesOrganizerMenu": ["color-contrast", "heading-order", "select-name"]
 }
