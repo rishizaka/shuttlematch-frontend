@@ -49,7 +49,8 @@
 - ファイル: `src/routes/r.$code.tsx`,
   `src/features/room/ClaimNumberModal.tsx`, `src/features/room/QuickJoinBanner.tsx`,
   `src/lib/guests.ts`
-- 検証: L1 `src/features/room/ClaimNumberModal.test.tsx`, `src/lib/guests.test.ts`, L3 `e2e/participant-self-number.spec.ts`
+- 検証: L1 `src/features/room/ClaimNumberModal.test.tsx`, `src/lib/guests.test.ts`, L3 `e2e/participant-self-number.spec.ts`,
+  UI `e2e/ui/share-code.spec.ts`（短縮URLのリダイレクトと「見つからない」画面）
 
 ### 1-4. 運営権を別の端末・共同運営者に渡す（運営者用リンク）
 - 入口: 試合表ページの「運営者用リンク」（形は `/rooms/{id}/matches#organizer={トークン}`）
