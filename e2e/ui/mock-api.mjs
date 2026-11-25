@@ -12,7 +12,13 @@ const generated = fixture('room-generated')
 const routes = {
   [`/api/v1/rooms/${generated.room.id}`]: generated.room,
   [`/api/v1/rooms/${generated.room.id}/matches`]: generated.matches,
+  [`/api/v1/rooms/code/${generated.room.shareCode}`]: generated.room,
 }
+
+/** 「無い」ことを確かめるためのパス。backend と同じく 404 を返す(想定どおりなので「未定義」のログは出さない)。 */
+// e2e/ui/share-code.spec.ts の NOT_FOUND_SHARE_CODE と揃える
+const NOT_FOUND_SHARE_CODE = 'nosuchcd'
+const notFound = new Set([`/api/v1/rooms/code/${NOT_FOUND_SHARE_CODE}`])
 
 createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*')
@@ -23,7 +29,7 @@ createServer((req, res) => {
   if (path === '/health') return res.writeHead(200).end('ok')
   const body = req.method === 'GET' ? routes[path] : undefined
   if (body === undefined) {
-    console.warn(`[mock-api] 未定義: ${req.method} ${path}`)
+    if (!notFound.has(path)) console.warn(`[mock-api] 未定義: ${req.method} ${path}`)
     res.writeHead(404, { 'Content-Type': 'application/problem+json' })
     return res.end(JSON.stringify({ status: 404, title: 'Not Found', detail: `mock: ${path}` }))
   }

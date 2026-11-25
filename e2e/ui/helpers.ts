@@ -9,6 +9,7 @@ import axeKnown from './axe-known-violations.json' with { type: 'json' }
  */
 export const ROOM_ID = fixture.room.id
 export const ROOM_TITLE = fixture.room.title
+export const SHARE_CODE = fixture.room.shareCode
 
 /** 各テストの前に: 時刻の固定と外部サービスの遮断。 */
 export async function prepare(page: Page) {
