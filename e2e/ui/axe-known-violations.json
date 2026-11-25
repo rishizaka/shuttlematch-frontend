@@ -1,5 +1,11 @@
 {
   "matchesParticipant": [],
   "matchesOrganizer": [],
-  "matchesOrganizerMenu": []
+  "matchesOrganizerMenu": [],
+  "gameHub": [],
+  "gameFlap": ["color-contrast"],
+  "gameRain": ["color-contrast"],
+  "gameCoin": ["color-contrast"],
+  "gameFlick": ["color-contrast"],
+  "gameSki": ["color-contrast"]
 }

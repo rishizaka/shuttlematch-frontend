@@ -102,7 +102,9 @@
 - 共通: `src/features/minigames/shared.ts`, `src/features/minigames/GameGuide.tsx`,
   ランキング `src/features/minigames/RankingBoard.tsx` / `src/features/minigames/GameOverRanking.tsx` / `src/features/minigames/ranking.ts`
 - 検証: L1 `src/features/minigames/shuttleFlap.test.ts`, `src/features/minigames/shatopokoSki.test.ts`, `src/features/minigames/ranking.test.ts`,
-  `src/test/architecture.test.ts`（GameGuide 必須・AdSlot はちょうど1つ）, L2（実際に1プレイしてゲームオーバー→ランキング表示まで）
+  `src/test/architecture.test.ts`（GameGuide 必須・AdSlot はちょうど1つ）,
+  UI `e2e/ui/games.spec.ts`（ハブと5本のタイトル画面・スマホ幅。canvas はスクショで塗りつぶし、枠と本文を固定）,
+  L2（実際に1プレイしてゲームオーバー→ランキング表示まで）
 
 ## 4. コンテンツ（SEO・審査対策）
 - ガイド記事: `/guide`, `/guide/{id}` — `src/routes/guide.tsx`, `src/routes/guide.index.tsx`, `src/routes/guide.$id.tsx`, `src/lib/guides.ts`
