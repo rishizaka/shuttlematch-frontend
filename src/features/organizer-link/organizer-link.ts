@@ -9,6 +9,9 @@
 
 const KEY = 'organizer'
 
+/** 運営メニューの「運営者用リンク」欄の DOM id。外から欄までスクロールさせるときに使う。 */
+export const ORGANIZER_LINK_SECTION_ID = 'organizer-link'
+
 /** 運営者用リンクの URL。origin は shareOrigin() を渡す。 */
 export function organizerLinkUrl(origin: string, roomId: string, token: string): string {
   return `${origin.replace(/\/$/, '')}/rooms/${roomId}/matches#${KEY}=${encodeURIComponent(token)}`

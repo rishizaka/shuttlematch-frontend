@@ -6,4 +6,4 @@
  * 機能の外（routes など）からは、この index.ts で export しているものだけを使う。
  */
 export { OrganizerLinkSection } from './OrganizerLinkSection'
-export { readOrganizerTokenFromHash } from './organizer-link'
+export { ORGANIZER_LINK_SECTION_ID, readOrganizerTokenFromHash } from './organizer-link'

@@ -10,6 +10,8 @@ import axeKnown from './axe-known-violations.json' with { type: 'json' }
 export const ROOM_ID = fixture.room.id
 export const ROOM_TITLE = fixture.room.title
 export const SHARE_CODE = fixture.room.shareCode
+/** 1セット目を始める前の同じ試合表(e2e/ui/mock-api.mjs が fixture から作る。ID はそちらと揃える)。 */
+export const NOT_STARTED_ROOM_ID = '00000000-0000-4000-8000-000000000002'
 
 /** 各テストの前に: 時刻の固定と外部サービスの遮断。 */
 export async function prepare(page: Page) {
@@ -27,21 +29,21 @@ export async function prepare(page: Page) {
 }
 
 /** この端末を運営者にする(作成時に受け取る運営者トークンを localStorage に入れておく)。 */
-export async function actAsOrganizer(page: Page) {
+export async function actAsOrganizer(page: Page, roomId: string = ROOM_ID) {
   await page.addInitScript(
     ([roomId]) => window.localStorage.setItem(`shuttlematch.organizer.${roomId}`, 'ui-regression-token'),
-    [ROOM_ID],
+    [roomId],
   )
 }
 
 /** 試合表を開き、ハイドレーションが済むまで待つ。出たコンソールエラーを集める配列を返す。 */
-export async function openMatches(page: Page) {
+export async function openMatches(page: Page, roomId: string = ROOM_ID) {
   const errors: string[] = []
   page.on('console', (m) => {
     if (m.type() === 'error') errors.push(m.text())
   })
   page.on('pageerror', (e) => errors.push(e.message))
-  await page.goto(`/rooms/${ROOM_ID}/matches`)
+  await page.goto(`/rooms/${roomId}/matches`)
   await expect(page.locator('main [inert]')).toHaveCount(0)
   await expect(page.getByText(ROOM_TITLE).first()).toBeVisible()
   await page.evaluate(() => document.fonts.ready)
