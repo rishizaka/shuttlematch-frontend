@@ -2,7 +2,7 @@ import { Suspense, lazy, useState } from 'react'
 import { Copy, KeyRound, QrCode } from 'lucide-react'
 import { copyToClipboard } from '../../lib/clipboard'
 import { getOrganizerToken } from '../../lib/local-store'
-import { organizerLinkUrl } from './organizer-link'
+import { ORGANIZER_LINK_SECTION_ID, organizerLinkUrl } from './organizer-link'
 import { shareOrigin } from '../../lib/og'
 import { Button } from '../../components/ui/Button'
 import { useToast } from '../../components/ui/Toast'
@@ -35,7 +35,7 @@ export function OrganizerLinkSection({ roomId }: { roomId: string }) {
   }
 
   return (
-    <div className="px-4 py-4 sm:px-5">
+    <div id={ORGANIZER_LINK_SECTION_ID} className="scroll-mt-4 px-4 py-4 sm:px-5">
       <div className="mb-1 flex items-center gap-2">
         <KeyRound className="h-4 w-4 text-amber-500" />
         <h2 className="text-sm font-semibold text-slate-800">運営者用リンク</h2>

@@ -8,11 +8,29 @@ const PORT = Number(process.env.MOCK_API_PORT || 8099)
 const fixture = (name) => JSON.parse(readFileSync(new URL(`./fixtures/${name}.json`, import.meta.url), 'utf8'))
 const generated = fixture('room-generated')
 
+/**
+ * 1セット目を始める前の試合表(運営者に「はじめに」カードが出る状態)。fixture をもう1つ持つと
+ * 参加者や試合の並びが2か所でずれていくので、room-generated から ID・共有コードを替え、
+ * 開始時刻を全部消して作る。ID・共有コードは e2e/ui/helpers.ts の NOT_STARTED_* と揃える。
+ */
+const NOT_STARTED_ROOM_ID = '00000000-0000-4000-8000-000000000002'
+const NOT_STARTED_SHARE_CODE = 'uiregr02'
+const notStarted = {
+  room: { ...generated.room, id: NOT_STARTED_ROOM_ID, shareCode: NOT_STARTED_SHARE_CODE },
+  matches: {
+    ...generated.matches,
+    roomId: NOT_STARTED_ROOM_ID,
+    matches: generated.matches.matches.map((match) => ({ ...match, startedAt: null })),
+  },
+}
+
 /** パス → 応答。ここに無い API はテストが想定していない呼び出しなので 404 を返し、ログに残す。 */
 const routes = {
   [`/api/v1/rooms/${generated.room.id}`]: generated.room,
   [`/api/v1/rooms/${generated.room.id}/matches`]: generated.matches,
   [`/api/v1/rooms/code/${generated.room.shareCode}`]: generated.room,
+  [`/api/v1/rooms/${notStarted.room.id}`]: notStarted.room,
+  [`/api/v1/rooms/${notStarted.room.id}/matches`]: notStarted.matches,
 }
 
 /** 「無い」ことを確かめるためのパス。backend と同じく 404 を返す(想定どおりなので「未定義」のログは出さない)。 */

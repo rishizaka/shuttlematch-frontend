@@ -33,7 +33,11 @@ import {
 import { useCurrentUser, useHasOrganizerToken } from '../../hooks/useCurrentUser'
 import { ApiError, isNetworkError, roomApi } from '../../lib/api'
 import type { Room } from '../../lib/types'
-import { OrganizerLinkSection, readOrganizerTokenFromHash } from '../../features/organizer-link'
+import {
+  ORGANIZER_LINK_SECTION_ID,
+  OrganizerLinkSection,
+  readOrganizerTokenFromHash,
+} from '../../features/organizer-link'
 import {
   addRoomId,
   getSelfParticipant,
@@ -541,7 +545,21 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
             selfStartedRef.current = true
             startSet.mutate(1)
           }}
-          onOpenOrganizerMenu={() => setOrganizerOpen(true)}
+          onShowOrganizerLink={
+            // 運営者用リンクはトークンを持つ端末にしか出ない(OrganizerLinkSection)ので、
+            // トークンの無い作成者(導入前のランダム表)には案内しない。
+            hasOrganizerToken
+              ? () => {
+                  setOrganizerOpen(true)
+                  // 開いたメニューの中の「運営者用リンク」欄まで連れていく(メニューは画面の下のほうにある)。
+                  requestAnimationFrame(() =>
+                    document
+                      .getElementById(ORGANIZER_LINK_SECTION_ID)
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+                  )
+                }
+              : undefined
+          }
         />
       ) : null}
 

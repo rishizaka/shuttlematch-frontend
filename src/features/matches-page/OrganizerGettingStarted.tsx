@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Play, Settings2 } from 'lucide-react'
+import { KeyRound, Play } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
 import { burst } from '../../lib/motion'
 import { ShareButtons } from '../../features/room'
@@ -20,15 +20,18 @@ export function OrganizerGettingStarted({
   shareCode,
   starting,
   onStartFirstSet,
-  onOpenOrganizerMenu,
+  onShowOrganizerLink,
 }: {
   roomId: string
   shareCode?: string
   /** 第1セットの開始処理中か。 */
   starting: boolean
   onStartFirstSet: () => void
-  /** 運営メニューを開く(運営者用リンクはその中にある)。 */
-  onOpenOrganizerMenu: () => void
+  /**
+   * 運営メニューの「運営者用リンク」を出す。渡さなければ別端末向けの案内ごと出さない
+   * (運営者用リンクはトークンを持つ端末にしか無いため)。
+   */
+  onShowOrganizerLink?: () => void
 }) {
   const startRef = useRef<HTMLButtonElement>(null)
 
@@ -79,24 +82,29 @@ export function OrganizerGettingStarted({
               }}
             >
               <Play className="h-4 w-4 fill-current" />
-              {starting ? '開始中…' : '第1セット開始'}
+              {/* 第1セット見出しの右の「第1セット開始」と同じ動作。名前が同じだとスクリーンリーダーや
+                  E2E で区別できないので、文言を変えておく(「第1セット開始」を含まない形にする)。 */}
+              {starting ? '開始中…' : '第1セットを開始する'}
             </Button>
           </div>
         </li>
       </ol>
 
-      <p className="mt-4 border-t border-brand-100 pt-3 text-xs text-slate-500">
-        {'別のスマホで運営するときは、運営メニューの「運営者用リンク」を自分に送っておいてください。' +
-          '運営できるのは、この試合表を作った端末だけです。'}
-        <button
-          type="button"
-          onClick={onOpenOrganizerMenu}
-          className="ml-1 inline-flex items-center gap-0.5 font-medium text-brand-600 hover:underline"
-        >
-          <Settings2 className="h-3 w-3" />
-          運営メニューを開く
-        </button>
-      </p>
+      {/* ボタン名は運営メニューの開閉ボタン(「運営メニュー」)と重ならないようにする。 */}
+      {onShowOrganizerLink ? (
+        <p className="mt-4 border-t border-brand-100 pt-3 text-xs text-slate-600">
+          {'別のスマホで運営するときは、運営メニューの「運営者用リンク」を自分に送っておいてください。' +
+            '運営できるのは、この試合表を作った端末だけです。'}
+          <button
+            type="button"
+            onClick={onShowOrganizerLink}
+            className="ml-1 inline-flex items-center gap-0.5 font-medium text-brand-600 hover:underline"
+          >
+            <KeyRound className="h-3 w-3" />
+            運営者用リンクを出す
+          </button>
+        </p>
+      ) : null}
     </section>
   )
 }

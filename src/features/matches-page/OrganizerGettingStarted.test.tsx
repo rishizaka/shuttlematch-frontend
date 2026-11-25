@@ -12,7 +12,7 @@ const renderCard = (over: Partial<Parameters<typeof OrganizerGettingStarted>[0]>
     shareCode: 'abc12345',
     starting: false,
     onStartFirstSet: vi.fn(),
-    onOpenOrganizerMenu: vi.fn(),
+    onShowOrganizerLink: vi.fn(),
     ...over,
   }
   render(
@@ -34,9 +34,9 @@ describe('OrganizerGettingStarted', () => {
     expect(screen.getByRole('button', { name: /QRを表示/ })).toBeInTheDocument()
   })
 
-  it('「第1セット開始」を押すと開始する', () => {
+  it('「第1セットを開始する」を押すと開始する', () => {
     const props = renderCard()
-    fireEvent.click(screen.getByRole('button', { name: '第1セット開始' }))
+    fireEvent.click(screen.getByRole('button', { name: '第1セットを開始する' }))
     expect(props.onStartFirstSet).toHaveBeenCalledTimes(1)
   })
 
@@ -48,9 +48,25 @@ describe('OrganizerGettingStarted', () => {
     expect(props.onStartFirstSet).not.toHaveBeenCalled()
   })
 
-  it('別端末で運営する人向けに、運営メニュー(運営者用リンク)を開ける', () => {
+  it('別端末で運営する人向けに、運営者用リンクを出せる', () => {
     const props = renderCard()
-    fireEvent.click(screen.getByRole('button', { name: /運営メニューを開く/ }))
-    expect(props.onOpenOrganizerMenu).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByRole('button', { name: '運営者用リンクを出す' }))
+    expect(props.onShowOrganizerLink).toHaveBeenCalledTimes(1)
+  })
+
+  it('開始ボタンの名前が、試合表の見出しの「第1セット開始」と重ならない', () => {
+    renderCard()
+    expect(screen.queryAllByRole('button', { name: /第1セット開始/ })).toHaveLength(0)
+  })
+
+  it('運営者用リンクを出せない端末(トークンが無い)には、別端末向けの案内ごと出さない', () => {
+    renderCard({ onShowOrganizerLink: undefined })
+    expect(screen.queryByText(/別のスマホで運営するときは/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '運営者用リンクを出す' })).not.toBeInTheDocument()
+  })
+
+  it('ボタン名が運営メニューの開閉ボタン(「運営メニュー」)と重ならない', () => {
+    renderCard()
+    expect(screen.queryAllByRole('button', { name: /運営メニュー/ })).toHaveLength(0)
   })
 })

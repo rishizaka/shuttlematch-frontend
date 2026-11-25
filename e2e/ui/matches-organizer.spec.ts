@@ -4,6 +4,7 @@ import {
   expectAxeWithinKnown,
   expectNoConsoleErrors,
   expectNoHorizontalOverflow,
+  NOT_STARTED_ROOM_ID,
   openMatches,
   prepare,
 } from './helpers'
@@ -66,5 +67,58 @@ test.describe('運営メニューを開いた状態', () => {
 
   test('見た目が基準画像と一致する', async ({ page }) => {
     await expect(page).toHaveScreenshot('matches-organizer-menu.png', { fullPage: true })
+  })
+})
+
+/**
+ * 1セット目を始める前(作成直後)。運営者にだけ「はじめに」カードが出る。
+ * 次にやること(リンクを送る → 第1セット開始)が最初に目に入るか、開始ボタンが1つだけかを固定する。
+ */
+test.describe('1セット目を始める前', () => {
+  test.beforeEach(async ({ page }) => {
+    await actAsOrganizer(page, NOT_STARTED_ROOM_ID)
+  })
+
+  test('「はじめに」カードが「参加する」より上に出て、開始ボタンの名前が試合表側と重ならない', async ({ page }) => {
+    await openMatches(page, NOT_STARTED_ROOM_ID)
+    const card = page.getByRole('region', { name: /当日はこの2つだけ/ })
+    await expect(card).toBeVisible()
+    // 開始ボタンはカードと第1セット見出しの右の2か所。名前が同じだとスクリーンリーダーで区別できず、
+    // 「第1セット開始」を探す E2E(fairness など)も2つ見つけて止まるので、カード側は文言を変えてある
+    await expect(card.getByRole('button', { name: '第1セットを開始する' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '第1セット開始' })).toHaveCount(1)
+    // ヘッダーの共有ボタンはカードの中と重なるので出さない
+    await expect(page.getByRole('button', { name: /試合表を共有/ })).toHaveCount(1)
+    // カードのボタンが運営メニューの開閉ボタンと取り違えられない
+    await expect(page.getByRole('button', { name: /運営メニュー/ })).toHaveCount(1)
+    const cardTop = (await card.boundingBox())!.y
+    const joinTop = (await page.getByRole('button', { name: '参加する' }).boundingBox())!.y
+    expect(cardTop).toBeLessThan(joinTop)
+  })
+
+  test('「運営者用リンクを出す」で運営メニューが開き、運営者用リンクの欄が見える', async ({ page }) => {
+    await openMatches(page, NOT_STARTED_ROOM_ID)
+    await page.getByRole('button', { name: '運営者用リンクを出す' }).click()
+    await expect(page.getByRole('button', { name: /運営メニュー/ })).toHaveAttribute('aria-expanded', 'true')
+    await expect(page.getByRole('heading', { name: '運営者用リンク' })).toBeInViewport()
+  })
+
+  test('コンソールエラーが出ない(hydration mismatch を含む)', async ({ page }) => {
+    await expectNoConsoleErrors(page, await openMatches(page, NOT_STARTED_ROOM_ID))
+  })
+
+  test('スマホ幅で横スクロールが出ない', async ({ page }) => {
+    await openMatches(page, NOT_STARTED_ROOM_ID)
+    await expectNoHorizontalOverflow(page)
+  })
+
+  test('アクセシビリティ違反が既知のものから増えていない', async ({ page }) => {
+    await openMatches(page, NOT_STARTED_ROOM_ID)
+    await expectAxeWithinKnown(page, 'matchesOrganizerNotStarted')
+  })
+
+  test('見た目が基準画像と一致する', async ({ page }) => {
+    await openMatches(page, NOT_STARTED_ROOM_ID)
+    await expect(page).toHaveScreenshot('matches-organizer-not-started.png', { fullPage: true })
   })
 })
