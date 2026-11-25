@@ -58,6 +58,7 @@ import {
   ShareButtons,
 } from '../../features/room'
 import { MatchScheduleList, MatchesSkeleton, SetStartAnnouncement } from '../../features/match-schedule'
+import { OrganizerGettingStarted } from './OrganizerGettingStarted'
 
 /**
  * 試合表ページ(/rooms/{id}/matches)の本体。
@@ -364,6 +365,14 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
     }
   }
 
+  // 運営者向けの「はじめに」カードを出すか。1セット目が始まるまでの運営者だけ。
+  const showGettingStarted =
+    isOrganizer &&
+    !closed &&
+    activeSetNumber === null &&
+    startableSetNumber === 1 &&
+    schedule.matches.length > 0
+
   const submitClaim = (participantId: string, name: string | null) => {
     // 切り替え前に自分が名乗っていた番号。別の番号に切り替えるときだけ、間違えて
     // 入力した名前を番号の表示(「3」なら "3")に戻す。名簿に実名が残ったまま
@@ -514,8 +523,27 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
         {/* 試合表の共有・QR表示。以前は運営メニュー(ParticipantManager)の中にしか無く、
             一般参加者は友人を誘うのに使えなかった。誰でも押せるようヘッダーに出す
             (終了済みルームも誰でも閲覧できる方針なので、closed でも隠さない)。 */}
-        {room ? <ShareButtons roomId={roomId} shareCode={room.shareCode} /> : null}
+        {/* 「はじめに」カードを出している間は、同じ共有ボタンがカードの中にあるので出さない。 */}
+        {room && !showGettingStarted ? (
+          <ShareButtons roomId={roomId} shareCode={room.shareCode} />
+        ) : null}
       </div>
+
+      {/* 運営者だけに、1セット目を始めるまで「次にやること」を出す(OrganizerGettingStarted 参照)。
+          参加者向けの「参加する」より上に置き、運営者が最初に見るものにする。 */}
+      {showGettingStarted ? (
+        <OrganizerGettingStarted
+          roomId={roomId}
+          shareCode={room?.shareCode}
+          starting={startSet.isPending && startSet.variables === 1}
+          onStartFirstSet={() => {
+            // 自分の操作による開始では全画面アナウンスを出さない (トーストのみ)。
+            selfStartedRef.current = true
+            startSet.mutate(1)
+          }}
+          onOpenOrganizerMenu={() => setOrganizerOpen(true)}
+        />
+      ) : null}
 
       {/* 自分がまだ未設定の人への誘導。
           簡易作成ルームで1セット目が始まる前なら「参加する」で自動採番(QuickJoinBanner)、

@@ -39,7 +39,7 @@
   `src/features/room/`（ルームの運営と参加。フィーチャー構成。`ParticipantManager` / `ParticipantList` / `FixedPairEditor` / `RenameModal` / `RosterAccordion` / `ShareButtons`）,
   `src/components/room/QrModal.tsx`（運営者用リンクと共用）
 - 操作: セット開始・取り消し、セット追加、早退・遅刻（復帰）、再編成、末尾参加者の削除（開始前のみ）
-- 検証: L1 `src/features/match-schedule/` と `src/features/room/` のテスト, L3 `e2e/fairness.spec.ts`（公平性: 出場/休み回数・連続出場・ペア偏り）,
+- 検証: L1 `src/features/match-schedule/` と `src/features/room/` のテスト, `src/features/matches-page/OrganizerGettingStarted.test.tsx`（運営者向けの「はじめに」）, L3 `e2e/fairness.spec.ts`（公平性: 出場/休み回数・連続出場・ペア偏り）,
   `e2e/redirect.spec.ts`, UI `e2e/ui/matches-participant.spec.ts`（参加者視点・スマホ幅）・`e2e/ui/matches-organizer.spec.ts`（運営者視点。運営メニューを開いた状態も）
 - 注意: 運営操作は運営者トークンが要る。E2E では `e2e/helpers.ts` の `createRoomAsOrganizer` / `actAsOrganizer` を使う
 - 注意: SSR で中身ごと描画し、ハイドレーションが済むまでは画面全体が `inert`（操作不可）。E2E は `e2e/helpers.ts` の `gotoMatches` で inert が外れるのを待ってから操作する
