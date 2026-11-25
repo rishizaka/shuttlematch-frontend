@@ -4,6 +4,7 @@ import {
   ROOM_TITLE,
   SHARE_CODE,
   expectAxeWithinKnown,
+  expectNoConsoleErrors,
   expectNoHorizontalOverflow,
   prepare,
 } from './helpers'
@@ -32,26 +33,24 @@ test.describe('見つからないコード', () => {
   async function openNotFound(page: Page) {
     const errors: string[] = []
     page.on('console', (m) => {
-      if (m.type() === 'error') errors.push(m.text())
+      if (m.type() !== 'error') return
+      // ページ自身を 404 で返すと、Chrome は必ず「404 を受け取った」とログに出す。これは狙いどおりなので除く
+      // (API など他の URL の失敗は拾う)
+      if (new URL(m.location().url).pathname === `/r/${NOT_FOUND_SHARE_CODE}` && m.text().includes('status of 404')) return
+      errors.push(m.text())
     })
     page.on('pageerror', (e) => errors.push(e.message))
-    await page.goto(`/r/${NOT_FOUND_SHARE_CODE}`)
+    const res = await page.goto(`/r/${NOT_FOUND_SHARE_CODE}`)
+    // 打ち間違いなどは障害ではないので 404(以前は 500 を返していた)
+    expect(res?.status()).toBe(404)
     await expect(page.getByText('このリンクのランダム表が見つかりませんでした。')).toBeVisible()
     await page.waitForLoadState('networkidle')
     await page.evaluate(() => document.fonts.ready)
     return errors
   }
 
-  test('想定外のコンソールエラーが出ない', async ({ page }) => {
-    const errors = await openNotFound(page)
-    await page.waitForTimeout(1000)
-    // 今は loader の例外がそのまま HTTP 500 になり、ブラウザがその 500 とエラー内容をコンソールに出す。
-    // 「見つからない」は本来 404 なので、そう直したらこの許容を外して expect(errors).toEqual([]) にする。
-    const unexpected = errors.filter(
-      (e) =>
-        !e.includes('status of 500') && !e.startsWith(`Error: mock: /api/v1/rooms/code/${NOT_FOUND_SHARE_CODE}`),
-    )
-    expect(unexpected).toEqual([])
+  test('コンソールエラーが出ない(hydration mismatch を含む)', async ({ page }) => {
+    await expectNoConsoleErrors(page, await openNotFound(page))
   })
 
   test('スマホ幅で横スクロールが出ない', async ({ page }) => {
