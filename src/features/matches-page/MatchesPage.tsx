@@ -36,7 +36,10 @@ import type { Room } from '../../lib/types'
 import { OrganizerLinkSection, readOrganizerTokenFromHash } from '../../features/organizer-link'
 import {
   addRoomId,
+  getOrganizerToken,
   getSelfParticipant,
+  hasRecordedParticipantOpen,
+  markParticipantOpenRecorded,
   setSelfParticipant,
   removeSelfParticipant,
   removeOrganizerToken,
@@ -122,6 +125,21 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
       })
     // roomId ごとに一度だけ。showToast は useCallback(..., []) で安定しているので依存に入れても再実行されない。
   }, [roomId, showToast])
+
+  // 参加者の端末で開かれたことを1回だけ記録する(KPI 用)。作った試合表が参加者に配られて
+  // いるかを測るため。運営者の端末では送らない。判定は useHasOrganizerToken ではなく
+  // localStorage を直接読む(ハイドレーション直後の描画ではサーバー側の値 false が返るため、
+  // それを使うと運営者の端末でも送ってしまう)。失敗しても参加者の操作には関係ないので黙って捨てる。
+  const roomLoaded = !!room
+  const roomCreatedBy = room?.createdBy
+  useEffect(() => {
+    if (!roomLoaded || typeof window === 'undefined') return
+    if (getOrganizerToken(roomId) != null) return
+    if (user && roomCreatedBy === user.id) return
+    if (hasRecordedParticipantOpen(roomId)) return
+    markParticipantOpenRecorded(roomId)
+    roomApi.recordParticipantOpen(roomId).catch(() => {})
+  }, [roomId, roomLoaded, roomCreatedBy, user])
 
   // 再編成で途中参加者が試合表に現れたら、次の room ポーリングを待たずに
   // すぐ名前を解決できるよう room を取り直す (未知の ParticipantId を検知したときのみ)。

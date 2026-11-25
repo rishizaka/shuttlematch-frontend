@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError, NetworkError, isNetworkError, matchApi, roomApi, userApi } from './api'
-import { getOrganizerToken, setOrganizerToken } from './local-store'
+import {
+  getOrganizerToken,
+  hasRecordedParticipantOpen,
+  markParticipantOpenRecorded,
+  setOrganizerToken,
+} from './local-store'
 
 const okJson = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -180,9 +185,34 @@ describe('運営者トークン', () => {
     await roomApi.renameParticipant(ROOM, 'p1', 'たろう')
     await roomApi.claimNext(ROOM, 'たろう')
     await roomApi.get(ROOM)
+    await roomApi.recordParticipantOpen(ROOM)
 
     for (const call of fetchMock.mock.calls) {
       expect(headerOf(call[1])).toBeUndefined()
     }
+  })
+})
+
+describe('参加者の端末で開いた記録', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    window.localStorage.clear()
+  })
+
+  it('POST /rooms/{id}/participant-opens に送る', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(null, { status: 204 }))
+    await roomApi.recordParticipantOpen('room-1')
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(String(url)).toMatch(/\/api\/v1\/rooms\/room-1\/participant-opens$/)
+    expect(init?.method).toBe('POST')
+  })
+
+  it('記録済みの印はルームごとに持つ(端末ごとに1回だけ送るため)', () => {
+    expect(hasRecordedParticipantOpen('room-1')).toBe(false)
+    markParticipantOpenRecorded('room-1')
+    expect(hasRecordedParticipantOpen('room-1')).toBe(true)
+    expect(hasRecordedParticipantOpen('room-2')).toBe(false)
   })
 })

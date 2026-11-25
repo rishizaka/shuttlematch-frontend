@@ -242,6 +242,12 @@ export const roomApi = {
     request<void>(`/api/v1/rooms/${roomId}/organizer-check`, {
       headers: { 'X-Organizer-Token': token },
     }),
+  /**
+   * 参加者の端末で試合表を開いたことを記録する(KPI 用。backend V20)。運営者トークンは送らない。
+   * 呼ぶのは MatchesPage が「運営者ではない端末で初めて開いたとき」に1回だけ。
+   */
+  recordParticipantOpen: (roomId: string) =>
+    request<void>(`/api/v1/rooms/${roomId}/participant-opens`, { method: 'POST' }),
   /** ルームを終了する(終了済みとして履歴に残す)。 */
   close: (roomId: string) =>
     request<Room>(`/api/v1/rooms/${roomId}/close`, {
