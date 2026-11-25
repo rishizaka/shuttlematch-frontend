@@ -119,7 +119,7 @@ function RainPage() {
         <div>
           <Link
             to="/game"
-            className="mb-1 inline-flex items-center gap-0.5 text-xs font-medium text-slate-400 transition hover:text-brand-700"
+            className="mb-1 inline-flex items-center gap-0.5 text-xs font-medium text-slate-500 transition hover:text-brand-700"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
             ミニゲーム一覧
@@ -139,7 +139,7 @@ function RainPage() {
             <Crown className="arcade-glow h-4 w-4" />
             RANKING
           </button>
-          <p className="whitespace-nowrap text-[10px] tabular-nums text-slate-400">
+          <p className="whitespace-nowrap text-[10px] tabular-nums text-slate-500">
             自己ベスト {best}
           </p>
         </div>
@@ -212,7 +212,7 @@ function RainPage() {
 
       <AdSlot />
 
-      <p className="text-center text-[11px] leading-relaxed text-slate-400">
+      <p className="text-center text-[11px] leading-relaxed text-slate-500">
         ベストスコアはこの端末にだけ保存されます。
       </p>
       {showRanking ? (
