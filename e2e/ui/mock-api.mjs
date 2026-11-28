@@ -38,6 +38,9 @@ const routes = {
 const NOT_FOUND_SHARE_CODE = 'nosuchcd'
 const notFound = new Set([`/api/v1/rooms/code/${NOT_FOUND_SHARE_CODE}`])
 
+/** 中身を返さない POST(計測の記録など)。backend と同じく 204 を返す。 */
+const noContentPosts = new Set([`/api/v1/rooms/${generated.room.id}/participant-opens`])
+
 createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*')
   res.setHeader('Access-Control-Allow-Headers', '*')
@@ -45,6 +48,7 @@ createServer((req, res) => {
   if (req.method === 'OPTIONS') return res.writeHead(204).end()
   const path = new URL(req.url, 'http://x').pathname
   if (path === '/health') return res.writeHead(200).end('ok')
+  if (req.method === 'POST' && noContentPosts.has(path)) return res.writeHead(204).end()
   const body = req.method === 'GET' ? routes[path] : undefined
   if (body === undefined) {
     if (!notFound.has(path)) console.warn(`[mock-api] 未定義: ${req.method} ${path}`)

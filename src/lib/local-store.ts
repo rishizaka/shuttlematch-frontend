@@ -131,6 +131,32 @@ export function removeSelfParticipant(roomId: string) {
   emit()
 }
 
+// ---- participant open (参加者の端末で試合表を開いたことを記録済みか) ----
+// KPI 用に「参加者の端末で開かれた数」をサーバーに送る(roomApi.recordParticipantOpen)。
+// 端末ごとに1回だけにするための印。ポーリングや再訪で数が膨らまないようにする。
+// 画面の表示には使わないので emit() しない。
+
+const OPENED_PREFIX = 'shuttlematch.opened.'
+
+export function hasRecordedParticipantOpen(roomId: string): boolean {
+  if (!isBrowser()) return true
+  try {
+    return window.localStorage.getItem(OPENED_PREFIX + roomId) != null
+  } catch {
+    // 読めない(プライベートモードの一部など)なら、送りすぎないよう記録済みとみなす
+    return true
+  }
+}
+
+export function markParticipantOpenRecorded(roomId: string) {
+  if (!isBrowser()) return
+  try {
+    window.localStorage.setItem(OPENED_PREFIX + roomId, '1')
+  } catch {
+    // 保存できなくても計測が1回ぶん増えるだけなので無視する
+  }
+}
+
 // ---- organizer token (ランダム表を作成した端末であることの証明) ----
 // 作成のレスポンスで一度だけ払い出される秘密。以降、運営操作(終了・削除・参加者管理・
 // 試合表操作)のリクエストに X-Organizer-Token として添える。

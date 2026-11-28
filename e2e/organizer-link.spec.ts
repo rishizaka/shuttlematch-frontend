@@ -41,6 +41,28 @@ test('運営者用リンクを開いた別ブラウザが運営者になり、�
   }
 })
 
+test('運営者用リンクで開いた端末は、参加者の端末で開いた記録を送らない(KPI に数えない)', async ({
+  page,
+  request,
+}) => {
+  const room = await quickCreateRoom(request, { participantCount: 8, courtCount: 2 })
+  const sent: string[] = []
+  page.on('request', (r) => {
+    if (r.url().includes('/participant-opens')) sent.push(r.method())
+  })
+  try {
+    // 初めて開くのが運営者用リンク(トークンの確認・保存は非同期で、その間に記録が走りうる)
+    await page.goto(`/rooms/${room.id}/matches#organizer=${encodeURIComponent(room.organizerToken)}`)
+    await expect(page.getByText('この端末でも運営できるようになりました')).toBeVisible()
+    await page.reload()
+    await expect(page.locator('main [inert]')).toHaveCount(0)
+    await page.waitForTimeout(1000)
+    expect(sent).toEqual([])
+  } finally {
+    await deleteRoom(request, room.id)
+  }
+})
+
 test('偽の運営者用リンクでは運営者にならない', async ({ page, request }) => {
   const room = await quickCreateRoom(request, { participantCount: 8, courtCount: 2 })
   try {

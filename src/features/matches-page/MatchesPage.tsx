@@ -40,7 +40,10 @@ import {
 } from '../../features/organizer-link'
 import {
   addRoomId,
+  getOrganizerToken,
   getSelfParticipant,
+  hasRecordedParticipantOpen,
+  markParticipantOpenRecorded,
   setSelfParticipant,
   removeSelfParticipant,
   removeOrganizerToken,
@@ -99,6 +102,11 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
   const closed = room?.status === 'CLOSED'
   const qc = useQueryClient()
 
+  // 運営者用リンクで開かれたか。トークンの確認・保存は非同期なので、その間に下の「参加者の端末で
+  // 開いた記録」が走ると、共同運営者の端末を参加者として数えてしまう。アドレスバーの #organizer は
+  // すぐ消すので、あとから URL を読み直しても分からない。ここで覚えておく。
+  const openedViaOrganizerLinkRef = useRef(false)
+
   // 運営者用リンク(#organizer=トークン)で開かれたら、トークンが本物か確かめてから保存し、
   // この端末でも運営できるようにする。アドレスバーからはすぐ消す(うっかり再共有しない・
   // 履歴に残さない)。サーバーにはフラグメントが届かないので、確認は API で行う。
@@ -106,6 +114,7 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
     if (typeof window === 'undefined') return
     const token = readOrganizerTokenFromHash(window.location.hash)
     if (!token) return
+    openedViaOrganizerLinkRef.current = true
     const url = new URL(window.location.href)
     url.hash = ''
     window.history.replaceState(window.history.state, '', url.toString())
@@ -127,6 +136,24 @@ function MatchesContent({ roomId, seed }: { roomId: string; seed: Room | null })
       })
     // roomId ごとに一度だけ。showToast は useCallback(..., []) で安定しているので依存に入れても再実行されない。
   }, [roomId, showToast])
+
+  // 参加者の端末で開かれたことを1回だけ記録する(KPI 用)。作った試合表が参加者に配られて
+  // いるかを測るため。運営者の端末では送らない。判定は useHasOrganizerToken ではなく
+  // localStorage を直接読む(ハイドレーション直後の描画ではサーバー側の値 false が返るため、
+  // それを使うと運営者の端末でも送ってしまう)。運営者用リンクで開いた端末も送らない
+  // (openedViaOrganizerLinkRef。この effect は上のリンク処理より後に書いてあるので、同じ描画でも先に記録済み)。
+  // 失敗しても参加者の操作には関係ないので黙って捨てる。
+  const roomLoaded = !!room
+  const roomCreatedBy = room?.createdBy
+  useEffect(() => {
+    if (!roomLoaded || typeof window === 'undefined') return
+    if (openedViaOrganizerLinkRef.current) return
+    if (getOrganizerToken(roomId) != null) return
+    if (user && roomCreatedBy === user.id) return
+    if (hasRecordedParticipantOpen(roomId)) return
+    markParticipantOpenRecorded(roomId)
+    roomApi.recordParticipantOpen(roomId).catch(() => {})
+  }, [roomId, roomLoaded, roomCreatedBy, user])
 
   // 再編成で途中参加者が試合表に現れたら、次の room ポーリングを待たずに
   // すぐ名前を解決できるよう room を取り直す (未知の ParticipantId を検知したときのみ)。
