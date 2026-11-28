@@ -32,6 +32,16 @@ test('スマホ幅で横スクロールが出ない', async ({ page }) => {
   await expectNoHorizontalOverflow(page)
 })
 
+test('運営者の端末では、参加者の端末で開いた記録を送らない', async ({ page }) => {
+  const sent: string[] = []
+  page.on('request', (r) => {
+    if (r.url().includes('/participant-opens')) sent.push(r.method())
+  })
+  await openMatches(page)
+  await page.waitForTimeout(1500)
+  expect(sent).toEqual([])
+})
+
 test('アクセシビリティ違反が既知のものから増えていない', async ({ page }) => {
   await openMatches(page)
   await expectAxeWithinKnown(page, 'matchesOrganizer')

@@ -37,3 +37,16 @@ test('見た目が基準画像と一致する', async ({ page }) => {
   await openMatches(page)
   await expect(page).toHaveScreenshot('matches-participant.png', { fullPage: true })
 })
+
+test('参加者の端末で開くと、開いた記録を1回だけ送る(再読み込みでは送らない)', async ({ page }) => {
+  const sent: string[] = []
+  page.on('request', (r) => {
+    if (r.url().includes('/participant-opens')) sent.push(r.method())
+  })
+  await openMatches(page)
+  await expect.poll(() => sent).toEqual(['POST'])
+  await page.reload()
+  await expect(page.locator('main [inert]')).toHaveCount(0)
+  await page.waitForTimeout(1000)
+  expect(sent).toEqual(['POST'])
+})
